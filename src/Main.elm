@@ -131,15 +131,15 @@ view model =
     Element.layout
         [ Element.width Element.fill
         , Element.height Element.fill
-        , Element.paddingXY 100 0
-        , Background.color <| Element.rgb255 199 199 199
+        , Element.paddingXY (scaled 16) 0
+        , Background.color <| Element.rgb255 205 205 205
         , Font.family
             [ Font.external
                 { name = "Permanent Marker"
                 , url = "https://fonts.googleapis.com/css?family=Permanent+Marker"
                 }
             ]
-        , Font.size 30
+        , Font.size (scaled 1)
         ]
     <|
         Element.column
@@ -151,12 +151,17 @@ view model =
             ]
             [ infoRow model.character
             , storyRow model.character
+
             -- , heartRow model.character
-            , Element.wrappedRow [ Element.spacingXY 50 10, Element.width Element.fill ]
-                [ statCol model.character
-                , effortCol model.character
-                , equippedCol model.character
-                , unEquippedCol model.character
+            , Element.wrappedRow [ Element.spacingXY (scaled 3) 0, Element.width Element.fill ]
+                [ Element.row [ Element.spacingXY (scaled 1) 0, Element.height Element.fill ]
+                    [ statCol model.character
+                    , effortCol model.character
+                    ]
+                , Element.row [ Element.spacingXY (scaled 1) 0, Element.width Element.fill, Element.height Element.fill ]
+                    [ equippedCol model.character
+                    , unEquippedCol model.character
+                    ]
                 ]
             ]
 
@@ -165,7 +170,7 @@ infoRow : Character -> Element Msg
 infoRow char =
     let
         labelStyle =
-            [ Font.size 16 ]
+            [ Font.size (scaled -1) ]
 
         valueStyle =
             [ Element.width Element.fill, Element.paddingXY 10 0 ]
@@ -189,7 +194,7 @@ storyRow : Character -> Element Msg
 storyRow char =
     let
         labelStyle =
-            [ Font.size 18 ]
+            [ Font.size (scaled -1) ]
 
         valueStyle =
             [ Element.paddingXY 10 0, Font.italic ]
@@ -203,7 +208,6 @@ storyRow char =
         ]
         [ Element.el labelStyle (Element.text "Story:")
         , Element.el valueStyle (Element.text <| char.story)
-        , heartRow char
         ]
 
 
@@ -225,9 +229,9 @@ heartRow char =
         [ Element.spacingXY 5 10
         , Element.paddingXY 20 0
         ]
-
-    <|  [Element.el labelStyle (Element.text "Hit Points:")] ++
-        List.repeat heartCount filledHearts
+    <|
+        [ Element.el labelStyle (Element.text "Hit Points:") ]
+            ++ List.repeat heartCount filledHearts
             ++ List.repeat remainingHearts emptyHearts
 
 
@@ -245,10 +249,7 @@ statCol : Character -> Element Msg
 statCol char =
     Element.column
         [ Element.height Element.fill
-
-        -- , Element.width Element.fill
         , Element.spacingXY 32 32
-        , Element.alignLeft
         ]
         [ statBlock "Str" char.stats.str 0
         , statBlock "Dex" char.stats.dex 0
@@ -263,81 +264,80 @@ effortCol : Character -> Element Msg
 effortCol char =
     Element.column
         [ Element.height Element.fill
-
-        -- , Element.width Element.fill
         , Element.spacingXY 32 32
-        , Element.alignLeft
         ]
         [ armorBlock "Armor" char.stats.armor 0
-        , effortBlock "Basic Effort (D4)" char.stats.basic 0
-        , effortBlock "Weapon Effort (D6)" char.stats.weapon 0
-        , effortBlock "Magic Effort (D8)" char.stats.magic 0
-        , effortBlock "Ultimate Effort (D12)" char.stats.ultimate 0
+        , effortBlock "Basic (D4)" char.stats.basic 0
+        , effortBlock "Weapon (D6)" char.stats.weapon 0
+        , effortBlock "Magic (D8)" char.stats.magic 0
+        , effortBlock "Ultimate (D12)" char.stats.ultimate 0
         ]
 
 
 equippedCol : Character -> Element Msg
 equippedCol char =
     Element.column
-        [ Element.height Element.fill
-        , Element.paddingXY 130 0
+        [ Element.width Element.fill
+        , Element.alignTop
         ]
     <|
-        [ Element.row [Element.paddingEach { bottom = 25, left = 0, right = 0, top = 0}]
-            [ Element.el [] <| Element.text "📜"
-            , Element.el [ Font.size 40, Font.underline ] <| Element.text "Equipped Gear"
-            ]
+        [ Element.el [ Font.size (scaled 2), Element.alignTop ] <| Element.text "Equipped Gear:"
         ]
-            ++ List.repeat 10
+            ++ List.repeat 1
                 (Element.el
-                    [ Element.paddingEach { bottom = 8, left = 0, right = 0, top = 8 }
-                    , Element.width <| Element.px 140
-                    , Font.size 24
-                    , Font.underline
+                    [ Element.paddingEach { bottom = 8, left = scaled 1, right = 0, top = 8 }
+                    , Font.size (scaled 1)
+                    , Element.alignTop
                     ]
                  <|
-                    Element.text "                                        "
+                    Element.text "None yet!"
                 )
+
 
 unEquippedCol : Character -> Element Msg
 unEquippedCol char =
     Element.column
-        [ Element.height Element.fill
-        , Element.paddingXY 130 0
+        [ Element.width Element.fill
+        , Element.alignTop
         ]
     <|
-        [ Element.row [Element.paddingEach { bottom = 25, left = 0, right = 0, top = 0}]
-            [ Element.el [] <| Element.text "🧰"
-            , Element.el [ Font.size 40, Font.underline ] <| Element.text "Carried Gear"
-            ]
+        [ Element.el [ Font.size (scaled 2), Element.alignRight, Element.alignTop ] <| Element.text "Carried Gear:"
         ]
-            ++ List.repeat 10
+            ++ List.repeat 1
                 (Element.el
-                    [ Element.paddingEach { bottom = 8, left = 0, right = 0, top = 8 }
-                    , Element.width <| Element.px 140
-                    , Font.size 24
-                    , Font.underline
+                    [ Element.paddingEach { bottom = 8, left = scaled 1, right = 0, top = 8 }
+                    , Font.size (scaled 1)
+                    , Element.alignTop
                     ]
                  <|
-                    Element.text "                                        "
+                    Element.text "None yet!"
                 )
+
+
+scaled f =
+    Basics.round <| Element.modular 14 1.2 f
+
+
+blockStyle : List (Element.Attribute Msg)
+blockStyle =
+    [ Border.solid
+    , Border.color <| Element.rgb255 0 0 0
+    , Border.widthEach { bottom = 3, left = 1, right = 1, top = 1 }
+    , Border.rounded 5
+    , Element.paddingXY 10 5
+    , Font.center
+    , Element.alignRight
+    , Font.size (scaled 1)
+    ]
+
 
 statBlock : String -> Int -> Int -> Element Msg
 statBlock label basestat lootstat =
-    Element.row [ Element.spacing 11, Element.width Element.fill ] <|
-        [ Element.el [] <| Element.text label
-        , Element.el
-            [ Border.solid
-            , Border.color <| Element.rgb255 0 0 0
-            , Border.widthEach { bottom = 1, left = 1, right = 1, top = 1 }
-            , Border.rounded 5
-            , Element.paddingXY 15 10
-            , Font.center
-            , Element.alignRight
-            ]
-          <|
+    Element.row [ Element.spacing 5 ] <|
+        [ Element.el [ Font.size (scaled 1) ] <| Element.text label
+        , Element.el blockStyle <|
             Element.text (String.fromInt basestat)
-        , Element.column [ Font.size 14, Element.alignRight ]
+        , Element.column [ Font.size (scaled -3), Element.alignRight ]
             [ Element.text "Base"
             , Element.text <| String.fromInt basestat
             , Element.text "Loot"
@@ -348,20 +348,13 @@ statBlock label basestat lootstat =
 
 effortBlock : String -> Int -> Int -> Element Msg
 effortBlock label basestat lootstat =
-    Element.row [ Element.spacing 11, Element.width Element.fill ] <|
-        [ Element.column [] <| List.map (\l -> Element.el [ Element.centerY, Font.size 24 ] <| Element.text l) <| String.split " " label
+    Element.row [ Element.spacing 5, Element.alignRight, Element.height Element.fill ] <|
+        [ Element.column [] <| List.map (\l -> Element.el [ Font.size (scaled 1), Element.alignRight ] <| Element.text l) <| String.split " " label
         , Element.el
-            [ Border.solid
-            , Border.color <| Element.rgb255 0 0 0
-            , Border.widthEach { bottom = 1, left = 1, right = 1, top = 1 }
-            , Border.rounded 5
-            , Element.paddingXY 15 10
-            , Font.center
-            , Element.alignRight
-            ]
+            blockStyle
           <|
             Element.text (String.fromInt basestat)
-        , Element.column [ Font.size 14, Element.alignRight ]
+        , Element.column [ Font.size (scaled -3), Element.alignRight ]
             [ Element.text "Base"
             , Element.text <| String.fromInt basestat
             , Element.text "Loot"
@@ -372,23 +365,19 @@ effortBlock label basestat lootstat =
 
 armorBlock : String -> Int -> Int -> Element Msg
 armorBlock label basestat lootstat =
-    Element.row [ Element.spacing 11, Element.width Element.fill ] <|
-        [ Element.column [] <| List.map (\l -> Element.el [] <| Element.text l) <| String.split " " label
-        , Element.el
-            [ Border.solid
-            , Border.color <| Element.rgb255 0 0 0
-            , Border.widthEach { bottom = 1, left = 1, right = 1, top = 1 }
-            , Border.roundEach { bottomLeft = 25, topLeft = 0, bottomRight = 25, topRight = 0 }
-            , Element.paddingXY 15 10
-            , Font.center
-            , Element.alignRight
-            ]
+    Element.column [ Element.spacing 5, Element.centerX ] <|
+        [ Element.el
+            (blockStyle
+                ++ [ Font.size (scaled 3), Element.paddingXY 15 10, Element.centerX, Border.roundEach { bottomLeft = 25, topLeft = 0, bottomRight = 25, topRight = 0 } ]
+            )
           <|
-            Element.text (String.fromInt basestat)
-        , Element.column [ Element.centerX, Font.size 10, Element.alignRight ]
-            [ Element.text "Base"
+            Element.text (String.fromInt (10 + basestat))
+        , Element.column [] <| List.map (\l -> Element.el [ Font.size (scaled 2), Element.centerX ] <| Element.text l) <| String.split " " label
+        , Element.row [ Element.centerX, Font.size (scaled -3), Element.alignRight ]
+            [ Element.text "Base "
             , Element.text <| String.fromInt basestat
-            , Element.text "Loot"
+            , Element.text " "
+            , Element.text "Loot "
             , Element.text <| String.fromInt lootstat
             ]
         ]
