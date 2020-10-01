@@ -8,6 +8,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Html exposing (Html, button, div, span, text)
 import Html.Events exposing (onClick)
+import Maybe
 import String exposing (fromInt)
 
 
@@ -35,6 +36,8 @@ tabula_rasa =
     , equipped = []
     , carried = []
     , stats = Stats 0 0 0 0 0 0 0 0 0 0 0
+    , deadCount = Nothing
+    , coin = 0
     }
 
 
@@ -93,6 +96,8 @@ type alias Character =
     , equipped : List Item
     , carried : List Item
     , stats : Stats
+    , deadCount : Maybe Int
+    , coin : Int
     }
 
 
@@ -151,9 +156,8 @@ view model =
             ]
             [ infoRow model.character
             , storyRow model.character
-
-            -- , heartRow model.character
-            , Element.wrappedRow [ Element.spacingXY (scaled 3) 0, Element.width Element.fill ]
+            , heartRow model.character
+            , Element.wrappedRow [ Element.spacingXY (scaled 8) 0, Element.width Element.fill ]
                 [ Element.row [ Element.spacingXY (scaled 1) 0, Element.height Element.fill ]
                     [ statCol model.character
                     , effortCol model.character
@@ -223,26 +227,34 @@ heartRow char =
             10 - heartCount
 
         labelStyle =
-            [ Font.size 18 ]
+            [ Font.size (scaled 2) ]
     in
-    Element.row
+    Element.column
         [ Element.spacingXY 5 10
-        , Element.paddingXY 20 0
+        , Element.width Element.fill
         ]
     <|
-        [ Element.el labelStyle (Element.text "Hit Points:") ]
-            ++ List.repeat heartCount filledHearts
-            ++ List.repeat remainingHearts emptyHearts
+        [ Element.row [ Font.size (scaled 2), Element.spaceEvenly, Element.width Element.fill ]
+            [ Element.column []
+                [ Element.text <| "Hit Points: " ++ String.fromInt char.hitpoints
+                , Element.row [] <|
+                    List.repeat heartCount filledHearts
+                        ++ List.repeat remainingHearts emptyHearts
+                ]
+            , Element.column [] [ Element.text <| "Dying?: ", Element.el [ Font.size (scaled -1) ] <| Element.text <| Maybe.withDefault "Roll a D6" (Maybe.map String.fromInt char.deadCount) ]
+            , Element.column [] [ Element.text <| "Coin: ", Element.text <| String.fromInt char.coin ]
+            ]
+        ]
 
 
 filledHearts : Element Msg
 filledHearts =
-    Element.el [ Element.width Element.fill ] <| Element.text "❤️"
+    Element.el [ Element.width Element.fill ] <| Element.text "♥"
 
 
 emptyHearts : Element Msg
 emptyHearts =
-    Element.el [ Element.width Element.fill ] <| Element.text "\u{1F90D}"
+    Element.el [ Element.width Element.fill ] <| Element.text "♡"
 
 
 statCol : Character -> Element Msg
@@ -301,7 +313,7 @@ unEquippedCol char =
         , Element.alignTop
         ]
     <|
-        [ Element.el [ Font.size (scaled 2), Element.alignRight, Element.alignTop ] <| Element.text "Carried Gear:"
+        [ Element.el [ Font.size (scaled 2), Element.alignTop ] <| Element.text "Carried Gear:"
         ]
             ++ List.repeat 1
                 (Element.el
