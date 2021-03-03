@@ -6,7 +6,8 @@ import Element exposing (Element, alignRight, centerY, el, fill, padding, rgb255
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
-import Html exposing (Html, button, div, span, text)
+import Element.Input as Input
+import Html exposing (Attribute, Html, button, div, span, text, th)
 import Html.Events exposing (onClick)
 import Maybe
 import String exposing (fromInt)
@@ -19,10 +20,13 @@ main =
 type Msg
     = Increment
     | Decrement
+    | MakeEditable (Maybe String)
+    | UpdateName String
 
 
 type alias Model =
     { character : Character
+    , settings : AppSettings
     }
 
 
@@ -41,9 +45,17 @@ tabula_rasa =
     }
 
 
+type alias AppSettings =
+    { editable : Maybe String
+    }
+
+
 init : Model
 init =
     { character = tabula_rasa
+    , settings =
+        { editable = Nothing
+        }
     }
 
 
@@ -116,6 +128,21 @@ update msg model =
                 |> asStatsIn model.character
                 |> asCharIn model
 
+        MakeEditable target ->
+            let
+                oldSettings =
+                    model.settings
+
+                newSettings =
+                    { oldSettings | editable = target }
+            in
+            { model | settings = newSettings }
+
+        UpdateName name ->
+            name
+                |> asNameIn model.character
+                |> asCharIn model
+
 
 asStrIn : Stats -> Int -> Stats
 asStrIn stats change =
@@ -132,6 +159,12 @@ asCharIn model char =
     { model | character = char }
 
 
+asNameIn : Character -> String -> Character
+asNameIn char newname =
+    { char | name = newname }
+
+
+view : Model -> Html Msg
 view model =
     Element.layout
         [ Element.width Element.fill
@@ -153,8 +186,9 @@ view model =
             , Element.width Element.fill
             , Element.height Element.fill
             , Background.color <| Element.rgb255 255 255 255
+            , Element.behindContent unFocusButton
             ]
-            [ infoRow model.character
+            [ infoRow model
             , storyRow model.character
             , heartRow model.character
             , Element.wrappedRow [ Element.spacingXY (scaled 8) 0, Element.width Element.fill ]
@@ -170,9 +204,26 @@ view model =
             ]
 
 
-infoRow : Character -> Element Msg
-infoRow char =
+unFocusButton : Element Msg
+unFocusButton =
+    Input.button
+        [ Element.width <| Element.fill
+        , Element.height <| Element.fill
+        ]
+        { label = Element.none
+        , onPress = Just (MakeEditable Nothing)
+        }
+
+
+infoRow : Model -> Element Msg
+infoRow model =
     let
+        char =
+            model.character
+
+        settings =
+            model.settings
+
         labelStyle =
             [ Font.size (scaled -1) ]
 
@@ -186,12 +237,34 @@ infoRow char =
         , Border.widthEach { bottom = 1, left = 0, right = 0, top = 0 }
         ]
         [ Element.el labelStyle (Element.text "Name:")
-        , Element.el valueStyle (Element.text <| char.name)
+        , editableStringField valueStyle settings.editable "Name" char.name
         , Element.el labelStyle (Element.text "Class:")
         , Element.el valueStyle (Element.text <| char.class)
         , Element.el labelStyle (Element.text "Bioform:")
         , Element.el valueStyle (Element.text <| char.bioform)
         ]
+
+
+editableStringField : List (Element.Attribute Msg) -> Maybe String -> String -> String -> Element Msg
+editableStringField style editable label value =
+    let
+        readField =
+            Input.button style <| { label = Element.text value, onPress = Just (MakeEditable <| Just label) }
+
+        writeField =
+            Input.text style
+                { onChange = UpdateName, text = value, placeholder = Nothing, label = Input.labelHidden label }
+    in
+    case editable of
+        Just n ->
+            if n == label then
+                writeField
+
+            else
+                readField
+
+        Nothing ->
+            readField
 
 
 storyRow : Character -> Element Msg
