@@ -5,6 +5,7 @@ import Dict exposing (Dict)
 import Element exposing (Element, alignRight, centerY, el, fill, padding, rgb255, row, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
+import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Attribute, Html, button, div, span, text, th)
@@ -17,13 +18,6 @@ main =
     Browser.sandbox { init = init, update = update, view = view }
 
 
-type Msg
-    = Increment
-    | Decrement
-    | MakeEditable (Maybe String)
-    | UpdateName String
-
-
 type alias Model =
     { character : Character
     , settings : AppSettings
@@ -32,10 +26,22 @@ type alias Model =
 
 tabula_rasa : Character
 tabula_rasa =
-    { name = "Thuldir"
-    , bioform = "Dwarf"
-    , class = "Knight"
-    , story = "Lord Commander of the Red Knight"
+    { name =
+        { value = "Thuldir"
+        , id = "name"
+        }
+    , bioform =
+        { value = "Dwarf"
+        , id = "bioform"
+        }
+    , class =
+        { value = "Knight"
+        , id = "class"
+        }
+    , story =
+        { value = "Lord Commander of the Red Knight"
+        , id = "story"
+        }
     , hitpoints = 10
     , equipped = []
     , carried = []
@@ -57,6 +63,13 @@ init =
         { editable = Nothing
         }
     }
+
+
+
+-- type Attribute
+--     = Name
+--     | Story
+--     |
 
 
 type Stat
@@ -99,11 +112,17 @@ type Item
     = Item String Stats
 
 
+type alias CharacterProp =
+    { value : String
+    , id : String
+    }
+
+
 type alias Character =
-    { name : String
-    , bioform : String
-    , class : String
-    , story : String
+    { name : CharacterProp
+    , bioform : CharacterProp
+    , class : CharacterProp
+    , story : CharacterProp
     , hitpoints : Int
     , equipped : List Item
     , carried : List Item
@@ -111,6 +130,18 @@ type alias Character =
     , deadCount : Maybe Int
     , coin : Int
     }
+
+
+type Msg
+    = Increment
+    | Decrement
+    | MakeEditable String
+    | UpdateName String
+    | DisableEditing String
+
+
+
+-- ANCHOR Update
 
 
 update : Msg -> Model -> Model
@@ -128,18 +159,51 @@ update msg model =
                 |> asStatsIn model.character
                 |> asCharIn model
 
-        MakeEditable target ->
-            let
-                oldSettings =
-                    model.settings
+        MakeEditable id ->
+            -- let
+            --     oldSettings =
+            --         model.settings
+            --     newSettings =
+            --         { oldSettings | editable = id }
+            -- in
+            -- { model | settings = newSettings }
+            Just id
+                |> asEditableIn model.settings
+                |> asSettingsIn model
 
-                newSettings =
-                    { oldSettings | editable = target }
+        DisableEditing id ->
+            let
+                allowEmpty =
+                    Nothing
+                        |> asEditableIn model.settings
+                        |> asSettingsIn model
+
+                checkEmpty value =
+                    if model.character.name.value == "" then
+                        model
+
+                    else
+                        allowEmpty
             in
-            { model | settings = newSettings }
+            case id of
+                "name" ->
+                    checkEmpty model.character.name.value
+
+                "class" ->
+                    checkEmpty model.character.class.value
+
+                "bioform" ->
+                    checkEmpty model.character.bioform.value
+
+                "story" ->
+                    allowEmpty
+
+                _ ->
+                    model
 
         UpdateName name ->
             name
+                |> asValueIn model.character.name
                 |> asNameIn model.character
                 |> asCharIn model
 
@@ -159,9 +223,24 @@ asCharIn model char =
     { model | character = char }
 
 
-asNameIn : Character -> String -> Character
+asNameIn : Character -> CharacterProp -> Character
 asNameIn char newname =
     { char | name = newname }
+
+
+asValueIn : CharacterProp -> String -> CharacterProp
+asValueIn charp newvalue =
+    { charp | value = newvalue }
+
+
+asEditableIn : AppSettings -> Maybe String -> AppSettings
+asEditableIn setting editable =
+    { setting | editable = editable }
+
+
+asSettingsIn : Model -> AppSettings -> Model
+asSettingsIn model settings =
+    { model | settings = settings }
 
 
 view : Model -> Html Msg
@@ -186,7 +265,6 @@ view model =
             , Element.width Element.fill
             , Element.height Element.fill
             , Background.color <| Element.rgb255 255 255 255
-            , Element.behindContent unFocusButton
             ]
             [ infoRow model
             , storyRow model.character
@@ -202,17 +280,6 @@ view model =
                     ]
                 ]
             ]
-
-
-unFocusButton : Element Msg
-unFocusButton =
-    Input.button
-        [ Element.width <| Element.fill
-        , Element.height <| Element.fill
-        ]
-        { label = Element.none
-        , onPress = Just (MakeEditable Nothing)
-        }
 
 
 infoRow : Model -> Element Msg
@@ -237,27 +304,44 @@ infoRow model =
         , Border.widthEach { bottom = 1, left = 0, right = 0, top = 0 }
         ]
         [ Element.el labelStyle (Element.text "Name:")
-        , editableStringField valueStyle settings.editable "Name" char.name
+        , editableStringField settings.editable char.name
         , Element.el labelStyle (Element.text "Class:")
-        , Element.el valueStyle (Element.text <| char.class)
+        , Element.el valueStyle (Element.text <| char.class.value)
         , Element.el labelStyle (Element.text "Bioform:")
-        , Element.el valueStyle (Element.text <| char.bioform)
+        , Element.el valueStyle (Element.text <| char.bioform.value)
         ]
 
 
-editableStringField : List (Element.Attribute Msg) -> Maybe String -> String -> String -> Element Msg
-editableStringField style editable label value =
+
+--  ANCHOR editableStringField
+
+
+editableStringField : Maybe String -> CharacterProp -> Element Msg
+editableStringField editable prop =
     let
+        style =
+            [ Element.width Element.fill
+            , Element.paddingXY 10 0
+            ]
+
+        write_style =
+            [ Events.onLoseFocus <| DisableEditing prop.id
+            ]
+
         readField =
-            Input.button style <| { label = Element.text value, onPress = Just (MakeEditable <| Just label) }
+            Input.button style <| { label = Element.text prop.value, onPress = Just <| MakeEditable prop.id }
 
         writeField =
-            Input.text style
-                { onChange = UpdateName, text = value, placeholder = Nothing, label = Input.labelHidden label }
+            Input.text (style ++ write_style)
+                { onChange = UpdateName
+                , text = prop.value
+                , placeholder = Just <| Input.placeholder [] <| Element.text prop.id
+                , label = Input.labelHidden prop.id
+                }
     in
     case editable of
         Just n ->
-            if n == label then
+            if n == prop.id then
                 writeField
 
             else
@@ -284,7 +368,7 @@ storyRow char =
         , Element.paddingEach { bottom = 10, left = 0, right = 0, top = 0 }
         ]
         [ Element.el labelStyle (Element.text "Story:")
-        , Element.el valueStyle (Element.text <| char.story)
+        , Element.el valueStyle (Element.text <| char.story.value)
         ]
 
 
