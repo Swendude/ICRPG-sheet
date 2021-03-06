@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Dict exposing (Dict)
-import Element exposing (Element, alignRight, centerY, el, fill, padding, rgb255, row, spacing, text, width)
+import Element exposing (Attr, Element, alignRight, centerY, el, fill, padding, rgb255, row, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
@@ -28,19 +28,19 @@ tabula_rasa : Character
 tabula_rasa =
     { name =
         { value = "Thuldir"
-        , id = "name"
+        , id = Name
         }
     , bioform =
         { value = "Dwarf"
-        , id = "bioform"
+        , id = Bioform
         }
     , class =
         { value = "Knight"
-        , id = "class"
+        , id = Class
         }
     , story =
         { value = "Lord Commander of the Red Knight"
-        , id = "story"
+        , id = Story
         }
     , hitpoints = 10
     , equipped = []
@@ -52,7 +52,7 @@ tabula_rasa =
 
 
 type alias AppSettings =
-    { editable : Maybe String
+    { editable : Maybe Attribute
     }
 
 
@@ -65,11 +65,11 @@ init =
     }
 
 
-
--- type Attribute
---     = Name
---     | Story
---     |
+type Attribute
+    = Name
+    | Story
+    | Class
+    | Bioform
 
 
 type Stat
@@ -114,7 +114,7 @@ type Item
 
 type alias CharacterProp =
     { value : String
-    , id : String
+    , id : Attribute
     }
 
 
@@ -135,9 +135,9 @@ type alias Character =
 type Msg
     = Increment
     | Decrement
-    | MakeEditable String
-    | UpdateName String
-    | DisableEditing String
+    | MakeEditable Attribute
+    | UpdateAttr Attribute String
+    | DisableEditing Attribute
 
 
 
@@ -160,13 +160,6 @@ update msg model =
                 |> asCharIn model
 
         MakeEditable id ->
-            -- let
-            --     oldSettings =
-            --         model.settings
-            --     newSettings =
-            --         { oldSettings | editable = id }
-            -- in
-            -- { model | settings = newSettings }
             Just id
                 |> asEditableIn model.settings
                 |> asSettingsIn model
@@ -186,26 +179,56 @@ update msg model =
                         allowEmpty
             in
             case id of
-                "name" ->
+                Name ->
                     checkEmpty model.character.name.value
 
-                "class" ->
+                Class ->
                     checkEmpty model.character.class.value
 
-                "bioform" ->
+                Bioform ->
                     checkEmpty model.character.bioform.value
 
-                "story" ->
+                Story ->
                     allowEmpty
 
-                _ ->
-                    model
+        UpdateAttr attr value ->
+            asCharIn model <|
+                case attr of
+                    Name ->
+                        value
+                            |> asValueIn model.character.name
+                            |> asNameIn model.character
 
-        UpdateName name ->
-            name
-                |> asValueIn model.character.name
-                |> asNameIn model.character
-                |> asCharIn model
+                    Class ->
+                        value
+                            |> asValueIn model.character.class
+                            |> asClassIn model.character
+
+                    Bioform ->
+                        value
+                            |> asValueIn model.character.bioform
+                            |> asBioformIn model.character
+
+                    Story ->
+                        value
+                            |> asValueIn model.character.story
+                            |> asStoryIn model.character
+
+
+printAttribute : Attribute -> String
+printAttribute attr =
+    case attr of
+        Name ->
+            "Name"
+
+        Class ->
+            "Class"
+
+        Story ->
+            "Story"
+
+        Bioform ->
+            "Bioform"
 
 
 asStrIn : Stats -> Int -> Stats
@@ -228,12 +251,27 @@ asNameIn char newname =
     { char | name = newname }
 
 
+asBioformIn : Character -> CharacterProp -> Character
+asBioformIn char newbioform =
+    { char | bioform = newbioform }
+
+
+asStoryIn : Character -> CharacterProp -> Character
+asStoryIn char newstory =
+    { char | story = newstory }
+
+
+asClassIn : Character -> CharacterProp -> Character
+asClassIn char newclass =
+    { char | class = newclass }
+
+
 asValueIn : CharacterProp -> String -> CharacterProp
 asValueIn charp newvalue =
     { charp | value = newvalue }
 
 
-asEditableIn : AppSettings -> Maybe String -> AppSettings
+asEditableIn : AppSettings -> Maybe Attribute -> AppSettings
 asEditableIn setting editable =
     { setting | editable = editable }
 
@@ -306,9 +344,9 @@ infoRow model =
         [ Element.el labelStyle (Element.text "Name:")
         , editableStringField settings.editable char.name
         , Element.el labelStyle (Element.text "Class:")
-        , Element.el valueStyle (Element.text <| char.class.value)
+        , editableStringField settings.editable char.class
         , Element.el labelStyle (Element.text "Bioform:")
-        , Element.el valueStyle (Element.text <| char.bioform.value)
+        , editableStringField settings.editable char.bioform
         ]
 
 
@@ -316,7 +354,7 @@ infoRow model =
 --  ANCHOR editableStringField
 
 
-editableStringField : Maybe String -> CharacterProp -> Element Msg
+editableStringField : Maybe Attribute -> CharacterProp -> Element Msg
 editableStringField editable prop =
     let
         style =
@@ -333,10 +371,10 @@ editableStringField editable prop =
 
         writeField =
             Input.text (style ++ write_style)
-                { onChange = UpdateName
+                { onChange = UpdateAttr prop.id
                 , text = prop.value
-                , placeholder = Just <| Input.placeholder [] <| Element.text prop.id
-                , label = Input.labelHidden prop.id
+                , placeholder = Just <| Input.placeholder [] <| Element.text (printAttribute prop.id)
+                , label = Input.labelHidden (printAttribute prop.id)
                 }
     in
     case editable of
