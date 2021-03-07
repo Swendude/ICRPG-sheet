@@ -1,19 +1,21 @@
 module Main exposing (..)
 
+-- import Html.Events exposing (onClick)
+
 import Browser
 import Dict exposing (Dict)
-import Element exposing (Attr, Element, alignRight, centerY, el, fill, padding, rgb255, row, spacing, text, width)
+import Element exposing (Attr, Element, alignRight, centerX, centerY, column, el, fill, padding, paddingXY, px, rgb255, row, spacing, spacingXY, text, width)
 import Element.Background as Background
-import Element.Border as Border
+import Element.Border as Border exposing (widthXY)
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
-import Html exposing (Attribute, Html, button, div, span, text, th)
-import Html.Events exposing (onClick)
+import Html exposing (Html)
 import Maybe
-import String exposing (fromInt)
+import String exposing (fromInt, toInt)
 
 
+main : Program () Model Msg
 main =
     Browser.sandbox { init = init, update = update, view = view }
 
@@ -42,17 +44,26 @@ tabula_rasa =
         { value = "Lord Commander of the Red Knight"
         , id = Story
         }
-    , hitpoints = 10
+    , hitpoints =
+        { value = 30
+        , id = Hitpoints
+        , editvalue = 0
+        }
     , equipped = []
     , carried = []
     , stats = Stats 0 0 0 0 0 0 0 0 0 0 0
     , deadCount = Nothing
-    , coin = 0
+    , coin =
+        { value = 0
+        , id = Coin
+        , editvalue = 0
+        }
     }
 
 
 type alias AppSettings =
-    { editable : Maybe Attribute
+    { editableText : Maybe TextAttribute
+    , editableNumber : Maybe NumberAttribute
     }
 
 
@@ -60,16 +71,22 @@ init : Model
 init =
     { character = tabula_rasa
     , settings =
-        { editable = Nothing
+        { editableText = Nothing
+        , editableNumber = Nothing
         }
     }
 
 
-type Attribute
+type TextAttribute
     = Name
     | Story
     | Class
     | Bioform
+
+
+type NumberAttribute
+    = Coin
+    | Hitpoints
 
 
 type Stat
@@ -112,32 +129,44 @@ type Item
     = Item String Stats
 
 
-type alias CharacterProp =
+type alias CharacterTextProp =
     { value : String
-    , id : Attribute
+    , id : TextAttribute
+    }
+
+
+type alias CharacterNumberProp =
+    { value : Int
+    , id : NumberAttribute
+    , editvalue : Int
     }
 
 
 type alias Character =
-    { name : CharacterProp
-    , bioform : CharacterProp
-    , class : CharacterProp
-    , story : CharacterProp
-    , hitpoints : Int
+    { name : CharacterTextProp
+    , bioform : CharacterTextProp
+    , class : CharacterTextProp
+    , story : CharacterTextProp
+    , hitpoints : CharacterNumberProp
     , equipped : List Item
     , carried : List Item
     , stats : Stats
     , deadCount : Maybe Int
-    , coin : Int
+    , coin : CharacterNumberProp
     }
 
 
 type Msg
     = Increment
     | Decrement
-    | MakeEditable Attribute
-    | UpdateAttr Attribute String
-    | DisableEditing Attribute
+    | MakeTextEditable TextAttribute
+    | UpdateTextAttr TextAttribute String
+    | DisableTextEditing TextAttribute
+    | MakeNumberEditable NumberAttribute
+    | DisableNumberEditing
+    | IncreaseNumberAttribute NumberAttribute
+    | DecreaseNumberAttribute NumberAttribute
+    | UpdateEditField NumberAttribute String
 
 
 
@@ -159,16 +188,16 @@ update msg model =
                 |> asStatsIn model.character
                 |> asCharIn model
 
-        MakeEditable id ->
+        MakeTextEditable id ->
             Just id
-                |> asEditableIn model.settings
+                |> asEditableTextIn model.settings
                 |> asSettingsIn model
 
-        DisableEditing id ->
+        DisableTextEditing id ->
             let
                 allowEmpty =
                     Nothing
-                        |> asEditableIn model.settings
+                        |> asEditableTextIn model.settings
                         |> asSettingsIn model
 
                 checkEmpty value =
@@ -191,32 +220,117 @@ update msg model =
                 Story ->
                     allowEmpty
 
-        UpdateAttr attr value ->
+        UpdateTextAttr attr value ->
             asCharIn model <|
                 case attr of
                     Name ->
                         value
-                            |> asValueIn model.character.name
+                            |> asTextValueIn model.character.name
                             |> asNameIn model.character
 
                     Class ->
                         value
-                            |> asValueIn model.character.class
+                            |> asTextValueIn model.character.class
                             |> asClassIn model.character
 
                     Bioform ->
                         value
-                            |> asValueIn model.character.bioform
+                            |> asTextValueIn model.character.bioform
                             |> asBioformIn model.character
 
                     Story ->
                         value
-                            |> asValueIn model.character.story
+                            |> asTextValueIn model.character.story
                             |> asStoryIn model.character
 
+        MakeNumberEditable id ->
+            Just id
+                |> asEditableNumberIn model.settings
+                |> asSettingsIn model
 
-printAttribute : Attribute -> String
-printAttribute attr =
+        DisableNumberEditing ->
+            Nothing
+                |> asEditableNumberIn model.settings
+                |> asSettingsIn model
+
+        IncreaseNumberAttribute id ->
+            case id of
+                Coin ->
+                    (model.character.coin.value + model.character.coin.editvalue)
+                        |> asNumberValueIn model.character.coin
+                        |> asCoinIn model.character
+                        |> asCharIn model
+
+                Hitpoints ->
+                    (model.character.hitpoints.value + model.character.hitpoints.editvalue)
+                        |> asNumberValueIn model.character.hitpoints
+                        |> asHitpointsIn model.character
+                        |> asCharIn model
+
+        DecreaseNumberAttribute id ->
+            case id of
+                Coin ->
+                    (model.character.coin.value - model.character.coin.editvalue)
+                        |> asNumberValueIn model.character.coin
+                        |> asCoinIn model.character
+                        |> asCharIn model
+
+                Hitpoints ->
+                    if model.character.hitpoints.value <= 0 then
+                        model
+
+                    else
+                        (model.character.hitpoints.value - model.character.hitpoints.editvalue)
+                            |> asNumberValueIn model.character.hitpoints
+                            |> asHitpointsIn model.character
+                            |> asCharIn model
+
+        UpdateEditField id value ->
+            case id of
+                Coin ->
+                    Maybe.withDefault 0 (toInt value)
+                        |> asEditValueIn model.character.coin
+                        |> asCoinIn model.character
+                        |> asCharIn model
+
+                Hitpoints ->
+                    Maybe.withDefault 0 (toInt value)
+                        |> asEditValueIn model.character.hitpoints
+                        |> asHitpointsIn model.character
+                        |> asCharIn model
+
+
+
+-- UpdateNumberAttr attr value ->
+--     asCharIn model <|
+--         case attr of
+--             Coin ->
+--                 value
+--                     |> asNumberValueIn model.character.coin
+--                     |> asCoinIn model.character
+--             Hitpoints ->
+--                 value
+--                     |> asNumberValueIn model.character.hitpoints
+--                     |> asHitpointsIn model.character
+
+
+asEditValueIn : CharacterNumberProp -> Int -> CharacterNumberProp
+asEditValueIn charp newvalue =
+    { charp | editvalue = newvalue }
+
+
+printNumberAttribute : NumberAttribute -> String
+printNumberAttribute attr =
+    case attr of
+        Coin ->
+            "Coin"
+
+        Hitpoints ->
+            "Hitpoints"
+
+
+printTextAttribute : TextAttribute -> String
+printTextAttribute attr =
     case attr of
         Name ->
             "Name"
@@ -246,34 +360,54 @@ asCharIn model char =
     { model | character = char }
 
 
-asNameIn : Character -> CharacterProp -> Character
+asHitpointsIn : Character -> CharacterNumberProp -> Character
+asHitpointsIn char newhitpoints =
+    { char | hitpoints = newhitpoints }
+
+
+asCoinIn : Character -> CharacterNumberProp -> Character
+asCoinIn char newcoin =
+    { char | coin = newcoin }
+
+
+asNameIn : Character -> CharacterTextProp -> Character
 asNameIn char newname =
     { char | name = newname }
 
 
-asBioformIn : Character -> CharacterProp -> Character
+asBioformIn : Character -> CharacterTextProp -> Character
 asBioformIn char newbioform =
     { char | bioform = newbioform }
 
 
-asStoryIn : Character -> CharacterProp -> Character
+asStoryIn : Character -> CharacterTextProp -> Character
 asStoryIn char newstory =
     { char | story = newstory }
 
 
-asClassIn : Character -> CharacterProp -> Character
+asClassIn : Character -> CharacterTextProp -> Character
 asClassIn char newclass =
     { char | class = newclass }
 
 
-asValueIn : CharacterProp -> String -> CharacterProp
-asValueIn charp newvalue =
+asTextValueIn : CharacterTextProp -> String -> CharacterTextProp
+asTextValueIn charp newvalue =
     { charp | value = newvalue }
 
 
-asEditableIn : AppSettings -> Maybe Attribute -> AppSettings
-asEditableIn setting editable =
-    { setting | editable = editable }
+asNumberValueIn : CharacterNumberProp -> Int -> CharacterNumberProp
+asNumberValueIn charp newvalue =
+    { charp | value = newvalue }
+
+
+asEditableTextIn : AppSettings -> Maybe TextAttribute -> AppSettings
+asEditableTextIn setting editable =
+    { setting | editableText = editable }
+
+
+asEditableNumberIn : AppSettings -> Maybe NumberAttribute -> AppSettings
+asEditableNumberIn setting editable =
+    { setting | editableNumber = editable }
 
 
 asSettingsIn : Model -> AppSettings -> Model
@@ -284,7 +418,7 @@ asSettingsIn model settings =
 view : Model -> Html Msg
 view model =
     Element.layout
-        [ Element.width Element.fill
+        [ width fill
         , Element.height Element.fill
         , Element.paddingXY (scaled 16) 0
         , Background.color <| Element.rgb255 205 205 205
@@ -300,19 +434,19 @@ view model =
         Element.column
             [ Element.paddingXY 24 40
             , Element.spacingXY 0 25
-            , Element.width Element.fill
+            , width fill
             , Element.height Element.fill
             , Background.color <| Element.rgb255 255 255 255
             ]
             [ infoRow model
-            , storyRow model.character
-            , heartRow model.character
-            , Element.wrappedRow [ Element.spacingXY (scaled 8) 0, Element.width Element.fill ]
+            , storyRow model
+            , heartRow model
+            , Element.wrappedRow [ Element.spacingXY (scaled 8) 0, width fill ]
                 [ Element.row [ Element.spacingXY (scaled 1) 0, Element.height Element.fill ]
                     [ statCol model.character
                     , effortCol model.character
                     ]
-                , Element.row [ Element.spacingXY (scaled 1) 0, Element.width Element.fill, Element.height Element.fill ]
+                , Element.row [ Element.spacingXY (scaled 1) 0, width fill, Element.height Element.fill ]
                     [ equippedCol model.character
                     , unEquippedCol model.character
                     ]
@@ -323,58 +457,66 @@ view model =
 infoRow : Model -> Element Msg
 infoRow model =
     let
-        char =
-            model.character
-
-        settings =
-            model.settings
-
         labelStyle =
             [ Font.size (scaled -1) ]
 
         valueStyle =
-            [ Element.width Element.fill, Element.paddingXY 10 0 ]
+            [ width fill, Element.paddingXY 10 0 ]
     in
     Element.row
-        [ Element.width Element.fill
+        [ width fill
         , Border.solid
         , Border.color <| Element.rgb255 0 0 0
         , Border.widthEach { bottom = 1, left = 0, right = 0, top = 0 }
         ]
-        [ Element.el labelStyle (Element.text "Name:")
-        , editableStringField settings.editable char.name
-        , Element.el labelStyle (Element.text "Class:")
-        , editableStringField settings.editable char.class
-        , Element.el labelStyle (Element.text "Bioform:")
-        , editableStringField settings.editable char.bioform
+        [ el labelStyle (text "Name :")
+        , editableTextField model.settings.editableText model.character.name
+        , el labelStyle (text "Class :")
+        , editableTextField model.settings.editableText model.character.class
+        , el labelStyle (text "Bioform :")
+        , editableTextField model.settings.editableText model.character.bioform
         ]
 
 
+storyRow : Model -> Element Msg
+storyRow model =
+    let
+        labelStyle =
+            [ Font.size (scaled -1) ]
+    in
+    Element.row
+        [ width fill
+        , Border.solid
+        , Border.color <| Element.rgb255 0 0 0
+        , Border.widthEach { bottom = 1, left = 0, right = 0, top = 0 }
+        , Element.paddingEach { bottom = 10, left = 0, right = 0, top = 0 }
+        ]
+        [ el labelStyle (text "Story :")
+        , editableTextField model.settings.editableText model.character.story
+        ]
 
---  ANCHOR editableStringField
 
-
-editableStringField : Maybe Attribute -> CharacterProp -> Element Msg
-editableStringField editable prop =
+editableTextField : Maybe TextAttribute -> CharacterTextProp -> Element Msg
+editableTextField editable prop =
     let
         style =
-            [ Element.width Element.fill
+            [ width fill
             , Element.paddingXY 10 0
             ]
 
         write_style =
-            [ Events.onLoseFocus <| DisableEditing prop.id
+            [ Events.onLoseFocus <| DisableTextEditing prop.id
             ]
 
         readField =
-            Input.button style <| { label = Element.text prop.value, onPress = Just <| MakeEditable prop.id }
+            Input.button style <| { label = text prop.value, onPress = Just <| MakeTextEditable prop.id }
 
         writeField =
             Input.text (style ++ write_style)
-                { onChange = UpdateAttr prop.id
+                { onChange = UpdateTextAttr prop.id
                 , text = prop.value
-                , placeholder = Just <| Input.placeholder [] <| Element.text (printAttribute prop.id)
-                , label = Input.labelHidden (printAttribute prop.id)
+                , placeholder = Just <| Input.placeholder [] <| text (printTextAttribute prop.id)
+                , label = Input.labelHidden (printTextAttribute prop.id)
                 }
     in
     case editable of
@@ -389,33 +531,69 @@ editableStringField editable prop =
             readField
 
 
-storyRow : Character -> Element Msg
-storyRow char =
+
+-- ANCHOR NumberField
+
+
+editableNumberField : Maybe NumberAttribute -> CharacterNumberProp -> Element Msg
+editableNumberField editable prop =
     let
-        labelStyle =
-            [ Font.size (scaled -1) ]
+        readField =
+            Input.button [ paddingXY 10 18, width fill ] <|
+                { label = text <| fromInt prop.value, onPress = Just <| MakeNumberEditable prop.id }
 
-        valueStyle =
-            [ Element.paddingXY 10 0, Font.italic ]
+        writeField =
+            row
+                [ paddingXY 10 10
+                , spacingXY 10 0
+                , width fill
+                ]
+                [ Input.button [] <|
+                    { label =
+                        text <|
+                            fromInt prop.value
+                    , onPress =
+                        Just <|
+                            DisableNumberEditing
+                    }
+                , Input.text
+                    [ paddingXY 5 0
+                    , widthXY 2 4
+
+                    -- , spacingXY 5 5
+                    , width (px <| scaled 8)
+                    ]
+                  <|
+                    { label = Input.labelHidden (printNumberAttribute prop.id)
+                    , text = String.fromInt prop.editvalue
+                    , onChange = UpdateEditField prop.id
+                    , placeholder = Just <| Input.placeholder [] <| text "Halloo"
+                    }
+                , Element.column
+                    []
+                    [ Input.button [] <| { label = text <| "+", onPress = Just <| IncreaseNumberAttribute prop.id }
+                    , Input.button [] <| { label = text <| "-", onPress = Just <| DecreaseNumberAttribute prop.id }
+                    ]
+                ]
     in
-    Element.row
-        [ Element.width Element.fill
-        , Border.solid
-        , Border.color <| Element.rgb255 0 0 0
-        , Border.widthEach { bottom = 1, left = 0, right = 0, top = 0 }
-        , Element.paddingEach { bottom = 10, left = 0, right = 0, top = 0 }
-        ]
-        [ Element.el labelStyle (Element.text "Story:")
-        , Element.el valueStyle (Element.text <| char.story.value)
-        ]
+    case editable of
+        Just n ->
+            if n == prop.id then
+                writeField
+
+            else
+                readField
+
+        Nothing ->
+            readField
 
 
-heartRow : Character -> Element Msg
-heartRow char =
+heartRow : Model -> Element Msg
+heartRow model =
     let
         heartCount : Int
         heartCount =
-            char.hitpoints // 10
+            model.character.hitpoints.value // 10
 
         remainingHearts : Int
         remainingHearts =
@@ -424,32 +602,26 @@ heartRow char =
         labelStyle =
             [ Font.size (scaled 2) ]
     in
-    Element.column
-        [ Element.spacingXY 5 10
-        , Element.width Element.fill
-        ]
-    <|
-        [ Element.row [ Font.size (scaled 2), Element.spaceEvenly, Element.width Element.fill ]
-            [ Element.column []
-                [ Element.text <| "Hit Points: " ++ String.fromInt char.hitpoints
-                , Element.row [] <|
-                    List.repeat heartCount filledHearts
-                        ++ List.repeat remainingHearts emptyHearts
-                ]
-            , Element.column [] [ Element.text <| "Dying?: ", Element.el [ Font.size (scaled -1) ] <| Element.text <| Maybe.withDefault "Roll a D6" (Maybe.map String.fromInt char.deadCount) ]
-            , Element.column [] [ Element.text <| "Coin: ", Element.text <| String.fromInt char.coin ]
+    row [ Font.size (scaled 2), width fill ]
+        [ row [ width fill, centerX ]
+            [ text <| "Hit Points: "
+            , editableNumberField model.settings.editableNumber model.character.hitpoints
+            ]
+        , row [ width fill, centerX ]
+            [ text <| "Coin: "
+            , text <| String.fromInt model.character.coin.value
             ]
         ]
 
 
 filledHearts : Element Msg
 filledHearts =
-    Element.el [ Element.width Element.fill ] <| Element.text "♥"
+    el [ width fill ] <| text "♥"
 
 
 emptyHearts : Element Msg
 emptyHearts =
-    Element.el [ Element.width Element.fill ] <| Element.text "♡"
+    el [ width fill ] <| text "♡"
 
 
 statCol : Character -> Element Msg
@@ -484,43 +656,44 @@ effortCol char =
 equippedCol : Character -> Element Msg
 equippedCol char =
     Element.column
-        [ Element.width Element.fill
+        [ width fill
         , Element.alignTop
         ]
     <|
-        [ Element.el [ Font.size (scaled 2), Element.alignTop ] <| Element.text "Equipped Gear:"
+        [ el [ Font.size (scaled 2), Element.alignTop ] <| text "Equipped Gear :"
         ]
             ++ List.repeat 1
-                (Element.el
+                (el
                     [ Element.paddingEach { bottom = 8, left = scaled 1, right = 0, top = 8 }
                     , Font.size (scaled 1)
                     , Element.alignTop
                     ]
                  <|
-                    Element.text "None yet!"
+                    text "None yet!"
                 )
 
 
 unEquippedCol : Character -> Element Msg
 unEquippedCol char =
     Element.column
-        [ Element.width Element.fill
+        [ width fill
         , Element.alignTop
         ]
     <|
-        [ Element.el [ Font.size (scaled 2), Element.alignTop ] <| Element.text "Carried Gear:"
+        [ el [ Font.size (scaled 2), Element.alignTop ] <| text "Carried Gear :"
         ]
             ++ List.repeat 1
-                (Element.el
+                (el
                     [ Element.paddingEach { bottom = 8, left = scaled 1, right = 0, top = 8 }
                     , Font.size (scaled 1)
                     , Element.alignTop
                     ]
                  <|
-                    Element.text "None yet!"
+                    text "None yet!"
                 )
 
 
+scaled : Int -> Int
 scaled f =
     Basics.round <| Element.modular 14 1.2 f
 
@@ -541,14 +714,14 @@ blockStyle =
 statBlock : String -> Int -> Int -> Element Msg
 statBlock label basestat lootstat =
     Element.row [ Element.spacing 5 ] <|
-        [ Element.el [ Font.size (scaled 1) ] <| Element.text label
-        , Element.el blockStyle <|
-            Element.text (String.fromInt basestat)
+        [ el [ Font.size (scaled 1) ] <| text label
+        , el blockStyle <|
+            text (String.fromInt basestat)
         , Element.column [ Font.size (scaled -3), Element.alignRight ]
-            [ Element.text "Base"
-            , Element.text <| String.fromInt basestat
-            , Element.text "Loot"
-            , Element.text <| String.fromInt lootstat
+            [ text "Base"
+            , text <| String.fromInt basestat
+            , text "Loot"
+            , text <| String.fromInt lootstat
             ]
         ]
 
@@ -556,16 +729,16 @@ statBlock label basestat lootstat =
 effortBlock : String -> Int -> Int -> Element Msg
 effortBlock label basestat lootstat =
     Element.row [ Element.spacing 5, Element.alignRight, Element.height Element.fill ] <|
-        [ Element.column [] <| List.map (\l -> Element.el [ Font.size (scaled 1), Element.alignRight ] <| Element.text l) <| String.split " " label
-        , Element.el
+        [ Element.column [] <| List.map (\l -> el [ Font.size (scaled 1), Element.alignRight ] <| text l) <| String.split " " label
+        , el
             blockStyle
           <|
-            Element.text (String.fromInt basestat)
+            text (String.fromInt basestat)
         , Element.column [ Font.size (scaled -3), Element.alignRight ]
-            [ Element.text "Base"
-            , Element.text <| String.fromInt basestat
-            , Element.text "Loot"
-            , Element.text <| String.fromInt lootstat
+            [ text "Base"
+            , text <| String.fromInt basestat
+            , text "Loot"
+            , text <| String.fromInt lootstat
             ]
         ]
 
@@ -573,18 +746,18 @@ effortBlock label basestat lootstat =
 armorBlock : String -> Int -> Int -> Element Msg
 armorBlock label basestat lootstat =
     Element.column [ Element.spacing 5, Element.centerX ] <|
-        [ Element.el
+        [ el
             (blockStyle
                 ++ [ Font.size (scaled 3), Element.paddingXY 15 10, Element.centerX, Border.roundEach { bottomLeft = 25, topLeft = 0, bottomRight = 25, topRight = 0 } ]
             )
           <|
-            Element.text (String.fromInt (10 + basestat))
-        , Element.column [] <| List.map (\l -> Element.el [ Font.size (scaled 2), Element.centerX ] <| Element.text l) <| String.split " " label
+            text (String.fromInt (10 + basestat))
+        , Element.column [] <| List.map (\l -> el [ Font.size (scaled 2), Element.centerX ] <| text l) <| String.split " " label
         , Element.row [ Element.centerX, Font.size (scaled -3), Element.alignRight ]
-            [ Element.text "Base "
-            , Element.text <| String.fromInt basestat
-            , Element.text " "
-            , Element.text "Loot "
-            , Element.text <| String.fromInt lootstat
+            [ text "Base "
+            , text <| String.fromInt basestat
+            , text " "
+            , text "Loot "
+            , text <| String.fromInt lootstat
             ]
         ]
