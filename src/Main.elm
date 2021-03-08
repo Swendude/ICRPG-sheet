@@ -4,13 +4,13 @@ module Main exposing (..)
 
 import Browser
 import Dict exposing (Dict)
-import Element exposing (Attr, Element, alignRight, centerX, centerY, column, el, fill, padding, paddingXY, px, rgb255, row, spacing, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, alignRight, centerX, centerY, clip, column, el, fill, fillPortion, height, padding, paddingXY, px, rgb255, row, scrollbarX, scrollbars, spaceEvenly, spacing, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border exposing (widthXY)
 import Element.Events as Events
-import Element.Font as Font
+import Element.Font as Font exposing (center)
 import Element.Input as Input
-import Html exposing (Html)
+import Html exposing (Html, label)
 import Maybe
 import String exposing (fromInt, toInt)
 
@@ -41,7 +41,7 @@ tabula_rasa =
         , id = Class
         }
     , story =
-        { value = "Lord Commander of the Red Knight"
+        { value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
         , id = Story
         }
     , hitpoints =
@@ -52,10 +52,14 @@ tabula_rasa =
     , equipped = []
     , carried = []
     , stats = Stats 0 0 0 0 0 0 0 0 0 0 0
-    , deadCount = Nothing
     , coin =
         { value = 0
         , id = Coin
+        , editvalue = 0
+        }
+    , deathtimer =
+        { value = 0
+        , id = Deathtimer
         , editvalue = 0
         }
     }
@@ -87,6 +91,7 @@ type TextAttribute
 type NumberAttribute
     = Coin
     | Hitpoints
+    | Deathtimer
 
 
 type Stat
@@ -151,8 +156,8 @@ type alias Character =
     , equipped : List Item
     , carried : List Item
     , stats : Stats
-    , deadCount : Maybe Int
     , coin : CharacterNumberProp
+    , deathtimer : CharacterNumberProp
     }
 
 
@@ -267,6 +272,23 @@ update msg model =
                         |> asHitpointsIn model.character
                         |> asCharIn model
 
+                Deathtimer ->
+                    let
+                        result =
+                            model.character.deathtimer.value + model.character.deathtimer.editvalue
+
+                        maxResult =
+                            if result > 6 then
+                                6
+
+                            else
+                                result
+                    in
+                    maxResult
+                        |> asNumberValueIn model.character.deathtimer
+                        |> asDeathtimerIn model.character
+                        |> asCharIn model
+
         DecreaseNumberAttribute id ->
             case id of
                 Coin ->
@@ -285,6 +307,16 @@ update msg model =
                             |> asHitpointsIn model.character
                             |> asCharIn model
 
+                Deathtimer ->
+                    if model.character.deathtimer.value <= 0 then
+                        model
+
+                    else
+                        (model.character.deathtimer.value - model.character.deathtimer.editvalue)
+                            |> asNumberValueIn model.character.deathtimer
+                            |> asDeathtimerIn model.character
+                            |> asCharIn model
+
         UpdateEditField id value ->
             case id of
                 Coin ->
@@ -299,19 +331,16 @@ update msg model =
                         |> asHitpointsIn model.character
                         |> asCharIn model
 
+                Deathtimer ->
+                    Maybe.withDefault 0 (toInt value)
+                        |> asEditValueIn model.character.deathtimer
+                        |> asDeathtimerIn model.character
+                        |> asCharIn model
 
 
--- UpdateNumberAttr attr value ->
---     asCharIn model <|
---         case attr of
---             Coin ->
---                 value
---                     |> asNumberValueIn model.character.coin
---                     |> asCoinIn model.character
---             Hitpoints ->
---                 value
---                     |> asNumberValueIn model.character.hitpoints
---                     |> asHitpointsIn model.character
+asDeathtimerIn : Character -> CharacterNumberProp -> Character
+asDeathtimerIn char newvalue =
+    { char | deathtimer = newvalue }
 
 
 asEditValueIn : CharacterNumberProp -> Int -> CharacterNumberProp
@@ -327,6 +356,9 @@ printNumberAttribute attr =
 
         Hitpoints ->
             "Hitpoints"
+
+        Deathtimer ->
+            "Deathtimer"
 
 
 printTextAttribute : TextAttribute -> String
@@ -415,28 +447,29 @@ asSettingsIn model settings =
     { model | settings = settings }
 
 
+
+-- ANCHOR View
+
+
 view : Model -> Html Msg
 view model =
     Element.layout
         [ width fill
-        , Element.height Element.fill
-        , Element.paddingXY (scaled 16) 0
-        , Background.color <| Element.rgb255 205 205 205
+        , height fill
         , Font.family
-            [ Font.external
-                { name = "Permanent Marker"
-                , url = "https://fonts.googleapis.com/css?family=Permanent+Marker"
-                }
+            [ Font.typeface "Patrick Hand"
             ]
         , Font.size (scaled 1)
+        , Background.color <| Element.rgb255 0 0 0
         ]
     <|
         Element.column
-            [ Element.paddingXY 24 40
-            , Element.spacingXY 0 25
-            , width fill
+            [ width <| px 1200
+            , centerX
             , Element.height Element.fill
             , Background.color <| Element.rgb255 255 255 255
+            , paddingXY 50 0
+            , spacingXY 0 23
             ]
             [ infoRow model
             , storyRow model
@@ -454,27 +487,36 @@ view model =
             ]
 
 
+debugbg : Attr decorative msg
+debugbg =
+    Background.color <| Element.rgb255 0 255 255
+
+
 infoRow : Model -> Element Msg
 infoRow model =
     let
         labelStyle =
-            [ Font.size (scaled -1) ]
+            []
 
-        valueStyle =
-            [ width fill, Element.paddingXY 10 0 ]
+        groupStyle =
+            [ spacingXY 5 0 ]
+
+        fieldStyle =
+            [ height (px <| 36), width <| px 150 ]
     in
-    Element.row
-        [ width fill
-        , Border.solid
-        , Border.color <| Element.rgb255 0 0 0
-        , Border.widthEach { bottom = 1, left = 0, right = 0, top = 0 }
-        ]
-        [ el labelStyle (text "Name :")
-        , editableTextField model.settings.editableText model.character.name
-        , el labelStyle (text "Class :")
-        , editableTextField model.settings.editableText model.character.class
-        , el labelStyle (text "Bioform :")
-        , editableTextField model.settings.editableText model.character.bioform
+    Element.row [ width <| fill, spacingXY 10 0 ]
+        [ row groupStyle
+            [ el labelStyle (text "Name :")
+            , editableTextField fieldStyle model.settings.editableText model.character.name
+            ]
+        , row groupStyle
+            [ el labelStyle (text "Class :")
+            , editableTextField fieldStyle model.settings.editableText model.character.class
+            ]
+        , row groupStyle
+            [ el labelStyle (text "Bioform :")
+            , editableTextField fieldStyle model.settings.editableText model.character.bioform
+            ]
         ]
 
 
@@ -482,42 +524,54 @@ storyRow : Model -> Element Msg
 storyRow model =
     let
         labelStyle =
-            [ Font.size (scaled -1) ]
+            []
+
+        fieldStyle =
+            [ height (px <| 36), width fill ]
     in
     Element.row
         [ width fill
-        , Border.solid
-        , Border.color <| Element.rgb255 0 0 0
-        , Border.widthEach { bottom = 1, left = 0, right = 0, top = 0 }
-        , Element.paddingEach { bottom = 10, left = 0, right = 0, top = 0 }
+        , spacingXY 10 0
         ]
-        [ el labelStyle (text "Story :")
-        , editableTextField model.settings.editableText model.character.story
+        [ row [ width fill, spacingXY 5 0 ]
+            [ el labelStyle (text "Story :")
+            , editableTextField fieldStyle model.settings.editableText model.character.story
+            ]
         ]
 
 
-editableTextField : Maybe TextAttribute -> CharacterTextProp -> Element Msg
-editableTextField editable prop =
+editableTextField : List (Attribute Msg) -> Maybe TextAttribute -> CharacterTextProp -> Element Msg
+editableTextField style editable prop =
     let
-        style =
-            [ width fill
-            , Element.paddingXY 10 0
-            ]
-
-        write_style =
-            [ Events.onLoseFocus <| DisableTextEditing prop.id
-            ]
+        labelEl =
+            el
+                [ Border.widthEach { top = 0, left = 0, right = 0, bottom = 1 }
+                , Border.dotted
+                , paddingXY 5 5
+                ]
+            <|
+                text prop.value
 
         readField =
-            Input.button style <| { label = text prop.value, onPress = Just <| MakeTextEditable prop.id }
+            row style
+                [ Input.button [ scrollbarX, width fill ]
+                    { label = labelEl
+                    , onPress = Just <| MakeTextEditable prop.id
+                    }
+                ]
 
         writeField =
-            Input.text (style ++ write_style)
-                { onChange = UpdateTextAttr prop.id
-                , text = prop.value
-                , placeholder = Just <| Input.placeholder [] <| text (printTextAttribute prop.id)
-                , label = Input.labelHidden (printTextAttribute prop.id)
-                }
+            row style
+                [ Input.text
+                    [ Events.onLoseFocus <| DisableTextEditing prop.id
+                    , paddingXY 5 5
+                    ]
+                    { onChange = UpdateTextAttr prop.id
+                    , text = prop.value
+                    , placeholder = Just <| Input.placeholder [] <| text (printTextAttribute prop.id)
+                    , label = Input.labelHidden (printTextAttribute prop.id)
+                    }
+                ]
     in
     case editable of
         Just n ->
@@ -535,45 +589,51 @@ editableTextField editable prop =
 -- ANCHOR NumberField
 
 
-editableNumberField : Maybe NumberAttribute -> CharacterNumberProp -> Element Msg
-editableNumberField editable prop =
+editableNumberField : List (Attribute Msg) -> Maybe NumberAttribute -> CharacterNumberProp -> Element Msg
+editableNumberField style editable prop =
     let
+        labelEl =
+            el
+                [ Border.widthEach { top = 0, left = 0, right = 0, bottom = 1 }
+                , Border.dotted
+                ]
+            <|
+                text <|
+                    fromInt prop.value
+
         readField =
-            Input.button [ paddingXY 10 18, width fill ] <|
-                { label = text <| fromInt prop.value, onPress = Just <| MakeNumberEditable prop.id }
+            row
+                style
+                [ Input.button [] <|
+                    { label = labelEl
+                    , onPress = Just <| MakeNumberEditable prop.id
+                    }
+                ]
 
         writeField =
             row
-                [ paddingXY 10 10
-                , spacingXY 10 0
-                , width fill
-                ]
+                style
                 [ Input.button [] <|
                     { label =
-                        text <|
-                            fromInt prop.value
+                        labelEl
                     , onPress =
                         Just <|
                             DisableNumberEditing
                     }
                 , Input.text
                     [ paddingXY 5 0
-                    , widthXY 2 4
-
-                    -- , spacingXY 5 5
-                    , width (px <| scaled 8)
+                    , width (px 40)
                     ]
                   <|
                     { label = Input.labelHidden (printNumberAttribute prop.id)
                     , text = String.fromInt prop.editvalue
                     , onChange = UpdateEditField prop.id
-                    , placeholder = Just <| Input.placeholder [] <| text "Halloo"
+                    , placeholder = Nothing
                     }
-                , Element.column
-                    []
-                    [ Input.button [] <| { label = text <| "+", onPress = Just <| IncreaseNumberAttribute prop.id }
-                    , Input.button [] <| { label = text <| "-", onPress = Just <| DecreaseNumberAttribute prop.id }
-                    ]
+                , Input.button [ Font.size (scaled -1), paddingXY 0 0 ] <|
+                    { label = text <| "+", onPress = Just <| IncreaseNumberAttribute prop.id }
+                , Input.button [ Font.size (scaled -1), paddingXY 0 0 ] <|
+                    { label = text <| "-", onPress = Just <| DecreaseNumberAttribute prop.id }
                 ]
     in
     case editable of
@@ -597,20 +657,35 @@ heartRow model =
 
         remainingHearts : Int
         remainingHearts =
-            10 - heartCount
+            if heartCount > 8 then
+                0
 
-        labelStyle =
-            [ Font.size (scaled 2) ]
+            else
+                8 - heartCount
+
+        fieldStyle =
+            [ spacingXY 10 0
+            , height <| px 40
+            ]
     in
-    row [ Font.size (scaled 2), width fill ]
-        [ row [ width fill, centerX ]
-            [ text <| "Hit Points: "
-            , editableNumberField model.settings.editableNumber model.character.hitpoints
+    column [ width fill ]
+        [ row []
+            [ row [ width <| px 250 ]
+                [ text <| "Hit Points: "
+                , editableNumberField fieldStyle model.settings.editableNumber model.character.hitpoints
+                ]
+            , row [ width <| px 250 ]
+                [ text <| "Coin: "
+                , editableNumberField fieldStyle model.settings.editableNumber model.character.coin
+                ]
+            , row [ width <| px 250 ]
+                [ text <| "† Dying?: "
+                , editableNumberField fieldStyle model.settings.editableNumber model.character.deathtimer
+                ]
             ]
-        , row [ width fill, centerX ]
-            [ text <| "Coin: "
-            , text <| String.fromInt model.character.coin.value
-            ]
+        , row [] <|
+            List.repeat heartCount filledHearts
+                ++ List.repeat remainingHearts emptyHearts
         ]
 
 
@@ -695,7 +770,7 @@ unEquippedCol char =
 
 scaled : Int -> Int
 scaled f =
-    Basics.round <| Element.modular 14 1.2 f
+    Basics.round <| Element.modular 24 1.2 f
 
 
 blockStyle : List (Element.Attribute Msg)

@@ -1,0 +1,26 @@
+{
+  "name": "icrpg-sheet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "elm": "^0.19.1-5",
+    "elm-live": "^4.0.2",
+    "package-lock.json": "^1.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "elm test",
+    "start": "elm-live src/Main.elm --open -- --output=main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Swendude/ICRPG-sheet.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Swendude/ICRPG-sheet/issues"
+  },
+  "homepage": "https://github.com/Swendude/ICRPG-sheet#readme"
+}
