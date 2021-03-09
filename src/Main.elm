@@ -3,8 +3,7 @@ module Main exposing (..)
 -- import Html.Events exposing (onClick)
 
 import Browser
-import Dict exposing (Dict)
-import Element exposing (Attr, Attribute, Element, alignRight, centerX, centerY, clip, column, el, fill, fillPortion, height, padding, paddingXY, px, rgb255, row, scrollbarX, scrollbars, spaceEvenly, spacing, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, alignRight, centerX, centerY, clip, column, el, fill, fillPortion, height, maximum, minimum, padding, paddingXY, px, rgb255, row, scrollbarX, scrollbars, spaceEvenly, spacing, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border exposing (widthXY)
 import Element.Events as Events
@@ -12,7 +11,9 @@ import Element.Font as Font exposing (center)
 import Element.Input as Input
 import Html exposing (Html, label)
 import Maybe
-import String exposing (fromInt, toInt)
+import String exposing (fromInt, pad, toInt)
+import Svg
+import Svg.Attributes
 
 
 main : Program () Model Msg
@@ -51,7 +52,7 @@ tabula_rasa =
         }
     , equipped = []
     , carried = []
-    , stats = Stats 0 0 0 0 0 0 0 0 0 0 0
+    , stats = Stats 0 0 0 0 0 0 0 0 0 0 10 1
     , coin =
         { value = 0
         , id = Coin
@@ -106,6 +107,7 @@ type Stat
     | Weapon
     | Magic
     | Ultimate
+    | Hearts
 
 
 type alias Stats =
@@ -115,19 +117,13 @@ type alias Stats =
     , wis : Int
     , int : Int
     , cha : Int
-    , armor : Int
     , basic : Int
     , weapon : Int
     , magic : Int
     , ultimate : Int
+    , armor : Int
+    , hearts : Int
     }
-
-
-
--- emptyStats : Stats
--- emptyStats = [(Str, 0), (Dex, 0), (Con, 0), (Wis, 0), (Int, 0), (Cha, 0), (Armor, 0), (Basic, 0), (Weapon, 0), (Magic, 0), (Ultimate, 0)]
--- addStats : Stats -> Stats -> Stat
--- addStats s1 s2 =
 
 
 type Item
@@ -474,16 +470,20 @@ view model =
             [ infoRow model
             , storyRow model
             , heartRow model
-            , Element.wrappedRow [ Element.spacingXY (scaled 8) 0, width fill ]
-                [ Element.row [ Element.spacingXY (scaled 1) 0, Element.height Element.fill ]
-                    [ statCol model.character
-                    , effortCol model.character
-                    ]
-                , Element.row [ Element.spacingXY (scaled 1) 0, width fill, Element.height Element.fill ]
-                    [ equippedCol model.character
-                    , unEquippedCol model.character
+            , effortRow model.character
+            , row [ width fill ]
+                [ el [ width (fillPortion 1) ] <|
+                    armorBlock "Armor" model.character.stats.armor 0
+                , column [ width (fillPortion 7), spacingXY 0 10 ]
+                    [ statRow1 model.character
+                    , statRow2 model.character
                     ]
                 ]
+
+            -- , Element.row [ Element.spacingXY (scaled 1) 0, width fill, Element.height Element.fill ]
+            --     [ equippedCol model.character
+            --     , unEquippedCol model.character
+            --     ]
             ]
 
 
@@ -499,12 +499,12 @@ infoRow model =
             []
 
         groupStyle =
-            [ spacingXY 5 0 ]
+            [ spacingXY 5 0, centerX ]
 
         fieldStyle =
             [ height (px <| 36), width <| px 150 ]
     in
-    Element.row [ width <| fill, spacingXY 10 0 ]
+    row [ width fill, spacingXY 10 0, Background.color <| Element.rgb255 244 244 244, padding 10 ]
         [ row groupStyle
             [ el labelStyle (text "Name :")
             , editableTextField fieldStyle model.settings.editableText model.character.name
@@ -527,13 +527,10 @@ storyRow model =
             []
 
         fieldStyle =
-            [ height (px <| 36), width fill ]
+            [ Font.size (scaled -3), height (px <| 36), width (px 600) ]
     in
-    Element.row
-        [ width fill
-        , spacingXY 10 0
-        ]
-        [ row [ width fill, spacingXY 5 0 ]
+    row [ width fill, Background.color <| Element.rgb255 244 244 244, padding 10 ]
+        [ row [ spacingXY 10 0, centerX ]
             [ el labelStyle (text "Story :")
             , editableTextField fieldStyle model.settings.editableText model.character.story
             ]
@@ -550,7 +547,12 @@ editableTextField style editable prop =
                 , paddingXY 5 5
                 ]
             <|
-                text prop.value
+                case prop.value of
+                    "" ->
+                        text "Start typing"
+
+                    _ ->
+                        text prop.value
 
         readField =
             row style
@@ -565,10 +567,11 @@ editableTextField style editable prop =
                 [ Input.text
                     [ Events.onLoseFocus <| DisableTextEditing prop.id
                     , paddingXY 5 5
+                    , width fill
                     ]
                     { onChange = UpdateTextAttr prop.id
                     , text = prop.value
-                    , placeholder = Just <| Input.placeholder [] <| text (printTextAttribute prop.id)
+                    , placeholder = Just <| Input.placeholder [] <| text "Start typing"
                     , label = Input.labelHidden (printTextAttribute prop.id)
                     }
                 ]
@@ -583,10 +586,6 @@ editableTextField style editable prop =
 
         Nothing ->
             readField
-
-
-
--- ANCHOR NumberField
 
 
 editableNumberField : List (Attribute Msg) -> Maybe NumberAttribute -> CharacterNumberProp -> Element Msg
@@ -691,40 +690,115 @@ heartRow model =
 
 filledHearts : Element Msg
 filledHearts =
-    el [ width fill ] <| text "♥"
+    el [ width fill ]
+        (Element.html <|
+            Svg.svg
+                [ Svg.Attributes.viewBox "0 0 100 100"
+                , Svg.Attributes.width "20px"
+                ]
+                [ Svg.g
+                    [ Svg.Attributes.strokeWidth "5", Svg.Attributes.fill "red", Svg.Attributes.stroke "black" ]
+                    [ Svg.path [ Svg.Attributes.d "M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z" ] []
+                    ]
+                ]
+        )
 
 
 emptyHearts : Element Msg
 emptyHearts =
-    el [ width fill ] <| text "♡"
+    el [ width fill ]
+        (Element.html <|
+            Svg.svg
+                [ Svg.Attributes.viewBox "0 0 100 100"
+                , Svg.Attributes.width "18px"
+                ]
+                [ Svg.g
+                    [ Svg.Attributes.strokeWidth "5", Svg.Attributes.fill "white", Svg.Attributes.stroke "black" ]
+                    [ Svg.path [ Svg.Attributes.d "M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z" ] []
+                    ]
+                ]
+        )
 
 
-statCol : Character -> Element Msg
-statCol char =
-    Element.column
-        [ Element.height Element.fill
-        , Element.spacingXY 32 32
+blockRowLabelStyle : List (Attribute msg)
+blockRowLabelStyle =
+    [ centerX ]
+
+
+blockRowBlockStyle : List (Attribute msg)
+blockRowBlockStyle =
+    [ centerX ]
+
+
+blockRowStyle : List (Attribute msg)
+blockRowStyle =
+    [ spacingXY 10 0, Background.color <| Element.rgb255 244 244 244, padding 5, width (fill |> minimum 150) ]
+
+
+statRow1 : Character -> Element Msg
+statRow1 char =
+    row
+        [ width fill
+        , spacingXY 10 0
         ]
-        [ statBlock "Str" char.stats.str 0
-        , statBlock "Dex" char.stats.dex 0
-        , statBlock "Con" char.stats.con 0
-        , statBlock "Int" char.stats.int 0
-        , statBlock "Wis" char.stats.wis 0
-        , statBlock "Cha" char.stats.cha 0
+        [ row blockRowStyle
+            [ el blockRowLabelStyle <| text "Str"
+            , el blockRowBlockStyle <| statBlock char.stats.str 0
+            ]
+        , row blockRowStyle
+            [ el blockRowLabelStyle <| text "Dex"
+            , el blockRowBlockStyle <| statBlock char.stats.dex 0
+            ]
+        , row blockRowStyle
+            [ el blockRowLabelStyle <| text "Con"
+            , el blockRowBlockStyle <| statBlock char.stats.con 0
+            ]
         ]
 
 
-effortCol : Character -> Element Msg
-effortCol char =
-    Element.column
-        [ Element.height Element.fill
-        , Element.spacingXY 32 32
+statRow2 : Character -> Element Msg
+statRow2 char =
+    row
+        [ width fill
+        , spacingXY 10 0
         ]
-        [ armorBlock "Armor" char.stats.armor 0
-        , effortBlock "Basic (D4)" char.stats.basic 0
-        , effortBlock "Weapon (D6)" char.stats.weapon 0
-        , effortBlock "Magic (D8)" char.stats.magic 0
-        , effortBlock "Ultimate (D12)" char.stats.ultimate 0
+        [ row blockRowStyle
+            [ el blockRowLabelStyle <| text "Int"
+            , el blockRowBlockStyle <| statBlock char.stats.int 0
+            ]
+        , row blockRowStyle
+            [ el blockRowLabelStyle <| text "Wis"
+            , el blockRowBlockStyle <| statBlock char.stats.wis 0
+            ]
+        , row blockRowStyle
+            [ el blockRowLabelStyle <| text "Cha"
+            , el blockRowBlockStyle <| statBlock char.stats.cha 0
+            ]
+        ]
+
+
+effortRow : Character -> Element Msg
+effortRow char =
+    row
+        [ width fill
+        , spacingXY 10 0
+        ]
+        [ row blockRowStyle
+            [ el blockRowLabelStyle <| text "Basic (D4)"
+            , el blockRowBlockStyle <| statBlock char.stats.basic 0
+            ]
+        , row blockRowStyle
+            [ el blockRowLabelStyle <| text "Weapon (D6)"
+            , el blockRowBlockStyle <| statBlock char.stats.weapon 0
+            ]
+        , row blockRowStyle
+            [ el blockRowLabelStyle <| text "Magic (D8)"
+            , el blockRowBlockStyle <| statBlock char.stats.magic 0
+            ]
+        , row blockRowStyle
+            [ el blockRowLabelStyle <| text "Ultimate (D12)"
+            , el blockRowBlockStyle <| statBlock char.stats.ultimate 0
+            ]
         ]
 
 
@@ -779,37 +853,19 @@ blockStyle =
     , Border.color <| Element.rgb255 0 0 0
     , Border.widthEach { bottom = 3, left = 1, right = 1, top = 1 }
     , Border.rounded 5
+    , Background.color <| Element.rgb255 255 255 255
     , Element.paddingXY 10 5
     , Font.center
     , Element.alignRight
-    , Font.size (scaled 1)
     ]
 
 
-statBlock : String -> Int -> Int -> Element Msg
-statBlock label basestat lootstat =
+statBlock : Int -> Int -> Element Msg
+statBlock basestat lootstat =
     Element.row [ Element.spacing 5 ] <|
-        [ el [ Font.size (scaled 1) ] <| text label
-        , el blockStyle <|
+        [ el blockStyle <|
             text (String.fromInt basestat)
-        , Element.column [ Font.size (scaled -3), Element.alignRight ]
-            [ text "Base"
-            , text <| String.fromInt basestat
-            , text "Loot"
-            , text <| String.fromInt lootstat
-            ]
-        ]
-
-
-effortBlock : String -> Int -> Int -> Element Msg
-effortBlock label basestat lootstat =
-    Element.row [ Element.spacing 5, Element.alignRight, Element.height Element.fill ] <|
-        [ Element.column [] <| List.map (\l -> el [ Font.size (scaled 1), Element.alignRight ] <| text l) <| String.split " " label
-        , el
-            blockStyle
-          <|
-            text (String.fromInt basestat)
-        , Element.column [ Font.size (scaled -3), Element.alignRight ]
+        , Element.column [ Font.size (scaled -6), Element.alignRight ]
             [ text "Base"
             , text <| String.fromInt basestat
             , text "Loot"
@@ -826,7 +882,7 @@ armorBlock label basestat lootstat =
                 ++ [ Font.size (scaled 3), Element.paddingXY 15 10, Element.centerX, Border.roundEach { bottomLeft = 25, topLeft = 0, bottomRight = 25, topRight = 0 } ]
             )
           <|
-            text (String.fromInt (10 + basestat))
+            text (String.fromInt (lootstat + basestat))
         , Element.column [] <| List.map (\l -> el [ Font.size (scaled 2), Element.centerX ] <| text l) <| String.split " " label
         , Element.row [ Element.centerX, Font.size (scaled -3), Element.alignRight ]
             [ text "Base "
