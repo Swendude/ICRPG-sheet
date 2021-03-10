@@ -1,7 +1,5 @@
 module Main exposing (..)
 
--- import Html.Events exposing (onClick)
-
 import Browser
 import Element exposing (Attr, Attribute, Element, alignRight, centerX, centerY, clip, column, el, fill, fillPortion, height, maximum, minimum, padding, paddingXY, px, rgb255, row, scrollbarX, scrollbars, spaceEvenly, spacing, spacingXY, text, width)
 import Element.Background as Background
@@ -10,6 +8,7 @@ import Element.Events as Events
 import Element.Font as Font exposing (center)
 import Element.Input as Input
 import Html exposing (Html, label)
+import Html.Attributes exposing (default)
 import Maybe
 import String exposing (fromInt, pad, toInt)
 import Svg
@@ -46,13 +45,13 @@ tabula_rasa =
         , id = Story
         }
     , hitpoints =
-        { value = 30
+        { value = 10
         , id = Hitpoints
         , editvalue = 0
         }
     , equipped = []
     , carried = []
-    , stats = Stats 0 0 0 0 0 0 0 0 0 0 10 1
+    , stats = Stats 10 5 -3 0 5 0 9 0 0 0 10 1
     , coin =
         { value = 0
         , id = Coin
@@ -263,7 +262,18 @@ update msg model =
                         |> asCharIn model
 
                 Hitpoints ->
-                    (model.character.hitpoints.value + model.character.hitpoints.editvalue)
+                    let
+                        result =
+                            model.character.hitpoints.value + model.character.hitpoints.editvalue
+
+                        maxResult =
+                            if result > (model.character.stats.hearts * 10) then
+                                model.character.stats.hearts * 10
+
+                            else
+                                result
+                    in
+                    maxResult
                         |> asNumberValueIn model.character.hitpoints
                         |> asHitpointsIn model.character
                         |> asCharIn model
@@ -471,8 +481,13 @@ view model =
             , storyRow model
             , heartRow model
             , effortRow model.character
-            , row [ width fill ]
-                [ el [ width (fillPortion 1) ] <|
+            , row [ width fill, spacingXY 10 0 ]
+                [ el
+                    [ width (fillPortion 1)
+                    , Background.color <| Element.rgb255 244 244 244
+                    , paddingXY 10 10
+                    ]
+                  <|
                     armorBlock "Armor" model.character.stats.armor 0
                 , column [ width (fillPortion 7), spacingXY 0 10 ]
                     [ statRow1 model.character
@@ -647,6 +662,10 @@ editableNumberField style editable prop =
             readField
 
 
+
+-- ANCHOR Heartrow
+
+
 heartRow : Model -> Element Msg
 heartRow model =
     let
@@ -656,41 +675,56 @@ heartRow model =
 
         remainingHearts : Int
         remainingHearts =
-            if heartCount > 8 then
+            let
+                totalHp =
+                    model.character.stats.hearts
+            in
+            if heartCount >= totalHp then
                 0
 
             else
-                8 - heartCount
+                totalHp - heartCount
+
+        defaultHearts : Int
+        defaultHearts =
+            if heartCount + remainingHearts > 8 then
+                0
+
+            else
+                8 - (heartCount + remainingHearts)
 
         fieldStyle =
             [ spacingXY 10 0
             , height <| px 40
+            , centerX
             ]
     in
     column [ width fill ]
-        [ row []
-            [ row [ width <| px 250 ]
-                [ text <| "Hit Points: "
-                , editableNumberField fieldStyle model.settings.editableNumber model.character.hitpoints
+        [ row [ width fill, spacingXY 10 0 ]
+            [ column [ width <| fill, height <| px 65, centerX, Background.color <| Element.rgb255 244 244 244 ]
+                [ row [ centerX ]
+                    [ text <| "Hit Points: "
+                    , editableNumberField fieldStyle model.settings.editableNumber model.character.hitpoints
+                    ]
+                , row [ centerX, scrollbarX, height <| px 65 ] <|
+                    List.repeat heartCount filledHearts
+                        ++ List.repeat (remainingHearts + defaultHearts) emptyHearts
                 ]
-            , row [ width <| px 250 ]
-                [ text <| "Coin: "
+            , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
+                [ el [ centerX ] <| text <| "Coin: "
                 , editableNumberField fieldStyle model.settings.editableNumber model.character.coin
                 ]
-            , row [ width <| px 250 ]
-                [ text <| "† Dying?: "
+            , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
+                [ el [ centerX ] <| text <| "† Dying?: "
                 , editableNumberField fieldStyle model.settings.editableNumber model.character.deathtimer
                 ]
             ]
-        , row [] <|
-            List.repeat heartCount filledHearts
-                ++ List.repeat remainingHearts emptyHearts
         ]
 
 
 filledHearts : Element Msg
 filledHearts =
-    el [ width fill ]
+    el []
         (Element.html <|
             Svg.svg
                 [ Svg.Attributes.viewBox "0 0 100 100"
@@ -706,7 +740,7 @@ filledHearts =
 
 emptyHearts : Element Msg
 emptyHearts =
-    el [ width fill ]
+    el []
         (Element.html <|
             Svg.svg
                 [ Svg.Attributes.viewBox "0 0 100 100"
@@ -865,11 +899,9 @@ statBlock basestat lootstat =
     Element.row [ Element.spacing 5 ] <|
         [ el blockStyle <|
             text (String.fromInt basestat)
-        , Element.column [ Font.size (scaled -6), Element.alignRight ]
-            [ text "Base"
-            , text <| String.fromInt basestat
-            , text "Loot"
-            , text <| String.fromInt lootstat
+        , Element.column [ Font.size (scaled -3), Element.alignRight ]
+            [ text ("Base\t" ++ String.fromInt basestat)
+            , text ("Loot\t" ++ String.fromInt lootstat)
             ]
         ]
 
@@ -878,13 +910,21 @@ armorBlock : String -> Int -> Int -> Element Msg
 armorBlock label basestat lootstat =
     Element.column [ Element.spacing 5, Element.centerX ] <|
         [ el
-            (blockStyle
-                ++ [ Font.size (scaled 3), Element.paddingXY 15 10, Element.centerX, Border.roundEach { bottomLeft = 25, topLeft = 0, bottomRight = 25, topRight = 0 } ]
-            )
+            [ Element.paddingXY 5 5
+            , Element.centerX
+            , Border.widthEach { bottom = 3, left = 1, right = 1, top = 1 }
+            , Border.roundEach
+                { bottomLeft = 25
+                , topLeft = 3
+                , bottomRight = 25
+                , topRight = 3
+                }
+            , Background.color <| Element.rgb255 255 255 255
+            ]
           <|
             text (String.fromInt (lootstat + basestat))
-        , Element.column [] <| List.map (\l -> el [ Font.size (scaled 2), Element.centerX ] <| text l) <| String.split " " label
-        , Element.row [ Element.centerX, Font.size (scaled -3), Element.alignRight ]
+        , el [ Element.centerX ] <| text label
+        , Element.row [ Element.centerX, Font.size (scaled -3) ]
             [ text "Base "
             , text <| String.fromInt basestat
             , text " "
