@@ -1,14 +1,13 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Attr, Attribute, Element, alignRight, centerX, centerY, clip, column, el, fill, fillPortion, height, maximum, minimum, padding, paddingXY, px, rgb255, row, scrollbarX, scrollbars, spaceEvenly, spacing, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, alignRight, centerX, centerY, clip, column, el, fill, fillPortion, height, inFront, maximum, minimum, padding, paddingXY, px, rgb, rgb255, row, scrollbarX, scrollbars, spaceEvenly, spacing, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border exposing (widthXY)
 import Element.Events as Events
-import Element.Font as Font exposing (center)
-import Element.Input as Input
-import Html exposing (Html, label)
-import Html.Attributes exposing (default)
+import Element.Font as Font exposing (Font, center)
+import Element.Input as Input exposing (Placeholder, placeholder)
+import Html exposing (Html)
 import Maybe
 import String exposing (fromInt, pad, toInt)
 import Svg
@@ -51,7 +50,7 @@ tabula_rasa =
         }
     , equipped = []
     , carried = []
-    , stats = Stats 10 5 -3 0 5 0 9 0 0 0 10 1
+    , stats = Stats 0 0 0 0 0 0 0 0 0 0 0 1
     , coin =
         { value = 0
         , id = Coin
@@ -68,6 +67,7 @@ tabula_rasa =
 type alias AppSettings =
     { editableText : Maybe TextAttribute
     , editableNumber : Maybe NumberAttribute
+    , editingStats : Bool
     }
 
 
@@ -77,6 +77,7 @@ init =
     , settings =
         { editableText = Nothing
         , editableNumber = Nothing
+        , editingStats = False
         }
     }
 
@@ -167,6 +168,8 @@ type Msg
     | IncreaseNumberAttribute NumberAttribute
     | DecreaseNumberAttribute NumberAttribute
     | UpdateEditField NumberAttribute String
+    | EditBaseStats
+    | ChangeStat Stat String
 
 
 
@@ -343,6 +346,71 @@ update msg model =
                         |> asDeathtimerIn model.character
                         |> asCharIn model
 
+        EditBaseStats ->
+            not model.settings.editingStats
+                |> asEditingStatsIn model.settings
+                |> asSettingsIn model
+
+        ChangeStat stat value ->
+            case toInt value of
+                Just intVal ->
+                    updateStat model stat intVal
+
+                Nothing ->
+                    updateStat model stat 0
+
+
+updateStat : Model -> Stat -> Int -> Model
+updateStat model stat value =
+    let
+        stats =
+            model.character.stats
+
+        statsToModel newStat =
+            newStat |> asStatsIn model.character |> asCharIn model
+    in
+    case stat of
+        Str ->
+            { stats | str = value } |> statsToModel
+
+        Dex ->
+            { stats | dex = value } |> statsToModel
+
+        Con ->
+            { stats | con = value } |> statsToModel
+
+        Wis ->
+            { stats | wis = value } |> statsToModel
+
+        Int ->
+            { stats | int = value } |> statsToModel
+
+        Cha ->
+            { stats | cha = value } |> statsToModel
+
+        Armor ->
+            { stats | armor = value } |> statsToModel
+
+        Basic ->
+            { stats | basic = value } |> statsToModel
+
+        Weapon ->
+            { stats | weapon = value } |> statsToModel
+
+        Magic ->
+            { stats | magic = value } |> statsToModel
+
+        Ultimate ->
+            { stats | ultimate = value } |> statsToModel
+
+        Hearts ->
+            { stats | hearts = value } |> statsToModel
+
+
+asEditingStatsIn : AppSettings -> Bool -> AppSettings
+asEditingStatsIn settings newvalue =
+    { settings | editingStats = newvalue }
+
 
 asDeathtimerIn : Character -> CharacterNumberProp -> Character
 asDeathtimerIn char newvalue =
@@ -459,22 +527,70 @@ asSettingsIn model settings =
 
 view : Model -> Html Msg
 view model =
+    let
+        editStatsModalOverlay =
+            inFront <|
+                el
+                    [ paddingXY 70 0
+                    , width fill
+                    , centerY
+                    , height fill
+                    , Background.color (Element.rgba 0 0 0 0.5)
+                    ]
+                <|
+                    column
+                        [ paddingXY 70 30
+                        , width fill
+                        , spacingXY 0 10
+                        , centerY
+                        , Background.color (rgb 0 0 0)
+                        , Font.color (rgb 255 255 255)
+                        ]
+                        [ row [ spacingXY 10 0 ]
+                            [ statEditor Basic model.character.stats.basic "Basic"
+                            , statEditor Weapon model.character.stats.weapon "Weapon"
+                            , statEditor Magic model.character.stats.magic "Magic"
+                            , statEditor Armor model.character.stats.armor "Armor"
+                            ]
+                        , row [ spacingXY 10 0 ]
+                            [ statEditor Str model.character.stats.str "Str"
+                            , statEditor Dex model.character.stats.dex "Dex"
+                            , statEditor Con model.character.stats.con "Con"
+                            , statEditor Int model.character.stats.int "Int"
+                            , statEditor Wis model.character.stats.wis "Wis"
+                            , statEditor Cha model.character.stats.cha "Cha"
+                            ]
+                        , Input.button [ centerX ]
+                            { onPress = Just EditBaseStats
+                            , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Save"
+                            }
+                        ]
+
+        activeOverlay =
+            if model.settings.editingStats then
+                [ editStatsModalOverlay ]
+
+            else
+                []
+    in
     Element.layout
-        [ width fill
-        , height fill
-        , Font.family
+        ([ width fill
+         , height fill
+         , Font.family
             [ Font.typeface "Patrick Hand"
             ]
-        , Font.size (scaled 1)
-        , Background.color <| Element.rgb255 0 0 0
-        ]
+         , Font.size (scaled 1)
+         , Background.color <| Element.rgb255 0 0 0
+         ]
+            ++ activeOverlay
+        )
     <|
         Element.column
             [ width <| px 1200
             , centerX
             , Element.height Element.fill
             , Background.color <| Element.rgb255 255 255 255
-            , paddingXY 50 0
+            , paddingXY 50 23
             , spacingXY 0 23
             ]
             [ infoRow model
@@ -500,6 +616,17 @@ view model =
             --     , unEquippedCol model.character
             --     ]
             ]
+
+
+statEditor : Stat -> Int -> String -> Element Msg
+statEditor stat value label =
+    el [ width fill ] <|
+        Input.text [ Font.color (rgb 0 0 0) ]
+            { onChange = ChangeStat stat
+            , text = fromInt value
+            , placeholder = Just <| placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
+            , label = Input.labelAbove [ centerX ] <| text label
+            }
 
 
 debugbg : Attr decorative msg
@@ -660,10 +787,6 @@ editableNumberField style editable prop =
 
         Nothing ->
             readField
-
-
-
--- ANCHOR Heartrow
 
 
 heartRow : Model -> Element Msg
@@ -833,7 +956,31 @@ effortRow char =
             [ el blockRowLabelStyle <| text "Ultimate (D12)"
             , el blockRowBlockStyle <| statBlock char.stats.ultimate 0
             ]
+        , row [ Background.color <| Element.rgb255 244 244 244, padding 5, width (px 52) ]
+            [ el [ centerX, centerY ] <|
+                Input.button []
+                    { label = gear
+                    , onPress = Just EditBaseStats
+                    }
+            ]
         ]
+
+
+gear : Element Msg
+gear =
+    el []
+        (Element.html <|
+            Svg.svg
+                [ Svg.Attributes.viewBox "0 0 40 40"
+                , Svg.Attributes.width "40px"
+                , Svg.Attributes.height "40px"
+                ]
+                [ Svg.g
+                    [ Svg.Attributes.strokeWidth "1", Svg.Attributes.fill "black", Svg.Attributes.stroke "black" ]
+                    [ Svg.path [ Svg.Attributes.d "m3.83 16.135c-1.26.13-2.23 1.19-2.24 2.46l-.03 2.53c-.02 1.27.92 2.35 2.18 2.51l1.86.24c.31 1.13.75 2.21 1.32 3.23l-1.2 1.48c-.8.99-.74 2.41.15 3.32l1.77 1.81c.89.91 2.31 1.01 3.32.23l1.49-1.15c1.05.62 2.16 1.11 3.32 1.45l.2 1.92c.13 1.26 1.19 2.23 2.46 2.24l2.53.03c1.27.02 2.35-.92 2.51-2.18l.23-1.82c1.26-.31 2.46-.78 3.6-1.4l1.4 1.13c.99.8 2.41.74 3.32-.15l1.81-1.77c.91-.89 1.01-2.31.23-3.32l-1.07-1.39c.66-1.1 1.17-2.27 1.52-3.5l1.66-.17c1.26-.13 2.23-1.19 2.24-2.46l.03-2.53c.02-1.27-.92-2.35-2.18-2.51l-1.62-.21c-.31-1.22-.77-2.4-1.37-3.5l1.01-1.24c.8-.99.74-2.41-.15-3.32l-1.77-1.81c-.89-.91-2.31-1.01-3.32-.23l-1.21.93c-1.14-.69-2.36-1.22-3.64-1.58l-.16-1.57c-.13-1.26-1.19-2.23-2.46-2.24l-2.53-.03c-1.27-.02-2.35.92-2.51 2.18l-.2 1.56c-1.32.34-2.59.86-3.77 1.54l-1.25-1.02c-.99-.8-2.41-.74-3.32.15l-1.82 1.78c-.91.89-1.01 2.31-.23 3.32l1.07 1.38c-.62 1.1-1.11 2.27-1.43 3.5l-1.75.18zm16.33-2.86c3.63.04 6.54 3.03 6.5 6.66-.04 3.63-3.03 6.54-6.66 6.5-3.63-.04-6.54-3.03-6.5-6.66.04-3.63 3.03-6.54 6.66-6.5z" ] []
+                    ]
+                ]
+        )
 
 
 equippedCol : Character -> Element Msg
@@ -922,7 +1069,7 @@ armorBlock label basestat lootstat =
             , Background.color <| Element.rgb255 255 255 255
             ]
           <|
-            text (String.fromInt (lootstat + basestat))
+            text (String.fromInt (lootstat + basestat + 10))
         , el [ Element.centerX ] <| text label
         , Element.row [ Element.centerX, Font.size (scaled -3) ]
             [ text "Base "
