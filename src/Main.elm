@@ -1,15 +1,15 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Attr, Attribute, Element, alignRight, centerX, centerY, clip, column, el, fill, fillPortion, height, inFront, maximum, minimum, padding, paddingXY, px, rgb, rgb255, row, scrollbarX, scrollbars, spaceEvenly, spacing, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, alignRight, centerX, centerY, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingXY, px, rgb, rgb255, row, scrollbarX, spacing, spacingXY, text, width)
 import Element.Background as Background
-import Element.Border as Border exposing (widthXY)
+import Element.Border as Border
 import Element.Events as Events
-import Element.Font as Font exposing (Font, center)
-import Element.Input as Input exposing (Placeholder, placeholder)
+import Element.Font as Font exposing (center)
+import Element.Input as Input exposing (placeholder)
 import Html exposing (Html)
 import Maybe
-import String exposing (fromInt, pad, toInt)
+import String exposing (fromInt, toInt)
 import Svg
 import Svg.Attributes
 
@@ -48,7 +48,7 @@ tabula_rasa =
         , id = Hitpoints
         , editvalue = 0
         }
-    , equipped = []
+    , equipped = [ Item "Heartstone" (Stats 0 0 0 0 0 0 0 0 0 0 0 1), Item "Heartstone" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) ]
     , carried = []
     , stats = Stats 0 0 0 0 0 0 0 0 0 0 0 1
     , coin =
@@ -126,8 +126,10 @@ type alias Stats =
     }
 
 
-type Item
-    = Item String Stats
+type alias Item =
+    { name : String
+    , stats : Stats
+    }
 
 
 type alias CharacterTextProp =
@@ -270,8 +272,8 @@ update msg model =
                             model.character.hitpoints.value + model.character.hitpoints.editvalue
 
                         maxResult =
-                            if result > (model.character.stats.hearts * 10) then
-                                model.character.stats.hearts * 10
+                            if result > (model.character.stats.hearts + .hearts (totalStats model.character.equipped) * 10) then
+                                (model.character.stats.hearts + .hearts (totalStats model.character.equipped)) * 10
 
                             else
                                 result
@@ -604,7 +606,8 @@ view model =
                     , paddingXY 10 10
                     ]
                   <|
-                    armorBlock "Armor" model.character.stats.armor 0
+                    armorBlock "Armor" model.character.stats.armor <|
+                        .armor (totalStats model.character.equipped)
                 , column [ width (fillPortion 7), spacingXY 0 10 ]
                     [ statRow1 model.character
                     , statRow2 model.character
@@ -799,22 +802,14 @@ heartRow model =
         remainingHearts : Int
         remainingHearts =
             let
-                totalHp =
-                    model.character.stats.hearts
+                totalHearts =
+                    model.character.stats.hearts + .hearts (totalStats model.character.equipped)
             in
-            if heartCount >= totalHp then
+            if heartCount >= totalHearts then
                 0
 
             else
-                totalHp - heartCount
-
-        defaultHearts : Int
-        defaultHearts =
-            if heartCount + remainingHearts > 8 then
-                0
-
-            else
-                8 - (heartCount + remainingHearts)
+                totalHearts - heartCount
 
         fieldStyle =
             [ spacingXY 10 0
@@ -831,7 +826,7 @@ heartRow model =
                     ]
                 , row [ centerX, scrollbarX, height <| px 65 ] <|
                     List.repeat heartCount filledHearts
-                        ++ List.repeat (remainingHearts + defaultHearts) emptyHearts
+                        ++ List.repeat remainingHearts emptyHearts
                 ]
             , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ el [ centerX ] <| text <| "Coin: "
@@ -900,15 +895,15 @@ statRow1 char =
         ]
         [ row blockRowStyle
             [ el blockRowLabelStyle <| text "Str"
-            , el blockRowBlockStyle <| statBlock char.stats.str 0
+            , el blockRowBlockStyle <| statBlock char.stats.str <| .str (totalStats char.equipped)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Dex"
-            , el blockRowBlockStyle <| statBlock char.stats.dex 0
+            , el blockRowBlockStyle <| statBlock char.stats.dex <| .dex (totalStats char.equipped)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Con"
-            , el blockRowBlockStyle <| statBlock char.stats.con 0
+            , el blockRowBlockStyle <| statBlock char.stats.con <| .con (totalStats char.equipped)
             ]
         ]
 
@@ -921,15 +916,15 @@ statRow2 char =
         ]
         [ row blockRowStyle
             [ el blockRowLabelStyle <| text "Int"
-            , el blockRowBlockStyle <| statBlock char.stats.int 0
+            , el blockRowBlockStyle <| statBlock char.stats.int <| .int (totalStats char.equipped)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Wis"
-            , el blockRowBlockStyle <| statBlock char.stats.wis 0
+            , el blockRowBlockStyle <| statBlock char.stats.wis <| .wis (totalStats char.equipped)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Cha"
-            , el blockRowBlockStyle <| statBlock char.stats.cha 0
+            , el blockRowBlockStyle <| statBlock char.stats.cha <| .cha (totalStats char.equipped)
             ]
         ]
 
@@ -942,19 +937,19 @@ effortRow char =
         ]
         [ row blockRowStyle
             [ el blockRowLabelStyle <| text "Basic (D4)"
-            , el blockRowBlockStyle <| statBlock char.stats.basic 0
+            , el blockRowBlockStyle <| statBlock char.stats.basic <| .basic (totalStats char.equipped)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Weapon (D6)"
-            , el blockRowBlockStyle <| statBlock char.stats.weapon 0
+            , el blockRowBlockStyle <| statBlock char.stats.weapon <| .weapon (totalStats char.equipped)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Magic (D8)"
-            , el blockRowBlockStyle <| statBlock char.stats.magic 0
+            , el blockRowBlockStyle <| statBlock char.stats.magic <| .magic (totalStats char.equipped)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Ultimate (D12)"
-            , el blockRowBlockStyle <| statBlock char.stats.ultimate 0
+            , el blockRowBlockStyle <| statBlock char.stats.ultimate <| .ultimate (totalStats char.equipped)
             ]
         , row [ Background.color <| Element.rgb255 244 244 244, padding 5, width (px 52) ]
             [ el [ centerX, centerY ] <|
@@ -1079,3 +1074,26 @@ armorBlock label basestat lootstat =
             , text <| String.fromInt lootstat
             ]
         ]
+
+
+totalStats : List Item -> Stats
+totalStats items =
+    List.foldr sumStats (Stats 0 0 0 0 0 0 0 0 0 0 0 0) <|
+        List.map .stats items
+
+
+sumStats : Stats -> Stats -> Stats
+sumStats s1 s2 =
+    { str = s1.str + s2.str
+    , dex = s1.dex + s2.dex
+    , con = s1.con + s2.con
+    , wis = s1.wis + s2.wis
+    , int = s1.int + s2.int
+    , cha = s1.cha + s2.cha
+    , basic = s1.basic + s2.basic
+    , weapon = s1.weapon + s2.weapon
+    , magic = s1.magic + s2.magic
+    , ultimate = s1.ultimate + s2.ultimate
+    , armor = s1.armor + s2.armor
+    , hearts = s1.hearts + s2.hearts
+    }

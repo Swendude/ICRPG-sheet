@@ -4479,6 +4479,10 @@ var $author$project$Main$Class = {$: 'Class'};
 var $author$project$Main$Coin = {$: 'Coin'};
 var $author$project$Main$Deathtimer = {$: 'Deathtimer'};
 var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
+var $author$project$Main$Item = F2(
+	function (name, stats) {
+		return {name: name, stats: stats};
+	});
 var $author$project$Main$Name = {$: 'Name'};
 var $author$project$Main$Stats = function (str) {
 	return function (dex) {
@@ -4512,7 +4516,17 @@ var $author$project$Main$tabula_rasa = {
 	_class: {id: $author$project$Main$Class, value: 'Knight'},
 	coin: {editvalue: 0, id: $author$project$Main$Coin, value: 0},
 	deathtimer: {editvalue: 0, id: $author$project$Main$Deathtimer, value: 0},
-	equipped: _List_Nil,
+	equipped: _List_fromArray(
+		[
+			A2(
+			$author$project$Main$Item,
+			'Heartstone',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1)),
+			A2(
+			$author$project$Main$Item,
+			'Heartstone',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1))
+		]),
 	hitpoints: {editvalue: 0, id: $author$project$Main$Hitpoints, value: 10},
 	name: {id: $author$project$Main$Name, value: 'Thuldir'},
 	stats: $author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
@@ -5353,6 +5367,22 @@ var $author$project$Main$asTextValueIn = F2(
 			{value: newvalue});
 	});
 var $elm$core$Basics$not = _Basics_not;
+var $author$project$Main$sumStats = F2(
+	function (s1, s2) {
+		return {armor: s1.armor + s2.armor, basic: s1.basic + s2.basic, cha: s1.cha + s2.cha, con: s1.con + s2.con, dex: s1.dex + s2.dex, hearts: s1.hearts + s2.hearts, _int: s1._int + s2._int, magic: s1.magic + s2.magic, str: s1.str + s2.str, ultimate: s1.ultimate + s2.ultimate, weapon: s1.weapon + s2.weapon, wis: s1.wis + s2.wis};
+	});
+var $author$project$Main$totalStats = function (items) {
+	return A3(
+		$elm$core$List$foldr,
+		$author$project$Main$sumStats,
+		$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+		A2(
+			$elm$core$List$map,
+			function ($) {
+				return $.stats;
+			},
+			items));
+};
 var $author$project$Main$updateStat = F3(
 	function (model, stat, value) {
 		var statsToModel = function (newStat) {
@@ -5538,7 +5568,15 @@ var $author$project$Main$update = F2(
 								A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value + model.character.coin.editvalue)));
 					case 'Hitpoints':
 						var result = model.character.hitpoints.value + model.character.hitpoints.editvalue;
-						var maxResult = (_Utils_cmp(result, model.character.stats.hearts * 10) > 0) ? (model.character.stats.hearts * 10) : result;
+						var maxResult = (_Utils_cmp(
+							result,
+							model.character.stats.hearts + (function ($) {
+								return $.hearts;
+							}(
+								$author$project$Main$totalStats(model.character.equipped)) * 10)) > 0) ? ((model.character.stats.hearts + function ($) {
+							return $.hearts;
+						}(
+							$author$project$Main$totalStats(model.character.equipped))) * 10) : result;
 						return A2(
 							$author$project$Main$asCharIn,
 							model,
@@ -11933,7 +11971,13 @@ var $author$project$Main$effortRow = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats.basic, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats.basic,
+							function ($) {
+								return $.basic;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -11947,7 +11991,13 @@ var $author$project$Main$effortRow = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats.weapon, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats.weapon,
+							function ($) {
+								return $.weapon;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -11961,7 +12011,13 @@ var $author$project$Main$effortRow = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats.magic, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats.magic,
+							function ($) {
+								return $.magic;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -11975,7 +12031,13 @@ var $author$project$Main$effortRow = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats.ultimate, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats.ultimate,
+							function ($) {
+								return $.ultimate;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -13142,8 +13204,11 @@ var $mdgriffith$elm_ui$Element$scrollbarX = A2($mdgriffith$elm_ui$Internal$Model
 var $author$project$Main$heartRow = function (model) {
 	var heartCount = (model.character.hitpoints.value / 10) | 0;
 	var remainingHearts = function () {
-		var totalHp = model.character.stats.hearts;
-		return (_Utils_cmp(heartCount, totalHp) > -1) ? 0 : (totalHp - heartCount);
+		var totalHearts = model.character.stats.hearts + function ($) {
+			return $.hearts;
+		}(
+			$author$project$Main$totalStats(model.character.equipped));
+		return (_Utils_cmp(heartCount, totalHearts) > -1) ? 0 : (totalHearts - heartCount);
 	}();
 	var fieldStyle = _List_fromArray(
 		[
@@ -13152,7 +13217,6 @@ var $author$project$Main$heartRow = function (model) {
 			$mdgriffith$elm_ui$Element$px(40)),
 			$mdgriffith$elm_ui$Element$centerX
 		]);
-	var defaultHearts = ((heartCount + remainingHearts) > 8) ? 0 : (8 - (heartCount + remainingHearts));
 	return A2(
 		$mdgriffith$elm_ui$Element$column,
 		_List_fromArray(
@@ -13203,7 +13267,7 @@ var $author$project$Main$heartRow = function (model) {
 									]),
 								_Utils_ap(
 									A2($elm$core$List$repeat, heartCount, $author$project$Main$filledHearts),
-									A2($elm$core$List$repeat, remainingHearts + defaultHearts, $author$project$Main$emptyHearts)))
+									A2($elm$core$List$repeat, remainingHearts, $author$project$Main$emptyHearts)))
 							])),
 						A2(
 						$mdgriffith$elm_ui$Element$row,
@@ -13685,7 +13749,13 @@ var $author$project$Main$statRow1 = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats.str, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats.str,
+							function ($) {
+								return $.str;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -13699,7 +13769,13 @@ var $author$project$Main$statRow1 = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats.dex, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats.dex,
+							function ($) {
+								return $.dex;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -13713,7 +13789,13 @@ var $author$project$Main$statRow1 = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats.con, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats.con,
+							function ($) {
+								return $.con;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					]))
 			]));
 };
@@ -13739,7 +13821,13 @@ var $author$project$Main$statRow2 = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats._int, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats._int,
+							function ($) {
+								return $._int;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -13753,7 +13841,13 @@ var $author$project$Main$statRow2 = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats.wis, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats.wis,
+							function ($) {
+								return $.wis;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -13767,7 +13861,13 @@ var $author$project$Main$statRow2 = function (_char) {
 						A2(
 						$mdgriffith$elm_ui$Element$el,
 						$author$project$Main$blockRowBlockStyle,
-						A2($author$project$Main$statBlock, _char.stats.cha, 0))
+						A2(
+							$author$project$Main$statBlock,
+							_char.stats.cha,
+							function ($) {
+								return $.cha;
+							}(
+								$author$project$Main$totalStats(_char.equipped))))
 					]))
 			]));
 };
@@ -13943,7 +14043,14 @@ var $author$project$Main$view = function (model) {
 									A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244)),
 									A2($mdgriffith$elm_ui$Element$paddingXY, 10, 10)
 								]),
-							A3($author$project$Main$armorBlock, 'Armor', model.character.stats.armor, 0)),
+							A3(
+								$author$project$Main$armorBlock,
+								'Armor',
+								model.character.stats.armor,
+								function ($) {
+									return $.armor;
+								}(
+									$author$project$Main$totalStats(model.character.equipped)))),
 							A2(
 							$mdgriffith$elm_ui$Element$column,
 							_List_fromArray(
