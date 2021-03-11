@@ -13,6 +13,7 @@ import Maybe
 import String exposing (fromInt, toInt)
 import Svg
 import Svg.Attributes
+import Element exposing (paddingEach)
 
 
 main : Program () Model Msg
@@ -154,7 +155,7 @@ tabula_rasa =
         , editvalue = 0
         }
     , equipped = [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 1), Item "Sword" "Makes you strong!" (Stats 1 0 0 0 0 0 0 0 0 0 0 0) ]
-    , carried = []
+    , carried = [ Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1)]
     , stats = Stats 0 0 0 0 0 0 0 0 0 0 0 1
     , coin =
         { value = 0
@@ -493,7 +494,61 @@ printTextAttribute attr =
 view : Model -> Html Msg
 view model =
     let
-        editStatsModalOverlay =
+        
+
+        activeOverlay =
+            if model.settings.editingStats then
+                [ editStatsModalOverlay model ]
+
+            else
+                []
+    in
+    Element.layout
+        ([ width fill
+        --  , height <| (px 2000)
+         , Font.family
+            [ Font.typeface "Patrick Hand"
+            ]
+         , Font.size (scaled 1)
+         , Background.color <| Element.rgb255 0 0 0
+         ]
+            ++ activeOverlay
+        )
+    <|
+        Element.column
+            [ width <| px 1000
+            , centerX
+            , Element.height Element.fill
+            , Background.color <| Element.rgb255 255 255 255
+            , paddingXY 50 23
+            , spacingXY 0 23
+            ]
+            [ infoRow model
+            , storyRow model
+            , heartRow model
+            , effortRow model.character
+            , row [ width fill, spacingXY 10 0 ]
+                [ el
+                    [ width (fillPortion 1)
+                    , Background.color <| Element.rgb255 244 244 244
+                    , paddingXY 10 10
+                    ]
+                  <|
+                    armorBlock "Armor" model.character.stats.armor <|
+                        .armor (totalStats model.character.equipped)
+                , column [ width (fillPortion 7), spacingXY 0 10 ]
+                    [ statRow1 model.character
+                    , statRow2 model.character
+                    ]
+                ]
+            , row [ width fill, spacingXY 10 0 ]
+                [ equippedCol model.character
+                , unequippedCol model.character
+                ]
+            ]
+
+editStatsModalOverlay : Model -> Attribute Msg
+editStatsModalOverlay model =
             inFront <|
                 el
                     [ paddingXY 70 0
@@ -530,58 +585,6 @@ view model =
                             , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Save"
                             }
                         ]
-
-        activeOverlay =
-            if model.settings.editingStats then
-                [ editStatsModalOverlay ]
-
-            else
-                []
-    in
-    Element.layout
-        ([ width fill
-         , height fill
-         , Font.family
-            [ Font.typeface "Patrick Hand"
-            ]
-         , Font.size (scaled 1)
-         , Background.color <| Element.rgb255 0 0 0
-         ]
-            ++ activeOverlay
-        )
-    <|
-        Element.column
-            [ width <| px 1200
-            , centerX
-            , Element.height Element.fill
-            , Background.color <| Element.rgb255 255 255 255
-            , paddingXY 50 23
-            , spacingXY 0 23
-            ]
-            [ infoRow model
-            , storyRow model
-            , heartRow model
-            , effortRow model.character
-            , row [ width fill, spacingXY 10 0 ]
-                [ el
-                    [ width (fillPortion 1)
-                    , Background.color <| Element.rgb255 244 244 244
-                    , paddingXY 10 10
-                    ]
-                  <|
-                    armorBlock "Armor" model.character.stats.armor <|
-                        .armor (totalStats model.character.equipped)
-                , column [ width (fillPortion 7), spacingXY 0 10 ]
-                    [ statRow1 model.character
-                    , statRow2 model.character
-                    ]
-                ]
-            , row [ width fill, spacingXY 10 0 ]
-                [ equippedCol model.character
-                , unequippedCol model.character
-                ]
-            ]
-
 
 statEditor : Stat -> Int -> String -> Element Msg
 statEditor stat value label =
@@ -893,24 +896,27 @@ statRow2 char =
 
 effortRow : Character -> Element Msg
 effortRow char =
+    let
+        labelStyle = [ centerX, Font.size (scaled -1) ]
+    in
     row
         [ width fill
         , spacingXY 10 0
         ]
         [ row blockRowStyle
-            [ el blockRowLabelStyle <| text "Basic (D4)"
+            [ el labelStyle <| text "Basic (D4)"
             , el blockRowBlockStyle <| statBlock char.stats.basic <| .basic (totalStats char.equipped)
             ]
         , row blockRowStyle
-            [ el blockRowLabelStyle <| text "Weapon (D6)"
+            [ el labelStyle <| text "Weapon (D6)"
             , el blockRowBlockStyle <| statBlock char.stats.weapon <| .weapon (totalStats char.equipped)
             ]
         , row blockRowStyle
-            [ el blockRowLabelStyle <| text "Magic (D8)"
+            [ el labelStyle <| text "Magic (D8)"
             , el blockRowBlockStyle <| statBlock char.stats.magic <| .magic (totalStats char.equipped)
             ]
         , row blockRowStyle
-            [ el blockRowLabelStyle <| text "Ultimate (D12)"
+            [ el labelStyle <| text "Ultimate (D12)"
             , el blockRowBlockStyle <| statBlock char.stats.ultimate <| .ultimate (totalStats char.equipped)
             ]
         , row [ Background.color <| Element.rgb255 244 244 244, padding 5, width (px 52) ]
@@ -955,7 +961,7 @@ equippedCol char =
         (el [ alignLeft, alignTop, Font.size (scaled -1), paddingXY 0 10 ] <|
             text "Equipped Gear"
         )
-            :: List.indexedMap (itemRow equippedModifier) char.equipped
+            :: List.indexedMap (itemRow equippedModifier) char.equipped ++ [newItemRow]
 
 
 unequippedCol : Character -> Element Msg
@@ -987,7 +993,26 @@ unequippedModifier ix =
         , label = el [ Font.size (scaled -1) ] <| text "Equip"
         }
 
-
+newItemRow : Element Msg
+newItemRow = row
+        [ spacingXY 10 0
+        , Background.color (rgb255 244 244 244)
+        , width fill
+        , padding 10
+        , Border.widthEach
+            { bottom = 0
+            , left = 2
+            , right = 0
+            , top = 0
+            }
+        ]
+        [ 
+        el [ alignRight, centerX ] <|
+            Input.button []
+                { onPress = Nothing
+                , label = el [ Font.italic ] <| text "+ Add Item"
+                }
+        ]
 itemRow : (Int -> Element Msg) -> Int -> Item -> Element Msg
 itemRow modifierButton ix item =
     row
@@ -1003,6 +1028,7 @@ itemRow modifierButton ix item =
             }
         ]
         [ el [ Font.bold, Font.italic ] <| text item.name
+        ,  el [ Font.size (scaled -4) ] <| text <| printStats item.stats
         , el [ Font.size (scaled -2) ] <| text item.description
         , el [ alignRight ] <|
             Input.button []
@@ -1011,6 +1037,47 @@ itemRow modifierButton ix item =
                 }
         , el [ alignRight ] <| modifierButton ix
         ]
+
+
+printStats : Stats -> String
+printStats stats =
+    List.foldl joinStrings "" <| List.map printStat <| [("str", stats.str)
+    ,("Dex", stats.dex)
+    ,("Con", stats.con)
+    ,("Wis", stats.wis)
+    ,("Int", stats.int)
+    ,("Cha", stats.cha)
+    ,("Basic", stats.basic)
+    ,("Weapon", stats.weapon)
+    ,("Magic", stats.magic)
+    ,("Ultimate", stats.ultimate)
+    ,("Armor", stats.armor)
+    ,("Heart", stats.hearts)]
+    
+joinStrings : Maybe String -> String -> String
+joinStrings mstr res=
+    case mstr of
+       Just str -> 
+        case res of 
+            "" -> str
+            _ -> res ++ ", " ++ str
+         
+       Nothing -> res
+
+printStat :  (String, Int) -> Maybe String
+printStat val_stat = 
+    let
+        val = Tuple.first val_stat
+        stat = Tuple.second val_stat
+    in
+    if stat > 0 then
+        Just <| val ++ " +" ++ String.fromInt stat
+    else
+        if stat < 0 then
+            Just <| val ++ " -" ++ String.fromInt stat
+        else
+            Nothing
+
 
 
 unEquippedCol : Character -> Element Msg
