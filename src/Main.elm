@@ -1,12 +1,12 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Attr, Attribute, Element, alignRight, centerX, centerY, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingXY, px, rgb, rgb255, row, scrollbarX, spacing, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, centerX, centerY, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingXY, px, rgb, row, scrollbarX, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
-import Element.Font as Font exposing (center)
-import Element.Input as Input exposing (placeholder)
+import Element.Font as Font
+import Element.Input as Input
 import Html exposing (Html)
 import Maybe
 import String exposing (fromInt, toInt)
@@ -19,48 +19,27 @@ main =
     Browser.sandbox { init = init, update = update, view = view }
 
 
+
+-- ANCHOR Model
+
+
 type alias Model =
     { character : Character
     , settings : AppSettings
     }
 
 
-tabula_rasa : Character
-tabula_rasa =
-    { name =
-        { value = "Thuldir"
-        , id = Name
-        }
-    , bioform =
-        { value = "Dwarf"
-        , id = Bioform
-        }
-    , class =
-        { value = "Knight"
-        , id = Class
-        }
-    , story =
-        { value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-        , id = Story
-        }
-    , hitpoints =
-        { value = 10
-        , id = Hitpoints
-        , editvalue = 0
-        }
-    , equipped = [ Item "Heartstone" (Stats 0 0 0 0 0 0 0 0 0 0 0 1), Item "Heartstone" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) ]
-    , carried = []
-    , stats = Stats 0 0 0 0 0 0 0 0 0 0 0 1
-    , coin =
-        { value = 0
-        , id = Coin
-        , editvalue = 0
-        }
-    , deathtimer =
-        { value = 0
-        , id = Deathtimer
-        , editvalue = 0
-        }
+type alias Character =
+    { name : CharacterTextProp
+    , bioform : CharacterTextProp
+    , class : CharacterTextProp
+    , story : CharacterTextProp
+    , hitpoints : CharacterNumberProp
+    , equipped : List Item
+    , carried : List Item
+    , stats : Stats
+    , coin : CharacterNumberProp
+    , deathtimer : CharacterNumberProp
     }
 
 
@@ -71,14 +50,16 @@ type alias AppSettings =
     }
 
 
-init : Model
-init =
-    { character = tabula_rasa
-    , settings =
-        { editableText = Nothing
-        , editableNumber = Nothing
-        , editingStats = False
-        }
+type alias CharacterTextProp =
+    { value : String
+    , id : TextAttribute
+    }
+
+
+type alias CharacterNumberProp =
+    { value : Int
+    , id : NumberAttribute
+    , editvalue : Int
     }
 
 
@@ -128,34 +109,62 @@ type alias Stats =
 
 type alias Item =
     { name : String
+    , description : String
     , stats : Stats
     }
 
 
-type alias CharacterTextProp =
-    { value : String
-    , id : TextAttribute
+
+-- ANCHOR init
+
+
+init : Model
+init =
+    { character = tabula_rasa
+    , settings =
+        { editableText = Nothing
+        , editableNumber = Nothing
+        , editingStats = False
+        }
     }
 
 
-type alias CharacterNumberProp =
-    { value : Int
-    , id : NumberAttribute
-    , editvalue : Int
-    }
-
-
-type alias Character =
-    { name : CharacterTextProp
-    , bioform : CharacterTextProp
-    , class : CharacterTextProp
-    , story : CharacterTextProp
-    , hitpoints : CharacterNumberProp
-    , equipped : List Item
-    , carried : List Item
-    , stats : Stats
-    , coin : CharacterNumberProp
-    , deathtimer : CharacterNumberProp
+tabula_rasa : Character
+tabula_rasa =
+    { name =
+        { value = "Thuldir"
+        , id = Name
+        }
+    , bioform =
+        { value = "Dwarf"
+        , id = Bioform
+        }
+    , class =
+        { value = "Knight"
+        , id = Class
+        }
+    , story =
+        { value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+        , id = Story
+        }
+    , hitpoints =
+        { value = 10
+        , id = Hitpoints
+        , editvalue = 0
+        }
+    , equipped = [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 1), Item "Sword" "Makes you strong!" (Stats 1 0 0 0 0 0 0 0 0 0 0 1) ]
+    , carried = []
+    , stats = Stats 0 0 0 0 0 0 0 0 0 0 0 1
+    , coin =
+        { value = 0
+        , id = Coin
+        , editvalue = 0
+        }
+    , deathtimer =
+        { value = 0
+        , id = Deathtimer
+        , editvalue = 0
+        }
     }
 
 
@@ -205,7 +214,7 @@ update msg model =
                         |> asEditableTextIn model.settings
                         |> asSettingsIn model
 
-                checkEmpty value =
+                checkEmpty _ =
                     if model.character.name.value == "" then
                         model
 
@@ -409,21 +418,6 @@ updateStat model stat value =
             { stats | hearts = value } |> statsToModel
 
 
-asEditingStatsIn : AppSettings -> Bool -> AppSettings
-asEditingStatsIn settings newvalue =
-    { settings | editingStats = newvalue }
-
-
-asDeathtimerIn : Character -> CharacterNumberProp -> Character
-asDeathtimerIn char newvalue =
-    { char | deathtimer = newvalue }
-
-
-asEditValueIn : CharacterNumberProp -> Int -> CharacterNumberProp
-asEditValueIn charp newvalue =
-    { charp | editvalue = newvalue }
-
-
 printNumberAttribute : NumberAttribute -> String
 printNumberAttribute attr =
     case attr of
@@ -451,76 +445,6 @@ printTextAttribute attr =
 
         Bioform ->
             "Bioform"
-
-
-asStrIn : Stats -> Int -> Stats
-asStrIn stats change =
-    { stats | str = change }
-
-
-asStatsIn : Character -> Stats -> Character
-asStatsIn char stats =
-    { char | stats = stats }
-
-
-asCharIn : Model -> Character -> Model
-asCharIn model char =
-    { model | character = char }
-
-
-asHitpointsIn : Character -> CharacterNumberProp -> Character
-asHitpointsIn char newhitpoints =
-    { char | hitpoints = newhitpoints }
-
-
-asCoinIn : Character -> CharacterNumberProp -> Character
-asCoinIn char newcoin =
-    { char | coin = newcoin }
-
-
-asNameIn : Character -> CharacterTextProp -> Character
-asNameIn char newname =
-    { char | name = newname }
-
-
-asBioformIn : Character -> CharacterTextProp -> Character
-asBioformIn char newbioform =
-    { char | bioform = newbioform }
-
-
-asStoryIn : Character -> CharacterTextProp -> Character
-asStoryIn char newstory =
-    { char | story = newstory }
-
-
-asClassIn : Character -> CharacterTextProp -> Character
-asClassIn char newclass =
-    { char | class = newclass }
-
-
-asTextValueIn : CharacterTextProp -> String -> CharacterTextProp
-asTextValueIn charp newvalue =
-    { charp | value = newvalue }
-
-
-asNumberValueIn : CharacterNumberProp -> Int -> CharacterNumberProp
-asNumberValueIn charp newvalue =
-    { charp | value = newvalue }
-
-
-asEditableTextIn : AppSettings -> Maybe TextAttribute -> AppSettings
-asEditableTextIn setting editable =
-    { setting | editableText = editable }
-
-
-asEditableNumberIn : AppSettings -> Maybe NumberAttribute -> AppSettings
-asEditableNumberIn setting editable =
-    { setting | editableNumber = editable }
-
-
-asSettingsIn : Model -> AppSettings -> Model
-asSettingsIn model settings =
-    { model | settings = settings }
 
 
 
@@ -627,7 +551,7 @@ statEditor stat value label =
         Input.text [ Font.color (rgb 0 0 0) ]
             { onChange = ChangeStat stat
             , text = fromInt value
-            , placeholder = Just <| placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
+            , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
             , label = Input.labelAbove [ centerX ] <| text label
             }
 
@@ -979,15 +903,16 @@ gear =
 
 
 equippedCol : Character -> Element Msg
-equippedCol char =
+equippedCol _ =
     Element.column
         [ width fill
         , Element.alignTop
         ]
     <|
-        [ el [ Font.size (scaled 2), Element.alignTop ] <| text "Equipped Gear :"
-        ]
-            ++ List.repeat 1
+        (el [ Font.size (scaled 2), Element.alignTop ] <|
+            text "Equipped Gear :"
+        )
+            :: List.repeat 1
                 (el
                     [ Element.paddingEach { bottom = 8, left = scaled 1, right = 0, top = 8 }
                     , Font.size (scaled 1)
@@ -1005,16 +930,18 @@ unEquippedCol char =
         , Element.alignTop
         ]
     <|
-        [ el [ Font.size (scaled 2), Element.alignTop ] <| text "Carried Gear :"
-        ]
-            ++ List.repeat 1
+        (el [ Font.size (scaled 2), Element.alignTop ] <|
+            text "Carried Gear :"
+        )
+            :: List.repeat
+                1
                 (el
                     [ Element.paddingEach { bottom = 8, left = scaled 1, right = 0, top = 8 }
                     , Font.size (scaled 1)
                     , Element.alignTop
                     ]
                  <|
-                    text "None yet!"
+                    text char.name.value
                 )
 
 
@@ -1097,3 +1024,92 @@ sumStats s1 s2 =
     , armor = s1.armor + s2.armor
     , hearts = s1.hearts + s2.hearts
     }
+
+
+
+-- ANCHOR: Modifiers
+
+
+asEditingStatsIn : AppSettings -> Bool -> AppSettings
+asEditingStatsIn settings newvalue =
+    { settings | editingStats = newvalue }
+
+
+asDeathtimerIn : Character -> CharacterNumberProp -> Character
+asDeathtimerIn char newvalue =
+    { char | deathtimer = newvalue }
+
+
+asEditValueIn : CharacterNumberProp -> Int -> CharacterNumberProp
+asEditValueIn charp newvalue =
+    { charp | editvalue = newvalue }
+
+
+asStrIn : Stats -> Int -> Stats
+asStrIn stats change =
+    { stats | str = change }
+
+
+asStatsIn : Character -> Stats -> Character
+asStatsIn char stats =
+    { char | stats = stats }
+
+
+asCharIn : Model -> Character -> Model
+asCharIn model char =
+    { model | character = char }
+
+
+asHitpointsIn : Character -> CharacterNumberProp -> Character
+asHitpointsIn char newhitpoints =
+    { char | hitpoints = newhitpoints }
+
+
+asCoinIn : Character -> CharacterNumberProp -> Character
+asCoinIn char newcoin =
+    { char | coin = newcoin }
+
+
+asNameIn : Character -> CharacterTextProp -> Character
+asNameIn char newname =
+    { char | name = newname }
+
+
+asBioformIn : Character -> CharacterTextProp -> Character
+asBioformIn char newbioform =
+    { char | bioform = newbioform }
+
+
+asStoryIn : Character -> CharacterTextProp -> Character
+asStoryIn char newstory =
+    { char | story = newstory }
+
+
+asClassIn : Character -> CharacterTextProp -> Character
+asClassIn char newclass =
+    { char | class = newclass }
+
+
+asTextValueIn : CharacterTextProp -> String -> CharacterTextProp
+asTextValueIn charp newvalue =
+    { charp | value = newvalue }
+
+
+asNumberValueIn : CharacterNumberProp -> Int -> CharacterNumberProp
+asNumberValueIn charp newvalue =
+    { charp | value = newvalue }
+
+
+asEditableTextIn : AppSettings -> Maybe TextAttribute -> AppSettings
+asEditableTextIn setting editable =
+    { setting | editableText = editable }
+
+
+asEditableNumberIn : AppSettings -> Maybe NumberAttribute -> AppSettings
+asEditableNumberIn setting editable =
+    { setting | editableNumber = editable }
+
+
+asSettingsIn : Model -> AppSettings -> Model
+asSettingsIn model settings =
+    { model | settings = settings }

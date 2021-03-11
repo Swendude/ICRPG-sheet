@@ -4479,9 +4479,9 @@ var $author$project$Main$Class = {$: 'Class'};
 var $author$project$Main$Coin = {$: 'Coin'};
 var $author$project$Main$Deathtimer = {$: 'Deathtimer'};
 var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
-var $author$project$Main$Item = F2(
-	function (name, stats) {
-		return {name: name, stats: stats};
+var $author$project$Main$Item = F3(
+	function (name, description, stats) {
+		return {description: description, name: name, stats: stats};
 	});
 var $author$project$Main$Name = {$: 'Name'};
 var $author$project$Main$Stats = function (str) {
@@ -4518,14 +4518,16 @@ var $author$project$Main$tabula_rasa = {
 	deathtimer: {editvalue: 0, id: $author$project$Main$Deathtimer, value: 0},
 	equipped: _List_fromArray(
 		[
-			A2(
+			A3(
 			$author$project$Main$Item,
 			'Heartstone',
+			'Adds 1 heart',
 			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1)),
-			A2(
+			A3(
 			$author$project$Main$Item,
-			'Heartstone',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1))
+			'Sword',
+			'Makes you strong!',
+			$author$project$Main$Stats(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1))
 		]),
 	hitpoints: {editvalue: 0, id: $author$project$Main$Hitpoints, value: 10},
 	name: {id: $author$project$Main$Name, value: 'Thuldir'},
@@ -5498,7 +5500,7 @@ var $author$project$Main$update = F2(
 					$author$project$Main$asSettingsIn,
 					model,
 					A2($author$project$Main$asEditableTextIn, model.settings, $elm$core$Maybe$Nothing));
-				var checkEmpty = function (value) {
+				var checkEmpty = function (_v2) {
 					return (model.character.name.value === '') ? model : allowEmpty;
 				};
 				switch (id.$) {
@@ -5678,9 +5680,9 @@ var $author$project$Main$update = F2(
 			default:
 				var stat = msg.a;
 				var value = msg.b;
-				var _v6 = $elm$core$String$toInt(value);
-				if (_v6.$ === 'Just') {
-					var intVal = _v6.a;
+				var _v7 = $elm$core$String$toInt(value);
+				if (_v7.$ === 'Just') {
+					var intVal = _v7.a;
 					return A3($author$project$Main$updateStat, model, stat, intVal);
 				} else {
 					return A3($author$project$Main$updateStat, model, stat, 0);
