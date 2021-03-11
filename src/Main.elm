@@ -1,13 +1,14 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Attr, Attribute, Element, centerX, centerY, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingXY, px, rgb, row, scrollbarX, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, alignLeft, alignRight, alignTop, centerX, centerY, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
+import List.Extra
 import Maybe
 import String exposing (fromInt, toInt)
 import Svg
@@ -152,7 +153,7 @@ tabula_rasa =
         , id = Hitpoints
         , editvalue = 0
         }
-    , equipped = [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 1), Item "Sword" "Makes you strong!" (Stats 1 0 0 0 0 0 0 0 0 0 0 1) ]
+    , equipped = [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 1), Item "Sword" "Makes you strong!" (Stats 1 0 0 0 0 0 0 0 0 0 0 0) ]
     , carried = []
     , stats = Stats 0 0 0 0 0 0 0 0 0 0 0 1
     , coin =
@@ -181,6 +182,8 @@ type Msg
     | UpdateEditField NumberAttribute String
     | EditBaseStats
     | ChangeStat Stat String
+    | Carry Int
+    | Equip Int
 
 
 
@@ -370,6 +373,42 @@ update msg model =
                 Nothing ->
                     updateStat model stat 0
 
+        Carry ix ->
+            case List.Extra.getAt ix model.character.equipped of
+                Just item ->
+                    let
+                        newEquipped =
+                            List.Extra.removeAt ix model.character.equipped
+
+                        newCarried =
+                            item :: model.character.carried
+                    in
+                    newCarried
+                        |> asCarriedIn
+                            (newEquipped |> asEquippedIn model.character)
+                        |> asCharIn model
+
+                Nothing ->
+                    model
+
+        Equip ix ->
+            case List.Extra.getAt ix model.character.carried of
+                Just item ->
+                    let
+                        newCarried =
+                            List.Extra.removeAt ix model.character.carried
+
+                        newEquipped =
+                            item :: model.character.equipped
+                    in
+                    newCarried
+                        |> asCarriedIn
+                            (newEquipped |> asEquippedIn model.character)
+                        |> asCharIn model
+
+                Nothing ->
+                    model
+
 
 updateStat : Model -> Stat -> Int -> Model
 updateStat model stat value =
@@ -537,11 +576,10 @@ view model =
                     , statRow2 model.character
                     ]
                 ]
-
-            -- , Element.row [ Element.spacingXY (scaled 1) 0, width fill, Element.height Element.fill ]
-            --     [ equippedCol model.character
-            --     , unEquippedCol model.character
-            --     ]
+            , row [ width fill, spacingXY 10 0 ]
+                [ equippedCol model.character
+                , unequippedCol model.character
+                ]
             ]
 
 
@@ -819,7 +857,7 @@ statRow1 char =
         ]
         [ row blockRowStyle
             [ el blockRowLabelStyle <| text "Str"
-            , el blockRowBlockStyle <| statBlock char.stats.str <| .str (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.str <| Debug.log "lootStr" (.str (totalStats char.equipped))
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Dex"
@@ -902,25 +940,77 @@ gear =
         )
 
 
+
+-- ANCHOR equipped
+
+
 equippedCol : Character -> Element Msg
-equippedCol _ =
-    Element.column
+equippedCol char =
+    column
         [ width fill
         , Element.alignTop
+        , spacingXY 0 10
         ]
     <|
-        (el [ Font.size (scaled 2), Element.alignTop ] <|
-            text "Equipped Gear :"
+        (el [ alignLeft, alignTop, Font.size (scaled -1), paddingXY 0 10 ] <|
+            text "Equipped Gear"
         )
-            :: List.repeat 1
-                (el
-                    [ Element.paddingEach { bottom = 8, left = scaled 1, right = 0, top = 8 }
-                    , Font.size (scaled 1)
-                    , Element.alignTop
-                    ]
-                 <|
-                    text "None yet!"
-                )
+            :: List.indexedMap (itemRow equippedModifier) char.equipped
+
+
+unequippedCol : Character -> Element Msg
+unequippedCol char =
+    column
+        [ width fill
+        , Element.alignTop
+        , spacingXY 0 10
+        ]
+    <|
+        (el [ alignTop, alignRight, Font.size (scaled -1), paddingXY 0 10 ] <|
+            text "Carried Gear"
+        )
+            :: List.indexedMap (itemRow unequippedModifier) char.carried
+
+
+equippedModifier : Int -> Element Msg
+equippedModifier ix =
+    Input.button []
+        { onPress = Just <| Carry ix
+        , label = el [ Font.size (scaled -1) ] <| text "Carry"
+        }
+
+
+unequippedModifier : Int -> Element Msg
+unequippedModifier ix =
+    Input.button []
+        { onPress = Just <| Equip ix
+        , label = el [ Font.size (scaled -1) ] <| text "Equip"
+        }
+
+
+itemRow : (Int -> Element Msg) -> Int -> Item -> Element Msg
+itemRow modifierButton ix item =
+    row
+        [ spacingXY 10 0
+        , Background.color (rgb255 244 244 244)
+        , width fill
+        , padding 10
+        , Border.widthEach
+            { bottom = 0
+            , left = 2
+            , right = 0
+            , top = 0
+            }
+        ]
+        [ el [ Font.bold, Font.italic ] <| text item.name
+        , el [ Font.size (scaled -2) ] <| text item.description
+        , el [ alignRight ] <|
+            Input.button []
+                { onPress = Nothing
+                , label = el [ Font.size (scaled -1) ] <| text "Edit"
+                }
+        , el [ alignRight ] <| modifierButton ix
+        ]
 
 
 unEquippedCol : Character -> Element Msg
@@ -967,7 +1057,7 @@ statBlock : Int -> Int -> Element Msg
 statBlock basestat lootstat =
     Element.row [ Element.spacing 5 ] <|
         [ el blockStyle <|
-            text (String.fromInt basestat)
+            text (String.fromInt <| basestat + lootstat)
         , Element.column [ Font.size (scaled -3), Element.alignRight ]
             [ text ("Base\t" ++ String.fromInt basestat)
             , text ("Loot\t" ++ String.fromInt lootstat)
@@ -1113,3 +1203,13 @@ asEditableNumberIn setting editable =
 asSettingsIn : Model -> AppSettings -> Model
 asSettingsIn model settings =
     { model | settings = settings }
+
+
+asEquippedIn : Character -> List Item -> Character
+asEquippedIn char items =
+    { char | equipped = items }
+
+
+asCarriedIn : Character -> List Item -> Character
+asCarriedIn char items =
+    { char | carried = items }

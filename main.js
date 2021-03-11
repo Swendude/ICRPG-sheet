@@ -4527,7 +4527,7 @@ var $author$project$Main$tabula_rasa = {
 			$author$project$Main$Item,
 			'Sword',
 			'Makes you strong!',
-			$author$project$Main$Stats(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1))
+			$author$project$Main$Stats(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0))
 		]),
 	hitpoints: {editvalue: 0, id: $author$project$Main$Hitpoints, value: 10},
 	name: {id: $author$project$Main$Name, value: 'Thuldir'},
@@ -5272,6 +5272,12 @@ var $author$project$Main$asBioformIn = F2(
 			_char,
 			{bioform: newbioform});
 	});
+var $author$project$Main$asCarriedIn = F2(
+	function (_char, items) {
+		return _Utils_update(
+			_char,
+			{carried: items});
+	});
 var $author$project$Main$asCharIn = F2(
 	function (model, _char) {
 		return _Utils_update(
@@ -5319,6 +5325,12 @@ var $author$project$Main$asEditingStatsIn = F2(
 		return _Utils_update(
 			settings,
 			{editingStats: newvalue});
+	});
+var $author$project$Main$asEquippedIn = F2(
+	function (_char, items) {
+		return _Utils_update(
+			_char,
+			{equipped: items});
 	});
 var $author$project$Main$asHitpointsIn = F2(
 	function (_char, newhitpoints) {
@@ -5368,7 +5380,184 @@ var $author$project$Main$asTextValueIn = F2(
 			charp,
 			{value: newvalue});
 	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm_community$list_extra$List$Extra$getAt = F2(
+	function (idx, xs) {
+		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
+			A2($elm$core$List$drop, idx, xs));
+	});
 var $elm$core$Basics$not = _Basics_not;
+var $elm$core$List$takeReverse = F3(
+	function (n, list, kept) {
+		takeReverse:
+		while (true) {
+			if (n <= 0) {
+				return kept;
+			} else {
+				if (!list.b) {
+					return kept;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs,
+						$temp$kept = A2($elm$core$List$cons, x, kept);
+					n = $temp$n;
+					list = $temp$list;
+					kept = $temp$kept;
+					continue takeReverse;
+				}
+			}
+		}
+	});
+var $elm$core$List$takeTailRec = F2(
+	function (n, list) {
+		return $elm$core$List$reverse(
+			A3($elm$core$List$takeReverse, n, list, _List_Nil));
+	});
+var $elm$core$List$takeFast = F3(
+	function (ctr, n, list) {
+		if (n <= 0) {
+			return _List_Nil;
+		} else {
+			var _v0 = _Utils_Tuple2(n, list);
+			_v0$1:
+			while (true) {
+				_v0$5:
+				while (true) {
+					if (!_v0.b.b) {
+						return list;
+					} else {
+						if (_v0.b.b.b) {
+							switch (_v0.a) {
+								case 1:
+									break _v0$1;
+								case 2:
+									var _v2 = _v0.b;
+									var x = _v2.a;
+									var _v3 = _v2.b;
+									var y = _v3.a;
+									return _List_fromArray(
+										[x, y]);
+								case 3:
+									if (_v0.b.b.b.b) {
+										var _v4 = _v0.b;
+										var x = _v4.a;
+										var _v5 = _v4.b;
+										var y = _v5.a;
+										var _v6 = _v5.b;
+										var z = _v6.a;
+										return _List_fromArray(
+											[x, y, z]);
+									} else {
+										break _v0$5;
+									}
+								default:
+									if (_v0.b.b.b.b && _v0.b.b.b.b.b) {
+										var _v7 = _v0.b;
+										var x = _v7.a;
+										var _v8 = _v7.b;
+										var y = _v8.a;
+										var _v9 = _v8.b;
+										var z = _v9.a;
+										var _v10 = _v9.b;
+										var w = _v10.a;
+										var tl = _v10.b;
+										return (ctr > 1000) ? A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A2($elm$core$List$takeTailRec, n - 4, tl))))) : A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A3($elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
+									} else {
+										break _v0$5;
+									}
+							}
+						} else {
+							if (_v0.a === 1) {
+								break _v0$1;
+							} else {
+								break _v0$5;
+							}
+						}
+					}
+				}
+				return list;
+			}
+			var _v1 = _v0.b;
+			var x = _v1.a;
+			return _List_fromArray(
+				[x]);
+		}
+	});
+var $elm$core$List$take = F2(
+	function (n, list) {
+		return A3($elm$core$List$takeFast, 0, n, list);
+	});
+var $elm_community$list_extra$List$Extra$removeAt = F2(
+	function (index, l) {
+		if (index < 0) {
+			return l;
+		} else {
+			var _v0 = A2($elm$core$List$drop, index, l);
+			if (!_v0.b) {
+				return l;
+			} else {
+				var rest = _v0.b;
+				return _Utils_ap(
+					A2($elm$core$List$take, index, l),
+					rest);
+			}
+		}
+	});
 var $author$project$Main$sumStats = F2(
 	function (s1, s2) {
 		return {armor: s1.armor + s2.armor, basic: s1.basic + s2.basic, cha: s1.cha + s2.cha, con: s1.con + s2.con, dex: s1.dex + s2.dex, hearts: s1.hearts + s2.hearts, _int: s1._int + s2._int, magic: s1.magic + s2.magic, str: s1.str + s2.str, ultimate: s1.ultimate + s2.ultimate, weapon: s1.weapon + s2.weapon, wis: s1.wis + s2.wis};
@@ -5677,7 +5866,7 @@ var $author$project$Main$update = F2(
 					$author$project$Main$asSettingsIn,
 					model,
 					A2($author$project$Main$asEditingStatsIn, model.settings, !model.settings.editingStats));
-			default:
+			case 'ChangeStat':
 				var stat = msg.a;
 				var value = msg.b;
 				var _v7 = $elm$core$String$toInt(value);
@@ -5686,6 +5875,40 @@ var $author$project$Main$update = F2(
 					return A3($author$project$Main$updateStat, model, stat, intVal);
 				} else {
 					return A3($author$project$Main$updateStat, model, stat, 0);
+				}
+			case 'Carry':
+				var ix = msg.a;
+				var _v8 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.equipped);
+				if (_v8.$ === 'Just') {
+					var item = _v8.a;
+					var newEquipped = A2($elm_community$list_extra$List$Extra$removeAt, ix, model.character.equipped);
+					var newCarried = A2($elm$core$List$cons, item, model.character.carried);
+					return A2(
+						$author$project$Main$asCharIn,
+						model,
+						A2(
+							$author$project$Main$asCarriedIn,
+							A2($author$project$Main$asEquippedIn, model.character, newEquipped),
+							newCarried));
+				} else {
+					return model;
+				}
+			default:
+				var ix = msg.a;
+				var _v9 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.carried);
+				if (_v9.$ === 'Just') {
+					var item = _v9.a;
+					var newEquipped = A2($elm$core$List$cons, item, model.character.equipped);
+					var newCarried = A2($elm_community$list_extra$List$Extra$removeAt, ix, model.character.carried);
+					return A2(
+						$author$project$Main$asCharIn,
+						model,
+						A2(
+							$author$project$Main$asCarriedIn,
+							A2($author$project$Main$asEquippedIn, model.character, newEquipped),
+							newCarried));
+				} else {
+					return model;
 				}
 		}
 	});
@@ -11933,7 +12156,7 @@ var $author$project$Main$statBlock = F2(
 					$mdgriffith$elm_ui$Element$el,
 					$author$project$Main$blockStyle,
 					$mdgriffith$elm_ui$Element$text(
-						$elm$core$String$fromInt(basestat))),
+						$elm$core$String$fromInt(basestat + lootstat))),
 					A2(
 					$mdgriffith$elm_ui$Element$column,
 					_List_fromArray(
@@ -12066,6 +12289,114 @@ var $author$project$Main$effortRow = function (_char) {
 							}))
 					]))
 			]));
+};
+var $mdgriffith$elm_ui$Internal$Model$Left = {$: 'Left'};
+var $mdgriffith$elm_ui$Element$alignLeft = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Left);
+var $mdgriffith$elm_ui$Internal$Model$Top = {$: 'Top'};
+var $mdgriffith$elm_ui$Element$alignTop = $mdgriffith$elm_ui$Internal$Model$AlignY($mdgriffith$elm_ui$Internal$Model$Top);
+var $author$project$Main$Carry = function (a) {
+	return {$: 'Carry', a: a};
+};
+var $author$project$Main$equippedModifier = function (ix) {
+	return A2(
+		$mdgriffith$elm_ui$Element$Input$button,
+		_List_Nil,
+		{
+			label: A2(
+				$mdgriffith$elm_ui$Element$el,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$Font$size(
+						$author$project$Main$scaled(-1))
+					]),
+				$mdgriffith$elm_ui$Element$text('Carry')),
+			onPress: $elm$core$Maybe$Just(
+				$author$project$Main$Carry(ix))
+		});
+};
+var $mdgriffith$elm_ui$Internal$Flag$fontWeight = $mdgriffith$elm_ui$Internal$Flag$flag(13);
+var $mdgriffith$elm_ui$Element$Font$bold = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$fontWeight, $mdgriffith$elm_ui$Internal$Style$classes.bold);
+var $mdgriffith$elm_ui$Element$Font$italic = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.italic);
+var $author$project$Main$itemRow = F3(
+	function (modifierButton, ix, item) {
+		return A2(
+			$mdgriffith$elm_ui$Element$row,
+			_List_fromArray(
+				[
+					A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+					$mdgriffith$elm_ui$Element$Background$color(
+					A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244)),
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$padding(10),
+					$mdgriffith$elm_ui$Element$Border$widthEach(
+					{bottom: 0, left: 2, right: 0, top: 0})
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$Font$bold, $mdgriffith$elm_ui$Element$Font$italic]),
+					$mdgriffith$elm_ui$Element$text(item.name)),
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$Font$size(
+							$author$project$Main$scaled(-2))
+						]),
+					$mdgriffith$elm_ui$Element$text(item.description)),
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$alignRight]),
+					A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_List_Nil,
+						{
+							label: A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$Font$size(
+										$author$project$Main$scaled(-1))
+									]),
+								$mdgriffith$elm_ui$Element$text('Edit')),
+							onPress: $elm$core$Maybe$Nothing
+						})),
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$alignRight]),
+					modifierButton(ix))
+				]));
+	});
+var $author$project$Main$equippedCol = function (_char) {
+	return A2(
+		$mdgriffith$elm_ui$Element$column,
+		_List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$alignTop,
+				A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
+			]),
+		A2(
+			$elm$core$List$cons,
+			A2(
+				$mdgriffith$elm_ui$Element$el,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$alignLeft,
+						$mdgriffith$elm_ui$Element$alignTop,
+						$mdgriffith$elm_ui$Element$Font$size(
+						$author$project$Main$scaled(-1)),
+						A2($mdgriffith$elm_ui$Element$paddingXY, 0, 10)
+					]),
+				$mdgriffith$elm_ui$Element$text('Equipped Gear')),
+			A2(
+				$elm$core$List$indexedMap,
+				$author$project$Main$itemRow($author$project$Main$equippedModifier),
+				_char.equipped)));
 };
 var $mdgriffith$elm_ui$Internal$Model$FontFamily = F2(
 	function (a, b) {
@@ -12316,15 +12647,6 @@ var $mdgriffith$elm_ui$Element$Input$getHeight = function (attr) {
 	if (attr.$ === 'Height') {
 		var h = attr.a;
 		return $elm$core$Maybe$Just(h);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
@@ -13729,6 +14051,7 @@ var $author$project$Main$statEditor = F3(
 					text: $elm$core$String$fromInt(value)
 				}));
 	});
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$statRow1 = function (_char) {
 	return A2(
 		$mdgriffith$elm_ui$Element$row,
@@ -13754,10 +14077,13 @@ var $author$project$Main$statRow1 = function (_char) {
 						A2(
 							$author$project$Main$statBlock,
 							_char.stats.str,
-							function ($) {
-								return $.str;
-							}(
-								$author$project$Main$totalStats(_char.equipped))))
+							A2(
+								$elm$core$Debug$log,
+								'lootStr',
+								function ($) {
+									return $.str;
+								}(
+									$author$project$Main$totalStats(_char.equipped)))))
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -13913,6 +14239,53 @@ var $author$project$Main$storyRow = function (model) {
 			]));
 };
 var $mdgriffith$elm_ui$Element$Font$typeface = $mdgriffith$elm_ui$Internal$Model$Typeface;
+var $author$project$Main$Equip = function (a) {
+	return {$: 'Equip', a: a};
+};
+var $author$project$Main$unequippedModifier = function (ix) {
+	return A2(
+		$mdgriffith$elm_ui$Element$Input$button,
+		_List_Nil,
+		{
+			label: A2(
+				$mdgriffith$elm_ui$Element$el,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$Font$size(
+						$author$project$Main$scaled(-1))
+					]),
+				$mdgriffith$elm_ui$Element$text('Equip')),
+			onPress: $elm$core$Maybe$Just(
+				$author$project$Main$Equip(ix))
+		});
+};
+var $author$project$Main$unequippedCol = function (_char) {
+	return A2(
+		$mdgriffith$elm_ui$Element$column,
+		_List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$alignTop,
+				A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
+			]),
+		A2(
+			$elm$core$List$cons,
+			A2(
+				$mdgriffith$elm_ui$Element$el,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$alignTop,
+						$mdgriffith$elm_ui$Element$alignRight,
+						$mdgriffith$elm_ui$Element$Font$size(
+						$author$project$Main$scaled(-1)),
+						A2($mdgriffith$elm_ui$Element$paddingXY, 0, 10)
+					]),
+				$mdgriffith$elm_ui$Element$text('Carried Gear')),
+			A2(
+				$elm$core$List$indexedMap,
+				$author$project$Main$itemRow($author$project$Main$unequippedModifier),
+				_char.carried)));
+};
 var $author$project$Main$view = function (model) {
 	var editStatsModalOverlay = $mdgriffith$elm_ui$Element$inFront(
 		A2(
@@ -14066,6 +14439,18 @@ var $author$project$Main$view = function (model) {
 									$author$project$Main$statRow1(model.character),
 									$author$project$Main$statRow2(model.character)
 								]))
+						])),
+					A2(
+					$mdgriffith$elm_ui$Element$row,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+							A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0)
+						]),
+					_List_fromArray(
+						[
+							$author$project$Main$equippedCol(model.character),
+							$author$project$Main$unequippedCol(model.character)
 						]))
 				])));
 };
