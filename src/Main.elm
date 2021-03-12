@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Attr, Attribute, Element, alignLeft, alignRight, alignTop, centerX, centerY, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingEach, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
@@ -13,7 +13,6 @@ import Maybe
 import String exposing (fromInt, toInt)
 import Svg
 import Svg.Attributes
-import Element exposing (paddingEach)
 
 
 main : Program () Model Msg
@@ -55,6 +54,7 @@ type alias AppSettings =
 type alias CharacterTextProp =
     { value : String
     , id : TextAttribute
+    , hovered : Bool
     }
 
 
@@ -136,26 +136,30 @@ tabula_rasa =
     { name =
         { value = "Thuldir"
         , id = Name
+        , hovered = False
         }
     , bioform =
         { value = "Dwarf"
         , id = Bioform
+        , hovered = False
         }
     , class =
         { value = "Knight"
         , id = Class
+        , hovered = False
         }
     , story =
         { value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
         , id = Story
+        , hovered = False
         }
     , hitpoints =
         { value = 10
         , id = Hitpoints
         , editvalue = 0
         }
-    , equipped = [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 1), Item "Sword" "Makes you strong!" (Stats 1 0 0 0 0 0 0 0 0 0 0 0) ]
-    , carried = [ Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1)]
+    , equipped = [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 10), Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) ]
+    , carried = [ Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) ]
     , stats = Stats 0 0 0 0 0 0 0 0 0 0 0 1
     , coin =
         { value = 0
@@ -185,6 +189,8 @@ type Msg
     | ChangeStat Stat String
     | Carry Int
     | Equip Int
+    | Hovered TextAttribute
+    | Unhovered TextAttribute
 
 
 
@@ -410,6 +416,58 @@ update msg model =
                 Nothing ->
                     model
 
+        Hovered attribute ->
+            case attribute of
+                Name ->
+                    True
+                        |> asHoveredIn model.character.name
+                        |> asNameIn model.character
+                        |> asCharIn model
+
+                Class ->
+                    True
+                        |> asHoveredIn model.character.class
+                        |> asClassIn model.character
+                        |> asCharIn model
+
+                Bioform ->
+                    True
+                        |> asHoveredIn model.character.bioform
+                        |> asBioformIn model.character
+                        |> asCharIn model
+
+                Story ->
+                    True
+                        |> asHoveredIn model.character.story
+                        |> asStoryIn model.character
+                        |> asCharIn model
+
+        Unhovered attribute ->
+            case attribute of
+                Name ->
+                    False
+                        |> asHoveredIn model.character.name
+                        |> asNameIn model.character
+                        |> asCharIn model
+
+                Class ->
+                    False
+                        |> asHoveredIn model.character.class
+                        |> asClassIn model.character
+                        |> asCharIn model
+
+                Bioform ->
+                    False
+                        |> asHoveredIn model.character.bioform
+                        |> asBioformIn model.character
+                        |> asCharIn model
+
+                Story ->
+                    False
+                        |> asHoveredIn model.character.story
+                        |> asStoryIn model.character
+                        |> asCharIn model
+
 
 updateStat : Model -> Stat -> Int -> Model
 updateStat model stat value =
@@ -494,8 +552,6 @@ printTextAttribute attr =
 view : Model -> Html Msg
 view model =
     let
-        
-
         activeOverlay =
             if model.settings.editingStats then
                 [ editStatsModalOverlay model ]
@@ -505,7 +561,8 @@ view model =
     in
     Element.layout
         ([ width fill
-        --  , height <| (px 2000)
+
+         --  , height <| (px 2000)
          , Font.family
             [ Font.typeface "Patrick Hand"
             ]
@@ -547,44 +604,46 @@ view model =
                 ]
             ]
 
+
 editStatsModalOverlay : Model -> Attribute Msg
 editStatsModalOverlay model =
-            inFront <|
-                el
-                    [ paddingXY 70 0
-                    , width fill
-                    , centerY
-                    , height fill
-                    , Background.color (Element.rgba 0 0 0 0.5)
+    inFront <|
+        el
+            [ paddingXY 70 0
+            , width fill
+            , centerY
+            , height fill
+            , Background.color (Element.rgba 0 0 0 0.5)
+            ]
+        <|
+            column
+                [ paddingXY 70 30
+                , width fill
+                , spacingXY 0 10
+                , centerY
+                , Background.color (rgb 0 0 0)
+                , Font.color (rgb 255 255 255)
+                ]
+                [ row [ spacingXY 10 0 ]
+                    [ statEditor Basic model.character.stats.basic "Basic"
+                    , statEditor Weapon model.character.stats.weapon "Weapon"
+                    , statEditor Magic model.character.stats.magic "Magic"
+                    , statEditor Armor model.character.stats.armor "Armor"
                     ]
-                <|
-                    column
-                        [ paddingXY 70 30
-                        , width fill
-                        , spacingXY 0 10
-                        , centerY
-                        , Background.color (rgb 0 0 0)
-                        , Font.color (rgb 255 255 255)
-                        ]
-                        [ row [ spacingXY 10 0 ]
-                            [ statEditor Basic model.character.stats.basic "Basic"
-                            , statEditor Weapon model.character.stats.weapon "Weapon"
-                            , statEditor Magic model.character.stats.magic "Magic"
-                            , statEditor Armor model.character.stats.armor "Armor"
-                            ]
-                        , row [ spacingXY 10 0 ]
-                            [ statEditor Str model.character.stats.str "Str"
-                            , statEditor Dex model.character.stats.dex "Dex"
-                            , statEditor Con model.character.stats.con "Con"
-                            , statEditor Int model.character.stats.int "Int"
-                            , statEditor Wis model.character.stats.wis "Wis"
-                            , statEditor Cha model.character.stats.cha "Cha"
-                            ]
-                        , Input.button [ centerX ]
-                            { onPress = Just EditBaseStats
-                            , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Save"
-                            }
-                        ]
+                , row [ spacingXY 10 0 ]
+                    [ statEditor Str model.character.stats.str "Str"
+                    , statEditor Dex model.character.stats.dex "Dex"
+                    , statEditor Con model.character.stats.con "Con"
+                    , statEditor Int model.character.stats.int "Int"
+                    , statEditor Wis model.character.stats.wis "Wis"
+                    , statEditor Cha model.character.stats.cha "Cha"
+                    ]
+                , Input.button [ centerX ]
+                    { onPress = Just EditBaseStats
+                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Save"
+                    }
+                ]
+
 
 statEditor : Stat -> Int -> String -> Element Msg
 statEditor stat value label =
@@ -663,10 +722,14 @@ editableTextField style editable prop =
 
                     _ ->
                         text prop.value
-
+        buttonStyle = 
+            if prop.hovered then
+                [ scrollbarX, width fill, Events.onMouseEnter (Hovered prop.id), Events.onMouseLeave (Unhovered prop.id)]
+            else
+                [ clip, width fill, Events.onMouseEnter (Hovered prop.id), Events.onMouseLeave (Unhovered prop.id)]
         readField =
             row style
-                [ Input.button [ scrollbarX, width fill ]
+                [ Input.button buttonStyle
                     { label = labelEl
                     , onPress = Just <| MakeTextEditable prop.id
                     }
@@ -897,7 +960,8 @@ statRow2 char =
 effortRow : Character -> Element Msg
 effortRow char =
     let
-        labelStyle = [ centerX, Font.size (scaled -1) ]
+        labelStyle =
+            [ centerX, Font.size (scaled -1) ]
     in
     row
         [ width fill
@@ -947,7 +1011,6 @@ gear =
 
 
 
--- ANCHOR equipped
 
 
 equippedCol : Character -> Element Msg
@@ -961,7 +1024,8 @@ equippedCol char =
         (el [ alignLeft, alignTop, Font.size (scaled -1), paddingXY 0 10 ] <|
             text "Equipped Gear"
         )
-            :: List.indexedMap (itemRow equippedModifier) char.equipped ++ [newItemRow]
+            :: List.indexedMap (itemRow equippedModifier) char.equipped
+            ++ [ newItemRow ]
 
 
 unequippedCol : Character -> Element Msg
@@ -993,8 +1057,10 @@ unequippedModifier ix =
         , label = el [ Font.size (scaled -1) ] <| text "Equip"
         }
 
+
 newItemRow : Element Msg
-newItemRow = row
+newItemRow =
+    row
         [ spacingXY 10 0
         , Background.color (rgb255 244 244 244)
         , width fill
@@ -1006,13 +1072,14 @@ newItemRow = row
             , top = 0
             }
         ]
-        [ 
-        el [ alignRight, centerX ] <|
+        [ el [ alignRight, centerX ] <|
             Input.button []
                 { onPress = Nothing
                 , label = el [ Font.italic ] <| text "+ Add Item"
                 }
         ]
+
+
 itemRow : (Int -> Element Msg) -> Int -> Item -> Element Msg
 itemRow modifierButton ix item =
     row
@@ -1027,9 +1094,9 @@ itemRow modifierButton ix item =
             , top = 0
             }
         ]
-        [ el [ Font.bold, Font.italic ] <| text item.name
-        ,  el [ Font.size (scaled -4) ] <| text <| printStats item.stats
-        , el [ Font.size (scaled -2) ] <| text item.description
+        [ el [ Font.bold, alignBottom ] <| text item.name
+        , el [ Font.size (scaled -3), alignBottom ] <| text <| printStats item.stats
+        , el [ Font.size (scaled -2), alignBottom ] <| text item.description
         , el [ alignRight ] <|
             Input.button []
                 { onPress = Nothing
@@ -1041,43 +1108,55 @@ itemRow modifierButton ix item =
 
 printStats : Stats -> String
 printStats stats =
-    List.foldl joinStrings "" <| List.map printStat <| [("str", stats.str)
-    ,("Dex", stats.dex)
-    ,("Con", stats.con)
-    ,("Wis", stats.wis)
-    ,("Int", stats.int)
-    ,("Cha", stats.cha)
-    ,("Basic", stats.basic)
-    ,("Weapon", stats.weapon)
-    ,("Magic", stats.magic)
-    ,("Ultimate", stats.ultimate)
-    ,("Armor", stats.armor)
-    ,("Heart", stats.hearts)]
-    
-joinStrings : Maybe String -> String -> String
-joinStrings mstr res=
-    case mstr of
-       Just str -> 
-        case res of 
-            "" -> str
-            _ -> res ++ ", " ++ str
-         
-       Nothing -> res
+    List.foldl joinStrings "" <|
+        List.map printStat <|
+            [ ( "str", stats.str )
+            , ( "Dex", stats.dex )
+            , ( "Con", stats.con )
+            , ( "Wis", stats.wis )
+            , ( "Int", stats.int )
+            , ( "Cha", stats.cha )
+            , ( "Basic", stats.basic )
+            , ( "Weapon", stats.weapon )
+            , ( "Magic", stats.magic )
+            , ( "Ultimate", stats.ultimate )
+            , ( "Armor", stats.armor )
+            , ( "Heart", stats.hearts )
+            ]
 
-printStat :  (String, Int) -> Maybe String
-printStat val_stat = 
+
+joinStrings : Maybe String -> String -> String
+joinStrings mstr res =
+    case mstr of
+        Just str ->
+            case res of
+                "" ->
+                    str
+
+                _ ->
+                    res ++ ", " ++ str
+
+        Nothing ->
+            res
+
+
+printStat : ( String, Int ) -> Maybe String
+printStat val_stat =
     let
-        val = Tuple.first val_stat
-        stat = Tuple.second val_stat
+        val =
+            Tuple.first val_stat
+
+        stat =
+            Tuple.second val_stat
     in
     if stat > 0 then
         Just <| val ++ " +" ++ String.fromInt stat
-    else
-        if stat < 0 then
-            Just <| val ++ " -" ++ String.fromInt stat
-        else
-            Nothing
 
+    else if stat < 0 then
+        Just <| val ++ " -" ++ String.fromInt stat
+
+    else
+        Nothing
 
 
 unEquippedCol : Character -> Element Msg
@@ -1280,3 +1359,8 @@ asEquippedIn char items =
 asCarriedIn : Character -> List Item -> Character
 asCarriedIn char items =
     { char | carried = items }
+
+
+asHoveredIn : CharacterTextProp -> Bool -> CharacterTextProp
+asHoveredIn charp hovered =
+    { charp | hovered = hovered }
