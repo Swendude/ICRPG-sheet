@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Attr, Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, image, inFront, minimum, newTabLink, none, padding, paddingEach, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
@@ -44,42 +44,51 @@ type alias Character =
     }
 
 
+type EditingState
+    = EditingStats
+    | EditingItem Int
+    | NotEditing
+
+
+
+-- TODO: Everything should be an EditingState!
+
+
 type alias AppSettings =
-    { editableText : Maybe TextAttribute
-    , editableNumber : Maybe NumberAttribute
-    , editingStats : Bool
-    , editingItem : Maybe ( Int, Bool, Item )
+    { editableText : Maybe CharacterTextAttribute
+    , editableNumber : Maybe CharacterNumberAttribute
+    , editingState : EditingState
     }
 
 
 type alias CharacterTextProp =
     { value : String
-    , id : TextAttribute
+    , id : CharacterTextAttribute
     , hovered : Bool
     }
 
 
 type alias CharacterNumberProp =
     { value : Int
-    , id : NumberAttribute
+    , id : CharacterNumberAttribute
     , editvalue : Int
     }
 
 
-type TextAttribute
+type CharacterTextAttribute
     = Name
     | Story
     | Class
     | Bioform
 
 
-type NumberAttribute
+type CharacterNumberAttribute
     = Coin
     | Hitpoints
     | Deathtimer
 
 
-type Stat
+type StatAttribute
     = Str
     | Dex
     | Con
@@ -110,6 +119,11 @@ type alias Stats =
     }
 
 
+type ItemAttribute
+    = ItemName
+    | Description
+
+
 type alias Item =
     { name : String
     , description : String
@@ -128,8 +142,7 @@ init =
     , settings =
         { editableText = Nothing
         , editableNumber = Nothing
-        , editingStats = False
-        , editingItem = Nothing
+        , editingState = NotEditing
         }
     }
 
@@ -165,15 +178,6 @@ tabula_rasa =
         [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 10) True
         , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
         , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
-        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
-        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
-        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
-        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
-        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
-        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
-        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
-        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
-        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
         ]
     , stats = Stats 0 0 10 0 0 0 0 0 0 0 0 1
     , coin =
@@ -189,24 +193,31 @@ tabula_rasa =
     }
 
 
+emptyStats : Stats
+emptyStats =
+    Stats 0 0 0 0 0 0 0 0 0 0 0 0
+
+
 type Msg
     = Increment
     | Decrement
-    | MakeTextEditable TextAttribute
-    | UpdateTextAttr TextAttribute String
-    | DisableTextEditing TextAttribute
-    | MakeNumberEditable NumberAttribute
+    | MakeTextEditable CharacterTextAttribute
+    | UpdateTextAttr CharacterTextAttribute String
+    | DisableTextEditing CharacterTextAttribute
+    | MakeNumberEditable CharacterNumberAttribute
     | DisableNumberEditing
-    | IncreaseNumberAttribute NumberAttribute
-    | DecreaseNumberAttribute NumberAttribute
-    | UpdateEditField NumberAttribute String
+    | IncreaseNumberAttribute CharacterNumberAttribute
+    | DecreaseNumberAttribute CharacterNumberAttribute
+    | UpdateEditField CharacterNumberAttribute String
     | EditBaseStats
-    | ChangeStat Stat String
+    | ChangeStatAttribute StatAttribute String
+    | ChangeItemAttribute ItemAttribute String
     | ToggleItem Int
-    | Hovered TextAttribute
-    | Unhovered TextAttribute
-    | ChangeItemStat Int Item Bool Stat String
-    | EditItem Int Bool
+    | Hovered CharacterTextAttribute
+    | Unhovered CharacterTextAttribute
+    | EditItem Int
+    | NewItem Bool
+    | DisableEdit
 
 
 
@@ -384,17 +395,39 @@ update msg model =
                         |> asCharIn model
 
         EditBaseStats ->
-            not model.settings.editingStats
-                |> asEditingStatsIn model.settings
+            EditingStats
+                |> asEditingStateIn model.settings
                 |> asSettingsIn model
 
-        ChangeStat stat value ->
+        DisableEdit ->
+            NotEditing
+                |> asEditingStateIn model.settings
+                |> asSettingsIn model
+
+        ChangeStatAttribute stat value ->
             case String.toInt value of
                 Just intVal ->
-                    updateStat model stat intVal
+                    case model.settings.editingState of
+                        EditingStats ->
+                            updateStat model stat intVal
+
+                        EditingItem ix ->
+                            updateItemStat model stat intVal ix
+
+                        _ ->
+                            model
 
                 Nothing ->
-                    updateStat model stat 0
+                    -- updateStat model stat 0
+                    model
+
+        ChangeItemAttribute attr value ->
+            case model.settings.editingState of
+                EditingItem ix ->
+                    updateItemAttribute model attr value ix
+
+                _ ->
+                    model
 
         ToggleItem ix ->
             case List.Extra.getAt ix model.character.items of
@@ -406,8 +439,11 @@ update msg model =
                         newItem =
                             { item | equipped = not item.equipped }
 
+                        itemsRemoved =
+                            List.Extra.removeAt ix model.character.items
+
                         newItems =
-                            List.Extra.setAt ix newItem model.character.items
+                            itemsRemoved ++ [ newItem ]
                     in
                     if totalItems < 10 then
                         newItems
@@ -419,6 +455,23 @@ update msg model =
 
                 Nothing ->
                     model
+
+        NewItem equippedState ->
+            let
+                totalItems =
+                    List.length <| List.filter ((==) equippedState << .equipped) model.character.items
+
+                newItem =
+                    Item "Edit me!" "" emptyStats equippedState
+            in
+            if totalItems < 10 then
+                model.character.items
+                    ++ [ newItem ]
+                    |> asItemsIn model.character
+                    |> asCharIn model
+
+            else
+                model
 
         Hovered attribute ->
             case attribute of
@@ -472,35 +525,18 @@ update msg model =
                         |> asStoryIn model.character
                         |> asCharIn model
 
-        ChangeItemStat ix item equipped stat newvalue ->
-            model
-
-        EditItem ix equipped ->
-            -- let
-            --     targetItem =
-            --         if equipped then
-            --             List.Extra.getAt ix model.character.items
-            --         else
-            --             List.Extra.getAt ix model.character.carried
-            -- in
-            -- case targetItem of
-            --     Just item ->
-            --         model
-            --     Nothing ->
-            model
+        EditItem ix ->
+            EditingItem ix
+                |> asEditingStateIn model.settings
+                |> asSettingsIn model
 
 
-equippedItemsIndexed : List Item -> List ( Int, Item )
-equippedItemsIndexed =
-    List.filter (.equipped << Tuple.second) << List.indexedMap Tuple.pair
+itemsIndexed : Bool -> List Item -> List ( Int, Item )
+itemsIndexed b =
+    List.filter ((==) b << .equipped << Tuple.second) << List.indexedMap Tuple.pair
 
 
-carriedItemsIndexed : List Item -> List ( Int, Item )
-carriedItemsIndexed =
-    List.filter (not << .equipped << Tuple.second) << List.indexedMap Tuple.pair
-
-
-updateStat : Model -> Stat -> Int -> Model
+updateStat : Model -> StatAttribute -> Int -> Model
 updateStat model stat value =
     let
         stats =
@@ -547,7 +583,82 @@ updateStat model stat value =
             { stats | hearts = value } |> statsToModel
 
 
-printNumberAttribute : NumberAttribute -> String
+updateItemAttribute : Model -> ItemAttribute -> String -> Int -> Model
+updateItemAttribute model attr value ix =
+    case List.Extra.getAt ix model.character.items of
+        Just item ->
+            let
+                itemToItems ix_ newItem =
+                    List.Extra.setAt ix_ newItem model.character.items
+                        |> asItemsIn model.character
+                        |> asCharIn model
+            in
+            case attr of
+                ItemName ->
+                    { item | name = value } |> itemToItems ix
+
+                Description ->
+                    { item | description = value } |> itemToItems ix
+
+        Nothing ->
+            model
+
+
+updateItemStat : Model -> StatAttribute -> Int -> Int -> Model
+updateItemStat model stat value ix =
+    case List.Extra.getAt ix model.character.items of
+        Just oldItem ->
+            let
+                stats =
+                    oldItem.stats
+
+                statsToItem ix_ newStat =
+                    List.Extra.setAt ix_ { oldItem | stats = newStat } model.character.items
+                        |> asItemsIn model.character
+                        |> asCharIn model
+            in
+            case stat of
+                Str ->
+                    { stats | str = value } |> statsToItem ix
+
+                Dex ->
+                    { stats | dex = value } |> statsToItem ix
+
+                Con ->
+                    { stats | con = value } |> statsToItem ix
+
+                Wis ->
+                    { stats | wis = value } |> statsToItem ix
+
+                Int ->
+                    { stats | int = value } |> statsToItem ix
+
+                Cha ->
+                    { stats | cha = value } |> statsToItem ix
+
+                Armor ->
+                    { stats | armor = value } |> statsToItem ix
+
+                Basic ->
+                    { stats | basic = value } |> statsToItem ix
+
+                Weapon ->
+                    { stats | weapon = value } |> statsToItem ix
+
+                Magic ->
+                    { stats | magic = value } |> statsToItem ix
+
+                Ultimate ->
+                    { stats | ultimate = value } |> statsToItem ix
+
+                Hearts ->
+                    { stats | hearts = value } |> statsToItem ix
+
+        Nothing ->
+            model
+
+
+printNumberAttribute : CharacterNumberAttribute -> String
 printNumberAttribute attr =
     case attr of
         Coin ->
@@ -560,7 +671,7 @@ printNumberAttribute attr =
             "Deathtimer"
 
 
-printTextAttribute : TextAttribute -> String
+printTextAttribute : CharacterTextAttribute -> String
 printTextAttribute attr =
     case attr of
         Name ->
@@ -584,11 +695,20 @@ view : Model -> Html Msg
 view model =
     let
         activeOverlay =
-            if model.settings.editingStats then
-                [ editStatsModal model ]
+            case model.settings.editingState of
+                EditingStats ->
+                    [ editStatsModal model ]
 
-            else
-                []
+                EditingItem ix ->
+                    case List.Extra.getAt ix model.character.items of
+                        Just item ->
+                            [ editItemModal item ]
+
+                        Nothing ->
+                            []
+
+                _ ->
+                    []
     in
     Element.layout
         [ width fill
@@ -627,10 +747,34 @@ view model =
                     , statRow2 model.character
                     ]
                 ]
-            , row [ width fill, spacingXY 10 0 ]
-                [ equippedCol model.character
-                , unequippedCol model.character
+            , row
+                [ width fill
+                , spacingXY 10 0
                 ]
+                [ itemCol True "Equipped " "Carry" model.character.items
+                , itemCol False "Carried " "Equip" model.character.items
+                ]
+            , spacerRow
+            , row
+                [ paddingEach { top = 20, right = 0, bottom = 10, left = 0 }
+                , centerX
+                , spacingXY 10 0
+                , Font.size (scaled -1)
+                ]
+                [ row [ alignBottom ]
+                    [ text "Made "
+                    , newTabLink [ Font.color (rgb255 194 0 0), Font.underline ]
+                        { url = "https://github.com/Swendude/ICRPG-sheet"
+                        , label = el [] <| text "(open source) "
+                        }
+                    , text "by "
+                    , newTabLink [ Font.color (rgb255 194 0 0), Font.underline ]
+                        { url = "https://github.com/Swendude"
+                        , label = el [] <| text "Swendude"
+                        }
+                    ]
+                ]
+            , image [ centerX, width (px 60), height (px 60) ] { src = "public/icrpg.png", description = "For use with ICRPG" }
             ]
 
 
@@ -674,14 +818,14 @@ editStatsModal model =
                     , statEditor Cha model.character.stats.cha "Cha"
                     ]
                 , Input.button [ centerX ]
-                    { onPress = Just EditBaseStats
-                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Save"
+                    { onPress = Just DisableEdit
+                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Close"
                     }
                 ]
 
 
-editItemModal : Int -> Item -> Bool -> Model -> Attribute Msg
-editItemModal id item equipped model =
+editItemModal : Item -> Attribute Msg
+editItemModal item =
     inFront <|
         el
             [ paddingXY 70 0
@@ -702,45 +846,51 @@ editItemModal id item equipped model =
                 [ row [ spacingXY 10 0, centerX ]
                     [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 2) ] <| text "Edit item"
                     ]
-                , row [ spacingXY 10 0, centerX ]
-                    [ statEditor Basic model.character.stats.basic "Basic"
-                    , statEditor Weapon model.character.stats.weapon "Weapon"
-                    , statEditor Magic model.character.stats.magic "Magic"
-                    , statEditor Armor model.character.stats.armor "Armor"
+                , row [ centerX ]
+                    [ textEditor ItemName item.name "Name"
+                    ]
+                , row [ centerX, width fill ]
+                    [ textEditor Description item.description "Description"
                     ]
                 , row [ spacingXY 10 0, centerX ]
-                    [ statEditor Str model.character.stats.str "Str"
-                    , statEditor Dex model.character.stats.dex "Dex"
-                    , statEditor Con model.character.stats.con "Con"
-                    , statEditor Int model.character.stats.int "Int"
-                    , statEditor Wis model.character.stats.wis "Wis"
-                    , statEditor Cha model.character.stats.cha "Cha"
+                    [ statEditor Basic item.stats.basic "Basic"
+                    , statEditor Weapon item.stats.weapon "Weapon"
+                    , statEditor Magic item.stats.magic "Magic"
+                    , statEditor Armor item.stats.armor "Armor"
+                    ]
+                , row [ spacingXY 10 0, centerX ]
+                    [ statEditor Str item.stats.str "Str"
+                    , statEditor Dex item.stats.dex "Dex"
+                    , statEditor Con item.stats.con "Con"
+                    , statEditor Int item.stats.int "Int"
+                    , statEditor Wis item.stats.wis "Wis"
+                    , statEditor Cha item.stats.cha "Cha"
                     ]
                 , Input.button [ centerX ]
-                    { onPress = Just EditBaseStats
-                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Save"
+                    { onPress = Just DisableEdit
+                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Close"
                     }
                 ]
 
 
-statEditor : Stat -> Int -> String -> Element Msg
+statEditor : StatAttribute -> Int -> String -> Element Msg
 statEditor stat value label =
     el [ width fill ] <|
         Input.text [ Font.color (rgb 0 0 0) ]
-            { onChange = ChangeStat stat
+            { onChange = ChangeStatAttribute stat
             , text = String.fromInt value
             , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
             , label = Input.labelAbove [ centerX ] <| text label
             }
 
 
-itemStatEditor : Int -> Item -> Bool -> Stat -> Int -> String -> Element Msg
-itemStatEditor ix item equipped stat value label =
+textEditor : ItemAttribute -> String -> String -> Element Msg
+textEditor attr value label =
     el [ width fill ] <|
         Input.text [ Font.color (rgb 0 0 0) ]
-            { onChange = ChangeItemStat ix item equipped stat
-            , text = String.fromInt value
-            , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
+            { onChange = ChangeItemAttribute attr
+            , text = value
+            , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| ".."
             , label = Input.labelAbove [ centerX ] <| text label
             }
 
@@ -748,6 +898,21 @@ itemStatEditor ix item equipped stat value label =
 debugbg : Attr decorative msg
 debugbg =
     Background.color <| Element.rgb255 0 255 255
+
+
+spacerRow : Element Msg
+spacerRow =
+    el
+        [ width fill
+        , Border.widthEach
+            { bottom = 2
+            , left = 0
+            , right = 0
+            , top = 0
+            }
+        ]
+    <|
+        none
 
 
 infoRow : Model -> Element Msg
@@ -795,7 +960,7 @@ storyRow model =
         ]
 
 
-editableTextField : List (Attribute Msg) -> Maybe TextAttribute -> CharacterTextProp -> Element Msg
+editableTextField : List (Attribute Msg) -> Maybe CharacterTextAttribute -> CharacterTextProp -> Element Msg
 editableTextField style editable prop =
     let
         labelEl =
@@ -853,7 +1018,7 @@ editableTextField style editable prop =
             readField
 
 
-editableNumberField : List (Attribute Msg) -> Maybe NumberAttribute -> CharacterNumberProp -> Element Msg
+editableNumberField : List (Attribute Msg) -> Maybe CharacterNumberAttribute -> CharacterNumberProp -> Element Msg
 editableNumberField style editable prop =
     let
         labelEl =
@@ -969,7 +1134,7 @@ filledHearts =
                 , Svg.Attributes.width "20px"
                 ]
                 [ Svg.g
-                    [ Svg.Attributes.strokeWidth "5", Svg.Attributes.fill "red", Svg.Attributes.stroke "black" ]
+                    [ Svg.Attributes.strokeWidth "5", Svg.Attributes.fill "rgb(194 0 0)", Svg.Attributes.stroke "black" ]
                     [ Svg.path [ Svg.Attributes.d "M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z" ] []
                     ]
                 ]
@@ -1102,102 +1267,112 @@ gear =
         )
 
 
-equippedCol : Character -> Element Msg
-equippedCol char =
+fillListUntil : a -> Int -> List a -> List a
+fillListUntil filler amount list =
+    let
+        fillerCount =
+            amount - List.length list
+    in
+    if fillerCount <= 0 then
+        list
+
+    else
+        list ++ List.repeat fillerCount filler
+
+
+
+-- ANCHOR itemCol
+
+
+itemCol : Bool -> String -> String -> List Item -> Element Msg
+itemCol equippedState label modifyLabel items =
     column
         [ width fill
         , Element.alignTop
         , spacingXY 0 10
         ]
-    <|
-        (el [ alignLeft, alignTop, Font.size (scaled -1), paddingXY 0 10 ] <|
-            text ("Equipped Gear " ++ (String.fromInt <| List.length <| equippedItemsIndexed char.items) ++ "/10")
-        )
-            :: List.map (itemRow equippedModifier editEquippedModifier) (equippedItemsIndexed char.items)
-            ++ [ newItemRow ]
-
-
-unequippedCol : Character -> Element Msg
-unequippedCol char =
-    column
-        [ width fill
-        , Element.alignTop
-        , spacingXY 0 10
+        [ row [ width fill ]
+            [ el
+                [ alignLeft
+                , alignTop
+                , Font.size (scaled -1)
+                , paddingXY 0 10
+                ]
+              <|
+                text
+                    (label
+                        ++ (String.fromInt <|
+                                List.length <|
+                                    itemsIndexed equippedState items
+                           )
+                        ++ "/10"
+                    )
+            , newItemButton equippedState
+            ]
+        , column
+            [ width fill
+            , spacingXY 0 10
+            , paddingXY 10 10
+            , Background.color (rgb255 244 244 244)
+            ]
+          <|
+            List.map (itemRow (stateModifier modifyLabel) editModifier)
+                (itemsIndexed equippedState items)
         ]
-    <|
-        (el [ alignTop, Font.size (scaled -1), paddingXY 0 10 ] <|
-            text ("Carried Gear " ++ (String.fromInt <| List.length <| carriedItemsIndexed char.items) ++ "/10")
-        )
-            :: List.map (itemRow carriedModifier editUnequippedModifier) (carriedItemsIndexed char.items)
 
 
-equippedModifier : Int -> Element Msg
-equippedModifier ix =
+stateModifier : String -> Int -> Element Msg
+stateModifier label ix =
     Input.button []
         { onPress = Just <| ToggleItem ix
-        , label = el [ Font.size (scaled -1) ] <| text "Carry"
+        , label = el [ Font.size (scaled -1) ] <| text label
         }
 
 
-carriedModifier : Int -> Element Msg
-carriedModifier ix =
+editModifier : Int -> Element Msg
+editModifier ix =
     Input.button []
-        { onPress = Just <| ToggleItem ix
-        , label = el [ Font.size (scaled -1) ] <| text "Equip"
-        }
-
-
-editEquippedModifier : Int -> Element Msg
-editEquippedModifier ix =
-    Input.button []
-        { onPress = Just <| EditItem ix True
+        { onPress = Just <| EditItem ix
         , label = el [ Font.size (scaled -1) ] <| text "Edit"
         }
 
 
-editUnequippedModifier : Int -> Element Msg
-editUnequippedModifier ix =
-    Input.button []
-        { onPress = Just <| EditItem ix False
-        , label = el [ Font.size (scaled -1) ] <| text "Edit"
+newItemButton : Bool -> Element Msg
+newItemButton equipped =
+    Input.button [ alignRight ]
+        { onPress = Just <| NewItem equipped
+        , label =
+            el
+                [ width fill
+                , Border.width 1
+                , padding 5
+                , Border.dotted
+                , Font.center
+                , Font.size (scaled -2)
+                ]
+            <|
+                text "Add item"
         }
 
 
-newItemRow : Element Msg
-newItemRow =
-    row
-        [ spacingXY 10 0
-        , Background.color (rgb255 244 244 244)
-        , width fill
-        , padding 10
-        , Border.widthEach
-            { bottom = 0
-            , left = 2
-            , right = 0
-            , top = 0
-            }
-        ]
-        [ el [ alignRight, centerX ] <|
-            Input.button []
-                { onPress = Nothing
-                , label = el [ Font.italic ] <| text "+ Add Item"
-                }
-        ]
+
+-- ANCHOR itemrow
 
 
 itemRow : (Int -> Element Msg) -> (Int -> Element Msg) -> ( Int, Item ) -> Element Msg
 itemRow modifierButton editButton ( ix, item ) =
     row
         [ spacingXY 10 0
-        , Background.color (rgb255 244 244 244)
         , width fill
-        , padding 10
+        , paddingXY 10 10
         , Border.widthEach
-            { bottom = 0
-            , left = 2
-            , right = 0
-            , top = 0
+            { bottom = 2
+            , left = 1
+            , right = 1
+            , top = 1
             }
+        , Border.rounded 5
+        , Background.color (rgb255 255 255 255)
         ]
         [ el [ Font.bold, alignBottom ] <| text item.name
         , el [ Font.size (scaled -3), alignBottom ] <| text <| printStats item.stats
@@ -1211,7 +1386,7 @@ printStats : Stats -> String
 printStats stats =
     List.foldl joinStrings "" <|
         List.map printStat <|
-            [ ( "str", stats.str )
+            [ ( "Str", stats.str )
             , ( "Dex", stats.dex )
             , ( "Con", stats.con )
             , ( "Wis", stats.wis )
@@ -1367,9 +1542,9 @@ sumStatsEquipped s1 s2 =
 -- ANCHOR: Modifiers
 
 
-asEditingStatsIn : AppSettings -> Bool -> AppSettings
-asEditingStatsIn settings newvalue =
-    { settings | editingStats = newvalue }
+asEditingStateIn : AppSettings -> EditingState -> AppSettings
+asEditingStateIn state newState =
+    { state | editingState = newState }
 
 
 asDeathtimerIn : Character -> CharacterNumberProp -> Character
@@ -1437,12 +1612,12 @@ asNumberValueIn charp newvalue =
     { charp | value = newvalue }
 
 
-asEditableTextIn : AppSettings -> Maybe TextAttribute -> AppSettings
+asEditableTextIn : AppSettings -> Maybe CharacterTextAttribute -> AppSettings
 asEditableTextIn setting editable =
     { setting | editableText = editable }
 
 
-asEditableNumberIn : AppSettings -> Maybe NumberAttribute -> AppSettings
+asEditableNumberIn : AppSettings -> Maybe CharacterNumberAttribute -> AppSettings
 asEditableNumberIn setting editable =
     { setting | editableNumber = editable }
 
