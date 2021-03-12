@@ -175,7 +175,7 @@ tabula_rasa =
         , editvalue = 0
         }
     , items =
-        [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 10) True
+        [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) True
         , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
         , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
         ]
@@ -853,7 +853,8 @@ editItemModal item =
                     [ textEditor Description item.description "Description"
                     ]
                 , row [ spacingXY 10 0, centerX ]
-                    [ statEditor Basic item.stats.basic "Basic"
+                    [[ statEditor Hearts item.stats.hearts "Hearts"
+                        , statEditor Basic item.stats.basic "Basic"
                     , statEditor Weapon item.stats.weapon "Weapon"
                     , statEditor Magic item.stats.magic "Magic"
                     , statEditor Armor item.stats.armor "Armor"
