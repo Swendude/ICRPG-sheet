@@ -853,8 +853,8 @@ editItemModal item =
                     [ textEditor Description item.description "Description"
                     ]
                 , row [ spacingXY 10 0, centerX ]
-                    [[ statEditor Hearts item.stats.hearts "Hearts"
-                        , statEditor Basic item.stats.basic "Basic"
+                    [ statEditor Hearts item.stats.hearts "Hearts"
+                    , statEditor Basic item.stats.basic "Basic"
                     , statEditor Weapon item.stats.weapon "Weapon"
                     , statEditor Magic item.stats.magic "Magic"
                     , statEditor Armor item.stats.armor "Armor"

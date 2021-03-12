@@ -4524,7 +4524,7 @@ var $author$project$Main$tabula_rasa = {
 			$author$project$Main$Item,
 			'Heartstone',
 			'Adds 1 heart',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(10),
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
 			true),
 			A4(
 			$author$project$Main$Item,
@@ -12162,6 +12162,7 @@ var $author$project$Main$Con = {$: 'Con'};
 var $author$project$Main$Description = {$: 'Description'};
 var $author$project$Main$Dex = {$: 'Dex'};
 var $author$project$Main$DisableEdit = {$: 'DisableEdit'};
+var $author$project$Main$Hearts = {$: 'Hearts'};
 var $author$project$Main$Int = {$: 'Int'};
 var $author$project$Main$ItemName = {$: 'ItemName'};
 var $author$project$Main$Magic = {$: 'Magic'};
@@ -13407,6 +13408,7 @@ var $author$project$Main$editItemModal = function (item) {
 							]),
 						_List_fromArray(
 							[
+								A3($author$project$Main$statEditor, $author$project$Main$Hearts, item.stats.hearts, 'Hearts'),
 								A3($author$project$Main$statEditor, $author$project$Main$Basic, item.stats.basic, 'Basic'),
 								A3($author$project$Main$statEditor, $author$project$Main$Weapon, item.stats.weapon, 'Weapon'),
 								A3($author$project$Main$statEditor, $author$project$Main$Magic, item.stats.magic, 'Magic'),
