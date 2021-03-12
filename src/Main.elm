@@ -36,8 +36,7 @@ type alias Character =
     , class : CharacterTextProp
     , story : CharacterTextProp
     , hitpoints : CharacterNumberProp
-    , equipped : List Item
-    , carried : List Item
+    , items : List Item
     , stats : Stats
     , coin : CharacterNumberProp
     , deathtimer : CharacterNumberProp
@@ -48,7 +47,7 @@ type alias AppSettings =
     { editableText : Maybe TextAttribute
     , editableNumber : Maybe NumberAttribute
     , editingStats : Bool
-    , editingItem : Maybe (Int, Bool, Item)
+    , editingItem : Maybe ( Int, Bool, Item )
     }
 
 
@@ -114,6 +113,7 @@ type alias Item =
     { name : String
     , description : String
     , stats : Stats
+    , equipped : Bool
     }
 
 
@@ -160,8 +160,11 @@ tabula_rasa =
         , id = Hitpoints
         , editvalue = 0
         }
-    , equipped = [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 10), Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) ]
-    , carried = [ Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) ]
+    , items =
+        [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 10) True
+        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
+        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
+        ]
     , stats = Stats 0 0 10 0 0 0 0 0 0 0 0 1
     , coin =
         { value = 0
@@ -189,12 +192,12 @@ type Msg
     | UpdateEditField NumberAttribute String
     | EditBaseStats
     | ChangeStat Stat String
-    | Carry Int
-    | Equip Int
+    | ToggleItem Int
     | Hovered TextAttribute
     | Unhovered TextAttribute
     | ChangeItemStat Int Item Bool Stat String
     | EditItem Int Bool
+
 
 
 -- ANCHOR Update
@@ -294,8 +297,8 @@ update msg model =
                             model.character.hitpoints.value + model.character.hitpoints.editvalue
 
                         maxResult =
-                            if result > (model.character.stats.hearts + .hearts (totalStats model.character.equipped) * 10) then
-                                (model.character.stats.hearts + .hearts (totalStats model.character.equipped)) * 10
+                            if result > (model.character.stats.hearts + .hearts (totalEquippedStats model.character.items) * 10) then
+                                (model.character.stats.hearts + .hearts (totalEquippedStats model.character.items)) * 10
 
                             else
                                 result
@@ -383,37 +386,18 @@ update msg model =
                 Nothing ->
                     updateStat model stat 0
 
-        Carry ix ->
-            case List.Extra.getAt ix model.character.equipped of
+        ToggleItem ix ->
+            case List.Extra.getAt ix model.character.items of
                 Just item ->
                     let
-                        newEquipped =
-                            List.Extra.removeAt ix model.character.equipped
+                        newItem =
+                            { item | equipped = not item.equipped }
 
-                        newCarried =
-                            item :: model.character.carried
+                        newItems =
+                            List.Extra.setAt ix newItem model.character.items
                     in
-                    newCarried
-                        |> asCarriedIn
-                            (newEquipped |> asEquippedIn model.character)
-                        |> asCharIn model
-
-                Nothing ->
-                    model
-
-        Equip ix ->
-            case List.Extra.getAt ix model.character.carried of
-                Just item ->
-                    let
-                        newCarried =
-                            List.Extra.removeAt ix model.character.carried
-
-                        newEquipped =
-                            item :: model.character.equipped
-                    in
-                    newCarried
-                        |> asCarriedIn
-                            (newEquipped |> asEquippedIn model.character)
+                    newItems
+                        |> asItemsIn model.character
                         |> asCharIn model
 
                 Nothing ->
@@ -470,22 +454,33 @@ update msg model =
                         |> asHoveredIn model.character.story
                         |> asStoryIn model.character
                         |> asCharIn model
-        
+
         ChangeItemStat ix item equipped stat newvalue ->
             model
-        
+
         EditItem ix equipped ->
-            let
-                targetItem =
-                    if equipped then 
-                        List.Extra.getAt ix model.character.equipped
-                    else
-                        List.Extra.getAt ix model.character.carried
-            in
-                case targetItem of
-                   Just item -> model
-                   Nothing -> model
-            
+            -- let
+            --     targetItem =
+            --         if equipped then
+            --             List.Extra.getAt ix model.character.items
+            --         else
+            --             List.Extra.getAt ix model.character.carried
+            -- in
+            -- case targetItem of
+            --     Just item ->
+            --         model
+            --     Nothing ->
+            model
+
+
+equippedItemsIndexed : List Item -> List ( Int, Item )
+equippedItemsIndexed =
+    List.filter (.equipped << Tuple.second) << List.indexedMap Tuple.pair
+
+
+carriedItemsIndexed : List Item -> List ( Int, Item )
+carriedItemsIndexed =
+    List.filter (not << .equipped << Tuple.second) << List.indexedMap Tuple.pair
 
 
 updateStat : Model -> Stat -> Int -> Model
@@ -609,7 +604,7 @@ view model =
                     ]
                   <|
                     armorBlock "Armor" model.character.stats.armor <|
-                        .armor (totalStats model.character.equipped)
+                        .armor (totalEquippedStats model.character.items)
                 , column [ width (fillPortion 7), spacingXY 0 10 ]
                     [ statRow1 model.character
                     , statRow2 model.character
@@ -667,6 +662,7 @@ editStatsModal model =
                     }
                 ]
 
+
 editItemModal : Int -> Item -> Bool -> Model -> Attribute Msg
 editItemModal id item equipped model =
     inFront <|
@@ -719,6 +715,7 @@ statEditor stat value label =
             , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
             , label = Input.labelAbove [ centerX ] <| text label
             }
+
 
 itemStatEditor : Int -> Item -> Bool -> Stat -> Int -> String -> Element Msg
 itemStatEditor ix item equipped stat value label =
@@ -909,7 +906,7 @@ heartRow model =
         remainingHearts =
             let
                 totalHearts =
-                    model.character.stats.hearts + .hearts (totalStats model.character.equipped)
+                    model.character.stats.hearts + .hearts (totalEquippedStats model.character.items)
             in
             if heartCount >= totalHearts then
                 0
@@ -1001,15 +998,15 @@ statRow1 char =
         ]
         [ row blockRowStyle
             [ el blockRowLabelStyle <| text "Str"
-            , el blockRowBlockStyle <| statBlock char.stats.str <| Debug.log "lootStr" (.str (totalStats char.equipped))
+            , el blockRowBlockStyle <| statBlock char.stats.str <| Debug.log "lootStr" (.str (totalEquippedStats char.items))
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Dex"
-            , el blockRowBlockStyle <| statBlock char.stats.dex <| .dex (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.dex <| .dex (totalEquippedStats char.items)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Con"
-            , el blockRowBlockStyle <| statBlock char.stats.con <| .con (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.con <| .con (totalEquippedStats char.items)
             ]
         ]
 
@@ -1022,15 +1019,15 @@ statRow2 char =
         ]
         [ row blockRowStyle
             [ el blockRowLabelStyle <| text "Int"
-            , el blockRowBlockStyle <| statBlock char.stats.int <| .int (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.int <| .int (totalEquippedStats char.items)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Wis"
-            , el blockRowBlockStyle <| statBlock char.stats.wis <| .wis (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.wis <| .wis (totalEquippedStats char.items)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Cha"
-            , el blockRowBlockStyle <| statBlock char.stats.cha <| .cha (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.cha <| .cha (totalEquippedStats char.items)
             ]
         ]
 
@@ -1047,19 +1044,19 @@ effortRow char =
         ]
         [ row blockRowStyle
             [ el labelStyle <| text "Basic (D4)"
-            , el blockRowBlockStyle <| statBlock char.stats.basic <| .basic (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.basic <| .basic (totalEquippedStats char.items)
             ]
         , row blockRowStyle
             [ el labelStyle <| text "Weapon (D6)"
-            , el blockRowBlockStyle <| statBlock char.stats.weapon <| .weapon (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.weapon <| .weapon (totalEquippedStats char.items)
             ]
         , row blockRowStyle
             [ el labelStyle <| text "Magic (D8)"
-            , el blockRowBlockStyle <| statBlock char.stats.magic <| .magic (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.magic <| .magic (totalEquippedStats char.items)
             ]
         , row blockRowStyle
             [ el labelStyle <| text "Ultimate (D12)"
-            , el blockRowBlockStyle <| statBlock char.stats.ultimate <| .ultimate (totalStats char.equipped)
+            , el blockRowBlockStyle <| statBlock char.stats.ultimate <| .ultimate (totalEquippedStats char.items)
             ]
         , row [ Background.color <| Element.rgb255 244 244 244, padding 5, width (px 52) ]
             [ el [ centerX, centerY ] <|
@@ -1099,7 +1096,7 @@ equippedCol char =
         (el [ alignLeft, alignTop, Font.size (scaled -1), paddingXY 0 10 ] <|
             text "Equipped Gear"
         )
-            :: List.indexedMap (itemRow equippedModifier editEquippedModifier) char.equipped
+            :: List.map (itemRow equippedModifier editEquippedModifier) (equippedItemsIndexed char.items)
             ++ [ newItemRow ]
 
 
@@ -1114,35 +1111,40 @@ unequippedCol char =
         (el [ alignTop, alignRight, Font.size (scaled -1), paddingXY 0 10 ] <|
             text "Carried Gear"
         )
-            :: List.indexedMap (itemRow unequippedModifier editUnequippedModifier) char.carried
+            :: List.map (itemRow carriedModifier editUnequippedModifier) (carriedItemsIndexed char.items)
 
 
 equippedModifier : Int -> Element Msg
 equippedModifier ix =
     Input.button []
-        { onPress = Just <| Carry ix
+        { onPress = Just <| ToggleItem ix
         , label = el [ Font.size (scaled -1) ] <| text "Carry"
         }
 
 
-unequippedModifier : Int -> Element Msg
-unequippedModifier ix =
+carriedModifier : Int -> Element Msg
+carriedModifier ix =
     Input.button []
-        { onPress = Just <| Equip ix
+        { onPress = Just <| ToggleItem ix
         , label = el [ Font.size (scaled -1) ] <| text "Equip"
         }
 
+
 editEquippedModifier : Int -> Element Msg
-editEquippedModifier ix =  Input.button []
-                { onPress = Just <| EditItem ix True 
-                , label = el [ Font.size (scaled -1) ] <| text "Edit"
-                }
+editEquippedModifier ix =
+    Input.button []
+        { onPress = Just <| EditItem ix True
+        , label = el [ Font.size (scaled -1) ] <| text "Edit"
+        }
+
 
 editUnequippedModifier : Int -> Element Msg
-editUnequippedModifier ix =  Input.button []
-                { onPress = Just <| EditItem ix False 
-                , label = el [ Font.size (scaled -1) ] <| text "Edit"
-                }
+editUnequippedModifier ix =
+    Input.button []
+        { onPress = Just <| EditItem ix False
+        , label = el [ Font.size (scaled -1) ] <| text "Edit"
+        }
+
 
 newItemRow : Element Msg
 newItemRow =
@@ -1166,8 +1168,8 @@ newItemRow =
         ]
 
 
-itemRow : (Int -> Element Msg) -> (Int -> Element Msg) -> Int -> Item -> Element Msg
-itemRow modifierButton editButton ix item =
+itemRow : (Int -> Element Msg) -> (Int -> Element Msg) -> ( Int, Item ) -> Element Msg
+itemRow modifierButton editButton ( ix, item ) =
     row
         [ spacingXY 10 0
         , Background.color (rgb255 244 244 244)
@@ -1183,7 +1185,7 @@ itemRow modifierButton editButton ix item =
         [ el [ Font.bold, alignBottom ] <| text item.name
         , el [ Font.size (scaled -3), alignBottom ] <| text <| printStats item.stats
         , el [ Font.size (scaled -2), alignBottom ] <| text item.description
-        , el [ alignRight ] <| editButton ix           
+        , el [ alignRight ] <| editButton ix
         , el [ alignRight ] <| modifierButton ix
         ]
 
@@ -1321,14 +1323,14 @@ armorBlock label basestat lootstat =
         ]
 
 
-totalStats : List Item -> Stats
-totalStats items =
-    List.foldr sumStats (Stats 0 0 0 0 0 0 0 0 0 0 0 0) <|
-        List.map .stats items
+totalEquippedStats : List Item -> Stats
+totalEquippedStats items =
+    List.foldr sumStatsEquipped (Stats 0 0 0 0 0 0 0 0 0 0 0 0) <|
+        List.map .stats (List.filter .equipped items)
 
 
-sumStats : Stats -> Stats -> Stats
-sumStats s1 s2 =
+sumStatsEquipped : Stats -> Stats -> Stats
+sumStatsEquipped s1 s2 =
     { str = s1.str + s2.str
     , dex = s1.dex + s2.dex
     , con = s1.con + s2.con
@@ -1433,14 +1435,9 @@ asSettingsIn model settings =
     { model | settings = settings }
 
 
-asEquippedIn : Character -> List Item -> Character
-asEquippedIn char items =
-    { char | equipped = items }
-
-
-asCarriedIn : Character -> List Item -> Character
-asCarriedIn char items =
-    { char | carried = items }
+asItemsIn : Character -> List Item -> Character
+asItemsIn char items =
+    { char | items = items }
 
 
 asHoveredIn : CharacterTextProp -> Bool -> CharacterTextProp

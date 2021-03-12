@@ -12,7 +12,8 @@
   "devDependencies": {},
   "scripts": {
     "test": "elm test",
-    "start": "elm-live src/Main.elm --open -- --output=main.js"
+    "start": "elm-live src/Main.elm --open -- --output=main.js",
+    "debug": "elm-live src/Main.elm --open -- --output=main.js --debug"
   },
   "repository": {
     "type": "git",
