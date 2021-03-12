@@ -4511,7 +4511,7 @@ var $author$project$Main$Stats = function (str) {
 };
 var $author$project$Main$Story = {$: 'Story'};
 var $author$project$Main$tabula_rasa = {
-	bioform: {id: $author$project$Main$Bioform, value: 'Dwarf'},
+	bioform: {hovered: false, id: $author$project$Main$Bioform, value: 'Dwarf'},
 	carried: _List_fromArray(
 		[
 			A3(
@@ -4520,7 +4520,7 @@ var $author$project$Main$tabula_rasa = {
 			'Wis Spell: Heal an ally',
 			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1))
 		]),
-	_class: {id: $author$project$Main$Class, value: 'Knight'},
+	_class: {hovered: false, id: $author$project$Main$Class, value: 'Knight'},
 	coin: {editvalue: 0, id: $author$project$Main$Coin, value: 0},
 	deathtimer: {editvalue: 0, id: $author$project$Main$Deathtimer, value: 0},
 	equipped: _List_fromArray(
@@ -4529,21 +4529,21 @@ var $author$project$Main$tabula_rasa = {
 			$author$project$Main$Item,
 			'Heartstone',
 			'Adds 1 heart',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1)),
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(10)),
 			A3(
 			$author$project$Main$Item,
 			'Sword',
 			'Makes you strong!',
-			$author$project$Main$Stats(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0))
+			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0))
 		]),
 	hitpoints: {editvalue: 0, id: $author$project$Main$Hitpoints, value: 10},
-	name: {id: $author$project$Main$Name, value: 'Thuldir'},
-	stats: $author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
-	story: {id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
+	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
+	stats: $author$project$Main$Stats(0)(0)(10)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+	story: {hovered: false, id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
 };
 var $author$project$Main$init = {
 	character: $author$project$Main$tabula_rasa,
-	settings: {editableNumber: $elm$core$Maybe$Nothing, editableText: $elm$core$Maybe$Nothing, editingStats: false}
+	settings: {editableNumber: $elm$core$Maybe$Nothing, editableText: $elm$core$Maybe$Nothing, editingItem: $elm$core$Maybe$Nothing, editingStats: false}
 };
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
@@ -5345,6 +5345,12 @@ var $author$project$Main$asHitpointsIn = F2(
 			_char,
 			{hitpoints: newhitpoints});
 	});
+var $author$project$Main$asHoveredIn = F2(
+	function (charp, hovered) {
+		return _Utils_update(
+			charp,
+			{hovered: hovered});
+	});
 var $author$project$Main$asNameIn = F2(
 	function (_char, newname) {
 		return _Utils_update(
@@ -5900,7 +5906,7 @@ var $author$project$Main$update = F2(
 				} else {
 					return model;
 				}
-			default:
+			case 'Equip':
 				var ix = msg.a;
 				var _v9 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.carried);
 				if (_v9.$ === 'Just') {
@@ -5914,6 +5920,95 @@ var $author$project$Main$update = F2(
 							$author$project$Main$asCarriedIn,
 							A2($author$project$Main$asEquippedIn, model.character, newEquipped),
 							newCarried));
+				} else {
+					return model;
+				}
+			case 'Hovered':
+				var attribute = msg.a;
+				switch (attribute.$) {
+					case 'Name':
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asNameIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.name, true)));
+					case 'Class':
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asClassIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character._class, true)));
+					case 'Bioform':
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asBioformIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.bioform, true)));
+					default:
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asStoryIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.story, true)));
+				}
+			case 'Unhovered':
+				var attribute = msg.a;
+				switch (attribute.$) {
+					case 'Name':
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asNameIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.name, false)));
+					case 'Class':
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asClassIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character._class, false)));
+					case 'Bioform':
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asBioformIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.bioform, false)));
+					default:
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asStoryIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.story, false)));
+				}
+			case 'ChangeItemStat':
+				var ix = msg.a;
+				var item = msg.b;
+				var equipped = msg.c;
+				var stat = msg.d;
+				var newvalue = msg.e;
+				return model;
+			default:
+				var ix = msg.a;
+				var equipped = msg.b;
+				var targetItem = equipped ? A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.equipped) : A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.carried);
+				if (targetItem.$ === 'Just') {
+					var item = targetItem.a;
+					return model;
 				} else {
 					return model;
 				}
@@ -12979,7 +13074,7 @@ var $author$project$Main$statEditor = F3(
 					text: $elm$core$String$fromInt(value)
 				}));
 	});
-var $author$project$Main$editStatsModalOverlay = function (model) {
+var $author$project$Main$editStatsModal = function (model) {
 	return $mdgriffith$elm_ui$Element$inFront(
 		A2(
 			$mdgriffith$elm_ui$Element$el,
@@ -13011,7 +13106,50 @@ var $author$project$Main$editStatsModalOverlay = function (model) {
 						$mdgriffith$elm_ui$Element$row,
 						_List_fromArray(
 							[
-								A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0)
+								A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+								$mdgriffith$elm_ui$Element$centerX
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$padding(5),
+										$mdgriffith$elm_ui$Element$Border$color(
+										A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255)),
+										$mdgriffith$elm_ui$Element$Font$size(
+										$author$project$Main$scaled(2))
+									]),
+								$mdgriffith$elm_ui$Element$text('Edit base stats'))
+							])),
+						A2(
+						$mdgriffith$elm_ui$Element$row,
+						_List_fromArray(
+							[
+								A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+								$mdgriffith$elm_ui$Element$centerX
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$padding(5),
+										$mdgriffith$elm_ui$Element$Border$color(
+										A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255)),
+										$mdgriffith$elm_ui$Element$Font$size(
+										$author$project$Main$scaled(-1))
+									]),
+								$mdgriffith$elm_ui$Element$text('These mostly come from your choice of Bioform and Class, but your GM might give you other reasons to add base stats!'))
+							])),
+						A2(
+						$mdgriffith$elm_ui$Element$row,
+						_List_fromArray(
+							[
+								A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+								$mdgriffith$elm_ui$Element$centerX
 							]),
 						_List_fromArray(
 							[
@@ -13024,7 +13162,8 @@ var $author$project$Main$editStatsModalOverlay = function (model) {
 						$mdgriffith$elm_ui$Element$row,
 						_List_fromArray(
 							[
-								A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0)
+								A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+								$mdgriffith$elm_ui$Element$centerX
 							]),
 						_List_fromArray(
 							[
@@ -13300,6 +13439,27 @@ var $mdgriffith$elm_ui$Internal$Model$Left = {$: 'Left'};
 var $mdgriffith$elm_ui$Element$alignLeft = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Left);
 var $mdgriffith$elm_ui$Internal$Model$Top = {$: 'Top'};
 var $mdgriffith$elm_ui$Element$alignTop = $mdgriffith$elm_ui$Internal$Model$AlignY($mdgriffith$elm_ui$Internal$Model$Top);
+var $author$project$Main$EditItem = F2(
+	function (a, b) {
+		return {$: 'EditItem', a: a, b: b};
+	});
+var $author$project$Main$editEquippedModifier = function (ix) {
+	return A2(
+		$mdgriffith$elm_ui$Element$Input$button,
+		_List_Nil,
+		{
+			label: A2(
+				$mdgriffith$elm_ui$Element$el,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$Font$size(
+						$author$project$Main$scaled(-1))
+					]),
+				$mdgriffith$elm_ui$Element$text('Edit')),
+			onPress: $elm$core$Maybe$Just(
+				A2($author$project$Main$EditItem, ix, true))
+		});
+};
 var $author$project$Main$Carry = function (a) {
 	return {$: 'Carry', a: a};
 };
@@ -13320,9 +13480,10 @@ var $author$project$Main$equippedModifier = function (ix) {
 				$author$project$Main$Carry(ix))
 		});
 };
+var $mdgriffith$elm_ui$Internal$Model$Bottom = {$: 'Bottom'};
+var $mdgriffith$elm_ui$Element$alignBottom = $mdgriffith$elm_ui$Internal$Model$AlignY($mdgriffith$elm_ui$Internal$Model$Bottom);
 var $mdgriffith$elm_ui$Internal$Flag$fontWeight = $mdgriffith$elm_ui$Internal$Flag$flag(13);
 var $mdgriffith$elm_ui$Element$Font$bold = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$fontWeight, $mdgriffith$elm_ui$Internal$Style$classes.bold);
-var $mdgriffith$elm_ui$Element$Font$italic = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.italic);
 var $author$project$Main$joinStrings = F2(
 	function (mstr, res) {
 		if (mstr.$ === 'Just') {
@@ -13367,8 +13528,8 @@ var $author$project$Main$printStats = function (stats) {
 					_Utils_Tuple2('Heart', stats.hearts)
 				])));
 };
-var $author$project$Main$itemRow = F3(
-	function (modifierButton, ix, item) {
+var $author$project$Main$itemRow = F4(
+	function (modifierButton, editButton, ix, item) {
 		return A2(
 			$mdgriffith$elm_ui$Element$row,
 			_List_fromArray(
@@ -13386,14 +13547,15 @@ var $author$project$Main$itemRow = F3(
 					A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(
-						[$mdgriffith$elm_ui$Element$Font$bold, $mdgriffith$elm_ui$Element$Font$italic]),
+						[$mdgriffith$elm_ui$Element$Font$bold, $mdgriffith$elm_ui$Element$alignBottom]),
 					$mdgriffith$elm_ui$Element$text(item.name)),
 					A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(
 						[
 							$mdgriffith$elm_ui$Element$Font$size(
-							$author$project$Main$scaled(-4))
+							$author$project$Main$scaled(-3)),
+							$mdgriffith$elm_ui$Element$alignBottom
 						]),
 					$mdgriffith$elm_ui$Element$text(
 						$author$project$Main$printStats(item.stats))),
@@ -13402,27 +13564,15 @@ var $author$project$Main$itemRow = F3(
 					_List_fromArray(
 						[
 							$mdgriffith$elm_ui$Element$Font$size(
-							$author$project$Main$scaled(-2))
+							$author$project$Main$scaled(-2)),
+							$mdgriffith$elm_ui$Element$alignBottom
 						]),
 					$mdgriffith$elm_ui$Element$text(item.description)),
 					A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(
 						[$mdgriffith$elm_ui$Element$alignRight]),
-					A2(
-						$mdgriffith$elm_ui$Element$Input$button,
-						_List_Nil,
-						{
-							label: A2(
-								$mdgriffith$elm_ui$Element$el,
-								_List_fromArray(
-									[
-										$mdgriffith$elm_ui$Element$Font$size(
-										$author$project$Main$scaled(-1))
-									]),
-								$mdgriffith$elm_ui$Element$text('Edit')),
-							onPress: $elm$core$Maybe$Nothing
-						})),
+					editButton(ix)),
 					A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(
@@ -13430,6 +13580,7 @@ var $author$project$Main$itemRow = F3(
 					modifierButton(ix))
 				]));
 	});
+var $mdgriffith$elm_ui$Element$Font$italic = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.italic);
 var $author$project$Main$newItemRow = A2(
 	$mdgriffith$elm_ui$Element$row,
 	_List_fromArray(
@@ -13485,7 +13636,7 @@ var $author$project$Main$equippedCol = function (_char) {
 			_Utils_ap(
 				A2(
 					$elm$core$List$indexedMap,
-					$author$project$Main$itemRow($author$project$Main$equippedModifier),
+					A2($author$project$Main$itemRow, $author$project$Main$equippedModifier, $author$project$Main$editEquippedModifier),
 					_char.equipped),
 				_List_fromArray(
 					[$author$project$Main$newItemRow]))));
@@ -13858,8 +14009,14 @@ var $author$project$Main$heartRow = function (model) {
 var $author$project$Main$DisableTextEditing = function (a) {
 	return {$: 'DisableTextEditing', a: a};
 };
+var $author$project$Main$Hovered = function (a) {
+	return {$: 'Hovered', a: a};
+};
 var $author$project$Main$MakeTextEditable = function (a) {
 	return {$: 'MakeTextEditable', a: a};
+};
+var $author$project$Main$Unhovered = function (a) {
+	return {$: 'Unhovered', a: a};
 };
 var $author$project$Main$UpdateTextAttr = F2(
 	function (a, b) {
@@ -13872,6 +14029,20 @@ var $elm$html$Html$Events$onBlur = function (msg) {
 		$elm$json$Json$Decode$succeed(msg));
 };
 var $mdgriffith$elm_ui$Element$Events$onLoseFocus = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Attr, $elm$html$Html$Events$onBlur);
+var $elm$html$Html$Events$onMouseEnter = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseenter',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $mdgriffith$elm_ui$Element$Events$onMouseEnter = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Attr, $elm$html$Html$Events$onMouseEnter);
+var $elm$html$Html$Events$onMouseLeave = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseleave',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $mdgriffith$elm_ui$Element$Events$onMouseLeave = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Attr, $elm$html$Html$Events$onMouseLeave);
 var $author$project$Main$printTextAttribute = function (attr) {
 	switch (attr.$) {
 		case 'Name':
@@ -13929,6 +14100,23 @@ var $author$project$Main$editableTextField = F3(
 					return $mdgriffith$elm_ui$Element$text(prop.value);
 				}
 			}());
+		var buttonStyle = prop.hovered ? _List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$scrollbarX,
+				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$Events$onMouseEnter(
+				$author$project$Main$Hovered(prop.id)),
+				$mdgriffith$elm_ui$Element$Events$onMouseLeave(
+				$author$project$Main$Unhovered(prop.id))
+			]) : _List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$clip,
+				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$Events$onMouseEnter(
+				$author$project$Main$Hovered(prop.id)),
+				$mdgriffith$elm_ui$Element$Events$onMouseLeave(
+				$author$project$Main$Unhovered(prop.id))
+			]);
 		var readField = A2(
 			$mdgriffith$elm_ui$Element$row,
 			style,
@@ -13936,11 +14124,7 @@ var $author$project$Main$editableTextField = F3(
 				[
 					A2(
 					$mdgriffith$elm_ui$Element$Input$button,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$scrollbarX,
-							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-						]),
+					buttonStyle,
 					{
 						label: labelEl,
 						onPress: $elm$core$Maybe$Just(
@@ -14413,6 +14597,23 @@ var $author$project$Main$storyRow = function (model) {
 			]));
 };
 var $mdgriffith$elm_ui$Element$Font$typeface = $mdgriffith$elm_ui$Internal$Model$Typeface;
+var $author$project$Main$editUnequippedModifier = function (ix) {
+	return A2(
+		$mdgriffith$elm_ui$Element$Input$button,
+		_List_Nil,
+		{
+			label: A2(
+				$mdgriffith$elm_ui$Element$el,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$Font$size(
+						$author$project$Main$scaled(-1))
+					]),
+				$mdgriffith$elm_ui$Element$text('Edit')),
+			onPress: $elm$core$Maybe$Just(
+				A2($author$project$Main$EditItem, ix, false))
+		});
+};
 var $author$project$Main$Equip = function (a) {
 	return {$: 'Equip', a: a};
 };
@@ -14457,44 +14658,44 @@ var $author$project$Main$unequippedCol = function (_char) {
 				$mdgriffith$elm_ui$Element$text('Carried Gear')),
 			A2(
 				$elm$core$List$indexedMap,
-				$author$project$Main$itemRow($author$project$Main$unequippedModifier),
+				A2($author$project$Main$itemRow, $author$project$Main$unequippedModifier, $author$project$Main$editUnequippedModifier),
 				_char.carried)));
 };
 var $author$project$Main$view = function (model) {
 	var activeOverlay = model.settings.editingStats ? _List_fromArray(
 		[
-			$author$project$Main$editStatsModalOverlay(model)
+			$author$project$Main$editStatsModal(model)
 		]) : _List_Nil;
 	return A2(
 		$mdgriffith$elm_ui$Element$layout,
-		_Utils_ap(
-			_List_fromArray(
-				[
-					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-					$mdgriffith$elm_ui$Element$Font$family(
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$Font$typeface('Patrick Hand')
-						])),
-					$mdgriffith$elm_ui$Element$Font$size(
-					$author$project$Main$scaled(1)),
-					$mdgriffith$elm_ui$Element$Background$color(
-					A3($mdgriffith$elm_ui$Element$rgb255, 0, 0, 0))
-				]),
-			activeOverlay),
+		_List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$Font$family(
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$Font$typeface('Patrick Hand')
+					])),
+				$mdgriffith$elm_ui$Element$Font$size(
+				$author$project$Main$scaled(1)),
+				$mdgriffith$elm_ui$Element$Background$color(
+				A3($mdgriffith$elm_ui$Element$rgb255, 0, 0, 0))
+			]),
 		A2(
 			$mdgriffith$elm_ui$Element$column,
-			_List_fromArray(
-				[
-					$mdgriffith$elm_ui$Element$width(
-					$mdgriffith$elm_ui$Element$px(1000)),
-					$mdgriffith$elm_ui$Element$centerX,
-					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
-					$mdgriffith$elm_ui$Element$Background$color(
-					A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255)),
-					A2($mdgriffith$elm_ui$Element$paddingXY, 50, 23),
-					A2($mdgriffith$elm_ui$Element$spacingXY, 0, 23)
-				]),
+			_Utils_ap(
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$width(
+						$mdgriffith$elm_ui$Element$px(1280)),
+						$mdgriffith$elm_ui$Element$centerX,
+						$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+						$mdgriffith$elm_ui$Element$Background$color(
+						A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255)),
+						A2($mdgriffith$elm_ui$Element$paddingXY, 50, 23),
+						A2($mdgriffith$elm_ui$Element$spacingXY, 0, 23)
+					]),
+				activeOverlay),
 			_List_fromArray(
 				[
 					$author$project$Main$infoRow(model),

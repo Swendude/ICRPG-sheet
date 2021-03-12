@@ -1,11 +1,11 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Attr, Attribute, Element, alignLeft, alignRight, alignTop, centerX, centerY, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingEach, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
-import Element.Font as Font
+import Element.Font as Font exposing (center)
 import Element.Input as Input
 import Html exposing (Html)
 import List.Extra
@@ -13,7 +13,6 @@ import Maybe
 import String exposing (fromInt, toInt)
 import Svg
 import Svg.Attributes
-import Element exposing (paddingEach)
 
 
 main : Program () Model Msg
@@ -49,12 +48,14 @@ type alias AppSettings =
     { editableText : Maybe TextAttribute
     , editableNumber : Maybe NumberAttribute
     , editingStats : Bool
+    , editingItem : Maybe (Int, Bool, Item)
     }
 
 
 type alias CharacterTextProp =
     { value : String
     , id : TextAttribute
+    , hovered : Bool
     }
 
 
@@ -127,6 +128,7 @@ init =
         { editableText = Nothing
         , editableNumber = Nothing
         , editingStats = False
+        , editingItem = Nothing
         }
     }
 
@@ -136,27 +138,31 @@ tabula_rasa =
     { name =
         { value = "Thuldir"
         , id = Name
+        , hovered = False
         }
     , bioform =
         { value = "Dwarf"
         , id = Bioform
+        , hovered = False
         }
     , class =
         { value = "Knight"
         , id = Class
+        , hovered = False
         }
     , story =
         { value = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
         , id = Story
+        , hovered = False
         }
     , hitpoints =
         { value = 10
         , id = Hitpoints
         , editvalue = 0
         }
-    , equipped = [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 1), Item "Sword" "Makes you strong!" (Stats 1 0 0 0 0 0 0 0 0 0 0 0) ]
-    , carried = [ Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1)]
-    , stats = Stats 0 0 0 0 0 0 0 0 0 0 0 1
+    , equipped = [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 10), Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) ]
+    , carried = [ Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) ]
+    , stats = Stats 0 0 10 0 0 0 0 0 0 0 0 1
     , coin =
         { value = 0
         , id = Coin
@@ -185,7 +191,10 @@ type Msg
     | ChangeStat Stat String
     | Carry Int
     | Equip Int
-
+    | Hovered TextAttribute
+    | Unhovered TextAttribute
+    | ChangeItemStat Int Item Bool Stat String
+    | EditItem Int Bool
 
 
 -- ANCHOR Update
@@ -410,6 +419,74 @@ update msg model =
                 Nothing ->
                     model
 
+        Hovered attribute ->
+            case attribute of
+                Name ->
+                    True
+                        |> asHoveredIn model.character.name
+                        |> asNameIn model.character
+                        |> asCharIn model
+
+                Class ->
+                    True
+                        |> asHoveredIn model.character.class
+                        |> asClassIn model.character
+                        |> asCharIn model
+
+                Bioform ->
+                    True
+                        |> asHoveredIn model.character.bioform
+                        |> asBioformIn model.character
+                        |> asCharIn model
+
+                Story ->
+                    True
+                        |> asHoveredIn model.character.story
+                        |> asStoryIn model.character
+                        |> asCharIn model
+
+        Unhovered attribute ->
+            case attribute of
+                Name ->
+                    False
+                        |> asHoveredIn model.character.name
+                        |> asNameIn model.character
+                        |> asCharIn model
+
+                Class ->
+                    False
+                        |> asHoveredIn model.character.class
+                        |> asClassIn model.character
+                        |> asCharIn model
+
+                Bioform ->
+                    False
+                        |> asHoveredIn model.character.bioform
+                        |> asBioformIn model.character
+                        |> asCharIn model
+
+                Story ->
+                    False
+                        |> asHoveredIn model.character.story
+                        |> asStoryIn model.character
+                        |> asCharIn model
+        
+        ChangeItemStat ix item equipped stat newvalue ->
+            model
+        
+        EditItem ix equipped ->
+            let
+                targetItem =
+                    if equipped then 
+                        List.Extra.getAt ix model.character.equipped
+                    else
+                        List.Extra.getAt ix model.character.carried
+            in
+                case targetItem of
+                   Just item -> model
+                   Nothing -> model
+            
+
 
 updateStat : Model -> Stat -> Int -> Model
 updateStat model stat value =
@@ -494,35 +571,32 @@ printTextAttribute attr =
 view : Model -> Html Msg
 view model =
     let
-        
-
         activeOverlay =
             if model.settings.editingStats then
-                [ editStatsModalOverlay model ]
+                [ editStatsModal model ]
 
             else
                 []
     in
     Element.layout
-        ([ width fill
-        --  , height <| (px 2000)
-         , Font.family
+        [ width fill
+        , Font.family
             [ Font.typeface "Patrick Hand"
             ]
-         , Font.size (scaled 1)
-         , Background.color <| Element.rgb255 0 0 0
-         ]
-            ++ activeOverlay
-        )
+        , Font.size (scaled 1)
+        , Background.color <| Element.rgb255 0 0 0
+        ]
     <|
         Element.column
-            [ width <| px 1000
-            , centerX
-            , Element.height Element.fill
-            , Background.color <| Element.rgb255 255 255 255
-            , paddingXY 50 23
-            , spacingXY 0 23
-            ]
+            ([ width <| px 1280
+             , centerX
+             , Element.height Element.fill
+             , Background.color <| Element.rgb255 255 255 255
+             , paddingXY 50 23
+             , spacingXY 0 23
+             ]
+                ++ activeOverlay
+            )
             [ infoRow model
             , storyRow model
             , heartRow model
@@ -547,50 +621,110 @@ view model =
                 ]
             ]
 
-editStatsModalOverlay : Model -> Attribute Msg
-editStatsModalOverlay model =
-            inFront <|
-                el
-                    [ paddingXY 70 0
-                    , width fill
-                    , centerY
-                    , height fill
-                    , Background.color (Element.rgba 0 0 0 0.5)
+
+editStatsModal : Model -> Attribute Msg
+editStatsModal model =
+    inFront <|
+        el
+            [ paddingXY 70 0
+            , width fill
+            , centerY
+            , height fill
+            , Background.color (Element.rgba 0 0 0 0.5)
+            ]
+        <|
+            column
+                [ paddingXY 70 30
+                , width fill
+                , spacingXY 0 10
+                , centerY
+                , Background.color (rgb 0 0 0)
+                , Font.color (rgb 255 255 255)
+                ]
+                [ row [ spacingXY 10 0, centerX ]
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 2) ] <| text "Edit base stats"
                     ]
-                <|
-                    column
-                        [ paddingXY 70 30
-                        , width fill
-                        , spacingXY 0 10
-                        , centerY
-                        , Background.color (rgb 0 0 0)
-                        , Font.color (rgb 255 255 255)
-                        ]
-                        [ row [ spacingXY 10 0 ]
-                            [ statEditor Basic model.character.stats.basic "Basic"
-                            , statEditor Weapon model.character.stats.weapon "Weapon"
-                            , statEditor Magic model.character.stats.magic "Magic"
-                            , statEditor Armor model.character.stats.armor "Armor"
-                            ]
-                        , row [ spacingXY 10 0 ]
-                            [ statEditor Str model.character.stats.str "Str"
-                            , statEditor Dex model.character.stats.dex "Dex"
-                            , statEditor Con model.character.stats.con "Con"
-                            , statEditor Int model.character.stats.int "Int"
-                            , statEditor Wis model.character.stats.wis "Wis"
-                            , statEditor Cha model.character.stats.cha "Cha"
-                            ]
-                        , Input.button [ centerX ]
-                            { onPress = Just EditBaseStats
-                            , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Save"
-                            }
-                        ]
+                , row [ spacingXY 10 0, centerX ]
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled -1) ] <| text "These mostly come from your choice of Bioform and Class, but your GM might give you other reasons to add base stats!"
+                    ]
+                , row [ spacingXY 10 0, centerX ]
+                    [ statEditor Basic model.character.stats.basic "Basic"
+                    , statEditor Weapon model.character.stats.weapon "Weapon"
+                    , statEditor Magic model.character.stats.magic "Magic"
+                    , statEditor Armor model.character.stats.armor "Armor"
+                    ]
+                , row [ spacingXY 10 0, centerX ]
+                    [ statEditor Str model.character.stats.str "Str"
+                    , statEditor Dex model.character.stats.dex "Dex"
+                    , statEditor Con model.character.stats.con "Con"
+                    , statEditor Int model.character.stats.int "Int"
+                    , statEditor Wis model.character.stats.wis "Wis"
+                    , statEditor Cha model.character.stats.cha "Cha"
+                    ]
+                , Input.button [ centerX ]
+                    { onPress = Just EditBaseStats
+                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Save"
+                    }
+                ]
+
+editItemModal : Int -> Item -> Bool -> Model -> Attribute Msg
+editItemModal id item equipped model =
+    inFront <|
+        el
+            [ paddingXY 70 0
+            , width fill
+            , centerY
+            , height fill
+            , Background.color (Element.rgba 0 0 0 0.5)
+            ]
+        <|
+            column
+                [ paddingXY 70 30
+                , width fill
+                , spacingXY 0 10
+                , centerY
+                , Background.color (rgb 0 0 0)
+                , Font.color (rgb 255 255 255)
+                ]
+                [ row [ spacingXY 10 0, centerX ]
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 2) ] <| text "Edit item"
+                    ]
+                , row [ spacingXY 10 0, centerX ]
+                    [ statEditor Basic model.character.stats.basic "Basic"
+                    , statEditor Weapon model.character.stats.weapon "Weapon"
+                    , statEditor Magic model.character.stats.magic "Magic"
+                    , statEditor Armor model.character.stats.armor "Armor"
+                    ]
+                , row [ spacingXY 10 0, centerX ]
+                    [ statEditor Str model.character.stats.str "Str"
+                    , statEditor Dex model.character.stats.dex "Dex"
+                    , statEditor Con model.character.stats.con "Con"
+                    , statEditor Int model.character.stats.int "Int"
+                    , statEditor Wis model.character.stats.wis "Wis"
+                    , statEditor Cha model.character.stats.cha "Cha"
+                    ]
+                , Input.button [ centerX ]
+                    { onPress = Just EditBaseStats
+                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Save"
+                    }
+                ]
+
 
 statEditor : Stat -> Int -> String -> Element Msg
 statEditor stat value label =
     el [ width fill ] <|
         Input.text [ Font.color (rgb 0 0 0) ]
             { onChange = ChangeStat stat
+            , text = fromInt value
+            , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
+            , label = Input.labelAbove [ centerX ] <| text label
+            }
+
+itemStatEditor : Int -> Item -> Bool -> Stat -> Int -> String -> Element Msg
+itemStatEditor ix item equipped stat value label =
+    el [ width fill ] <|
+        Input.text [ Font.color (rgb 0 0 0) ]
+            { onChange = ChangeItemStat ix item equipped stat
             , text = fromInt value
             , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
             , label = Input.labelAbove [ centerX ] <| text label
@@ -664,9 +798,16 @@ editableTextField style editable prop =
                     _ ->
                         text prop.value
 
+        buttonStyle =
+            if prop.hovered then
+                [ scrollbarX, width fill, Events.onMouseEnter (Hovered prop.id), Events.onMouseLeave (Unhovered prop.id) ]
+
+            else
+                [ clip, width fill, Events.onMouseEnter (Hovered prop.id), Events.onMouseLeave (Unhovered prop.id) ]
+
         readField =
             row style
-                [ Input.button [ scrollbarX, width fill ]
+                [ Input.button buttonStyle
                     { label = labelEl
                     , onPress = Just <| MakeTextEditable prop.id
                     }
@@ -897,7 +1038,8 @@ statRow2 char =
 effortRow : Character -> Element Msg
 effortRow char =
     let
-        labelStyle = [ centerX, Font.size (scaled -1) ]
+        labelStyle =
+            [ centerX, Font.size (scaled -1) ]
     in
     row
         [ width fill
@@ -946,10 +1088,6 @@ gear =
         )
 
 
-
--- ANCHOR equipped
-
-
 equippedCol : Character -> Element Msg
 equippedCol char =
     column
@@ -961,7 +1099,8 @@ equippedCol char =
         (el [ alignLeft, alignTop, Font.size (scaled -1), paddingXY 0 10 ] <|
             text "Equipped Gear"
         )
-            :: List.indexedMap (itemRow equippedModifier) char.equipped ++ [newItemRow]
+            :: List.indexedMap (itemRow equippedModifier editEquippedModifier) char.equipped
+            ++ [ newItemRow ]
 
 
 unequippedCol : Character -> Element Msg
@@ -975,7 +1114,7 @@ unequippedCol char =
         (el [ alignTop, alignRight, Font.size (scaled -1), paddingXY 0 10 ] <|
             text "Carried Gear"
         )
-            :: List.indexedMap (itemRow unequippedModifier) char.carried
+            :: List.indexedMap (itemRow unequippedModifier editUnequippedModifier) char.carried
 
 
 equippedModifier : Int -> Element Msg
@@ -993,28 +1132,20 @@ unequippedModifier ix =
         , label = el [ Font.size (scaled -1) ] <| text "Equip"
         }
 
-newItemRow : Element Msg
-newItemRow = row
-        [ spacingXY 10 0
-        , Background.color (rgb255 244 244 244)
-        , width fill
-        , padding 10
-        , Border.widthEach
-            { bottom = 0
-            , left = 2
-            , right = 0
-            , top = 0
-            }
-        ]
-        [ 
-        el [ alignRight, centerX ] <|
-            Input.button []
-                { onPress = Nothing
-                , label = el [ Font.italic ] <| text "+ Add Item"
+editEquippedModifier : Int -> Element Msg
+editEquippedModifier ix =  Input.button []
+                { onPress = Just <| EditItem ix True 
+                , label = el [ Font.size (scaled -1) ] <| text "Edit"
                 }
-        ]
-itemRow : (Int -> Element Msg) -> Int -> Item -> Element Msg
-itemRow modifierButton ix item =
+
+editUnequippedModifier : Int -> Element Msg
+editUnequippedModifier ix =  Input.button []
+                { onPress = Just <| EditItem ix False 
+                , label = el [ Font.size (scaled -1) ] <| text "Edit"
+                }
+
+newItemRow : Element Msg
+newItemRow =
     row
         [ spacingXY 10 0
         , Background.color (rgb255 244 244 244)
@@ -1027,57 +1158,87 @@ itemRow modifierButton ix item =
             , top = 0
             }
         ]
-        [ el [ Font.bold, Font.italic ] <| text item.name
-        ,  el [ Font.size (scaled -4) ] <| text <| printStats item.stats
-        , el [ Font.size (scaled -2) ] <| text item.description
-        , el [ alignRight ] <|
+        [ el [ alignRight, centerX ] <|
             Input.button []
                 { onPress = Nothing
-                , label = el [ Font.size (scaled -1) ] <| text "Edit"
+                , label = el [ Font.italic ] <| text "+ Add Item"
                 }
+        ]
+
+
+itemRow : (Int -> Element Msg) -> (Int -> Element Msg) -> Int -> Item -> Element Msg
+itemRow modifierButton editButton ix item =
+    row
+        [ spacingXY 10 0
+        , Background.color (rgb255 244 244 244)
+        , width fill
+        , padding 10
+        , Border.widthEach
+            { bottom = 0
+            , left = 2
+            , right = 0
+            , top = 0
+            }
+        ]
+        [ el [ Font.bold, alignBottom ] <| text item.name
+        , el [ Font.size (scaled -3), alignBottom ] <| text <| printStats item.stats
+        , el [ Font.size (scaled -2), alignBottom ] <| text item.description
+        , el [ alignRight ] <| editButton ix           
         , el [ alignRight ] <| modifierButton ix
         ]
 
 
 printStats : Stats -> String
 printStats stats =
-    List.foldl joinStrings "" <| List.map printStat <| [("str", stats.str)
-    ,("Dex", stats.dex)
-    ,("Con", stats.con)
-    ,("Wis", stats.wis)
-    ,("Int", stats.int)
-    ,("Cha", stats.cha)
-    ,("Basic", stats.basic)
-    ,("Weapon", stats.weapon)
-    ,("Magic", stats.magic)
-    ,("Ultimate", stats.ultimate)
-    ,("Armor", stats.armor)
-    ,("Heart", stats.hearts)]
-    
-joinStrings : Maybe String -> String -> String
-joinStrings mstr res=
-    case mstr of
-       Just str -> 
-        case res of 
-            "" -> str
-            _ -> res ++ ", " ++ str
-         
-       Nothing -> res
+    List.foldl joinStrings "" <|
+        List.map printStat <|
+            [ ( "str", stats.str )
+            , ( "Dex", stats.dex )
+            , ( "Con", stats.con )
+            , ( "Wis", stats.wis )
+            , ( "Int", stats.int )
+            , ( "Cha", stats.cha )
+            , ( "Basic", stats.basic )
+            , ( "Weapon", stats.weapon )
+            , ( "Magic", stats.magic )
+            , ( "Ultimate", stats.ultimate )
+            , ( "Armor", stats.armor )
+            , ( "Heart", stats.hearts )
+            ]
 
-printStat :  (String, Int) -> Maybe String
-printStat val_stat = 
+
+joinStrings : Maybe String -> String -> String
+joinStrings mstr res =
+    case mstr of
+        Just str ->
+            case res of
+                "" ->
+                    str
+
+                _ ->
+                    res ++ ", " ++ str
+
+        Nothing ->
+            res
+
+
+printStat : ( String, Int ) -> Maybe String
+printStat val_stat =
     let
-        val = Tuple.first val_stat
-        stat = Tuple.second val_stat
+        val =
+            Tuple.first val_stat
+
+        stat =
+            Tuple.second val_stat
     in
     if stat > 0 then
         Just <| val ++ " +" ++ String.fromInt stat
-    else
-        if stat < 0 then
-            Just <| val ++ " -" ++ String.fromInt stat
-        else
-            Nothing
 
+    else if stat < 0 then
+        Just <| val ++ " -" ++ String.fromInt stat
+
+    else
+        Nothing
 
 
 unEquippedCol : Character -> Element Msg
@@ -1280,3 +1441,8 @@ asEquippedIn char items =
 asCarriedIn : Character -> List Item -> Character
 asCarriedIn char items =
     { char | carried = items }
+
+
+asHoveredIn : CharacterTextProp -> Bool -> CharacterTextProp
+asHoveredIn charp hovered =
+    { charp | hovered = hovered }
