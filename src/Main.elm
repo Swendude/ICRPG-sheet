@@ -1,16 +1,17 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Attr, Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingEach, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
+import Element exposing (Attr, Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, inFront, minimum, padding, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
-import Element.Font as Font exposing (center)
+import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
+import List
 import List.Extra
 import Maybe
-import String exposing (fromInt, toInt)
+import String
 import Svg
 import Svg.Attributes
 
@@ -163,6 +164,15 @@ tabula_rasa =
     , items =
         [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 10) True
         , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
+        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
+        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
+        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
+        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
+        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
+        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
+        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
+        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
+        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
         , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
         ]
     , stats = Stats 0 0 10 0 0 0 0 0 0 0 0 1
@@ -356,19 +366,19 @@ update msg model =
         UpdateEditField id value ->
             case id of
                 Coin ->
-                    Maybe.withDefault 0 (toInt value)
+                    Maybe.withDefault 0 (String.toInt value)
                         |> asEditValueIn model.character.coin
                         |> asCoinIn model.character
                         |> asCharIn model
 
                 Hitpoints ->
-                    Maybe.withDefault 0 (toInt value)
+                    Maybe.withDefault 0 (String.toInt value)
                         |> asEditValueIn model.character.hitpoints
                         |> asHitpointsIn model.character
                         |> asCharIn model
 
                 Deathtimer ->
-                    Maybe.withDefault 0 (toInt value)
+                    Maybe.withDefault 0 (String.toInt value)
                         |> asEditValueIn model.character.deathtimer
                         |> asDeathtimerIn model.character
                         |> asCharIn model
@@ -379,7 +389,7 @@ update msg model =
                 |> asSettingsIn model
 
         ChangeStat stat value ->
-            case toInt value of
+            case String.toInt value of
                 Just intVal ->
                     updateStat model stat intVal
 
@@ -390,15 +400,22 @@ update msg model =
             case List.Extra.getAt ix model.character.items of
                 Just item ->
                     let
+                        totalItems =
+                            List.length <| List.filter ((/=) item.equipped << .equipped) model.character.items
+
                         newItem =
                             { item | equipped = not item.equipped }
 
                         newItems =
                             List.Extra.setAt ix newItem model.character.items
                     in
-                    newItems
-                        |> asItemsIn model.character
-                        |> asCharIn model
+                    if totalItems < 10 then
+                        newItems
+                            |> asItemsIn model.character
+                            |> asCharIn model
+
+                    else
+                        model
 
                 Nothing ->
                     model
@@ -711,7 +728,7 @@ statEditor stat value label =
     el [ width fill ] <|
         Input.text [ Font.color (rgb 0 0 0) ]
             { onChange = ChangeStat stat
-            , text = fromInt value
+            , text = String.fromInt value
             , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
             , label = Input.labelAbove [ centerX ] <| text label
             }
@@ -722,7 +739,7 @@ itemStatEditor ix item equipped stat value label =
     el [ width fill ] <|
         Input.text [ Font.color (rgb 0 0 0) ]
             { onChange = ChangeItemStat ix item equipped stat
-            , text = fromInt value
+            , text = String.fromInt value
             , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
             , label = Input.labelAbove [ centerX ] <| text label
             }
@@ -846,7 +863,7 @@ editableNumberField style editable prop =
                 ]
             <|
                 text <|
-                    fromInt prop.value
+                    String.fromInt prop.value
 
         readField =
             row
@@ -1094,7 +1111,7 @@ equippedCol char =
         ]
     <|
         (el [ alignLeft, alignTop, Font.size (scaled -1), paddingXY 0 10 ] <|
-            text "Equipped Gear"
+            text ("Equipped Gear " ++ (String.fromInt <| List.length <| equippedItemsIndexed char.items) ++ "/10")
         )
             :: List.map (itemRow equippedModifier editEquippedModifier) (equippedItemsIndexed char.items)
             ++ [ newItemRow ]
@@ -1108,8 +1125,8 @@ unequippedCol char =
         , spacingXY 0 10
         ]
     <|
-        (el [ alignTop, alignRight, Font.size (scaled -1), paddingXY 0 10 ] <|
-            text "Carried Gear"
+        (el [ alignTop, Font.size (scaled -1), paddingXY 0 10 ] <|
+            text ("Carried Gear " ++ (String.fromInt <| List.length <| carriedItemsIndexed char.items) ++ "/10")
         )
             :: List.map (itemRow carriedModifier editUnequippedModifier) (carriedItemsIndexed char.items)
 

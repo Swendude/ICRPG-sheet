@@ -5082,6 +5082,60 @@ var $author$project$Main$tabula_rasa = {
 			'Heal',
 			'Wis Spell: Heal an ally',
 			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			false),
+			A4(
+			$author$project$Main$Item,
+			'Heal',
+			'Wis Spell: Heal an ally',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			false),
+			A4(
+			$author$project$Main$Item,
+			'Sword',
+			'Makes you strong!',
+			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+			true),
+			A4(
+			$author$project$Main$Item,
+			'Sword',
+			'Makes you strong!',
+			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+			true),
+			A4(
+			$author$project$Main$Item,
+			'Sword',
+			'Makes you strong!',
+			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+			true),
+			A4(
+			$author$project$Main$Item,
+			'Sword',
+			'Makes you strong!',
+			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+			true),
+			A4(
+			$author$project$Main$Item,
+			'Heal',
+			'Wis Spell: Heal an ally',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			false),
+			A4(
+			$author$project$Main$Item,
+			'Heal',
+			'Wis Spell: Heal an ally',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			false),
+			A4(
+			$author$project$Main$Item,
+			'Heal',
+			'Wis Spell: Heal an ally',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			false),
+			A4(
+			$author$project$Main$Item,
+			'Heal',
+			'Wis Spell: Heal an ally',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
 			false)
 		]),
 	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
@@ -10740,6 +10794,17 @@ var $author$project$Main$asTextValueIn = F2(
 			charp,
 			{value: newvalue});
 	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -10907,17 +10972,6 @@ var $elm_community$list_extra$List$Extra$setAt = F2(
 			$elm_community$list_extra$List$Extra$updateAt,
 			index,
 			$elm$core$Basics$always(value));
-	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
 	});
 var $author$project$Main$sumStatsEquipped = F2(
 	function (s1, s2) {
@@ -11238,14 +11292,24 @@ var $author$project$Main$update = F2(
 				var _v8 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
 				if (_v8.$ === 'Just') {
 					var item = _v8.a;
+					var totalItems = $elm$core$List$length(
+						A2(
+							$elm$core$List$filter,
+							A2(
+								$elm$core$Basics$composeL,
+								$elm$core$Basics$neq(item.equipped),
+								function ($) {
+									return $.equipped;
+								}),
+							model.character.items));
 					var newItem = _Utils_update(
 						item,
 						{equipped: !item.equipped});
 					var newItems = A3($elm_community$list_extra$List$Extra$setAt, ix, newItem, model.character.items);
-					return A2(
+					return (totalItems < 10) ? A2(
 						$author$project$Main$asCharIn,
 						model,
-						A2($author$project$Main$asItemsIn, model.character, newItems));
+						A2($author$project$Main$asItemsIn, model.character, newItems)) : model;
 				} else {
 					return model;
 				}
@@ -18648,7 +18712,10 @@ var $author$project$Main$equippedCol = function (_char) {
 						$author$project$Main$scaled(-1)),
 						A2($mdgriffith$elm_ui$Element$paddingXY, 0, 10)
 					]),
-				$mdgriffith$elm_ui$Element$text('Equipped Gear')),
+				$mdgriffith$elm_ui$Element$text(
+					'Equipped Gear ' + ($elm$core$String$fromInt(
+						$elm$core$List$length(
+							$author$project$Main$equippedItemsIndexed(_char.items))) + '/10'))),
 			_Utils_ap(
 				A2(
 					$elm$core$List$map,
@@ -19676,12 +19743,14 @@ var $author$project$Main$unequippedCol = function (_char) {
 				_List_fromArray(
 					[
 						$mdgriffith$elm_ui$Element$alignTop,
-						$mdgriffith$elm_ui$Element$alignRight,
 						$mdgriffith$elm_ui$Element$Font$size(
 						$author$project$Main$scaled(-1)),
 						A2($mdgriffith$elm_ui$Element$paddingXY, 0, 10)
 					]),
-				$mdgriffith$elm_ui$Element$text('Carried Gear')),
+				$mdgriffith$elm_ui$Element$text(
+					'Carried Gear ' + ($elm$core$String$fromInt(
+						$elm$core$List$length(
+							$author$project$Main$carriedItemsIndexed(_char.items))) + '/10'))),
 			A2(
 				$elm$core$List$map,
 				A2($author$project$Main$itemRow, $author$project$Main$carriedModifier, $author$project$Main$editUnequippedModifier),
