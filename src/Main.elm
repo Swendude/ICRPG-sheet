@@ -892,10 +892,24 @@ editItemModal item =
                     , statEditor Wis item.stats.wis "Wis"
                     , statEditor Cha item.stats.cha "Cha"
                     ]
-                , Input.button [ centerX ]
-                    { onPress = Just DisableEdit
-                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Close"
-                    }
+                , row [ centerX, spacingXY 10 0 ]
+                    [ Input.button [ centerX ]
+                        { onPress = Just DisableEdit
+                        , label =
+                            el
+                                [ padding 5
+                                , Border.width 1
+                                , Border.color (rgb 255 255 255)
+                                , Background.color (rgb255 194 0 0)
+                                ]
+                            <|
+                                text "Delete item"
+                        }
+                    , Input.button [ centerX ]
+                        { onPress = Just DisableEdit
+                        , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Close"
+                        }
+                    ]
                 ]
 
 

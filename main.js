@@ -13907,22 +13907,51 @@ var $author$project$Main$editItemModal = function (item) {
 								A3($author$project$Main$statEditor, $author$project$Main$Cha, item.stats.cha, 'Cha')
 							])),
 						A2(
-						$mdgriffith$elm_ui$Element$Input$button,
+						$mdgriffith$elm_ui$Element$row,
 						_List_fromArray(
-							[$mdgriffith$elm_ui$Element$centerX]),
-						{
-							label: A2(
-								$mdgriffith$elm_ui$Element$el,
+							[
+								$mdgriffith$elm_ui$Element$centerX,
+								A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$mdgriffith$elm_ui$Element$Input$button,
 								_List_fromArray(
-									[
-										$mdgriffith$elm_ui$Element$padding(5),
-										$mdgriffith$elm_ui$Element$Border$width(1),
-										$mdgriffith$elm_ui$Element$Border$color(
-										A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255))
-									]),
-								$mdgriffith$elm_ui$Element$text('Close')),
-							onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
-						})
+									[$mdgriffith$elm_ui$Element$centerX]),
+								{
+									label: A2(
+										$mdgriffith$elm_ui$Element$el,
+										_List_fromArray(
+											[
+												$mdgriffith$elm_ui$Element$padding(5),
+												$mdgriffith$elm_ui$Element$Border$width(1),
+												$mdgriffith$elm_ui$Element$Border$color(
+												A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255)),
+												$mdgriffith$elm_ui$Element$Background$color(
+												A3($mdgriffith$elm_ui$Element$rgb255, 194, 0, 0))
+											]),
+										$mdgriffith$elm_ui$Element$text('Delete item')),
+									onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
+								}),
+								A2(
+								$mdgriffith$elm_ui$Element$Input$button,
+								_List_fromArray(
+									[$mdgriffith$elm_ui$Element$centerX]),
+								{
+									label: A2(
+										$mdgriffith$elm_ui$Element$el,
+										_List_fromArray(
+											[
+												$mdgriffith$elm_ui$Element$padding(5),
+												$mdgriffith$elm_ui$Element$Border$width(1),
+												$mdgriffith$elm_ui$Element$Border$color(
+												A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255))
+											]),
+										$mdgriffith$elm_ui$Element$text('Close')),
+									onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
+								})
+							]))
 					]))));
 };
 var $author$project$Main$editStatsModal = function (model) {
