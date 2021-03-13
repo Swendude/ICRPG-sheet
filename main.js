@@ -4392,8 +4392,8 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 {
 	return a >>> offset;
 });
+var $elm$core$Basics$False = {$: 'False'};
 var $author$project$Main$NotEditing = {$: 'NotEditing'};
-var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$List$cons = _List_cons;
 var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
 var $elm$core$Array$foldr = F3(
@@ -4478,7 +4478,6 @@ var $author$project$Main$Bioform = {$: 'Bioform'};
 var $author$project$Main$Class = {$: 'Class'};
 var $author$project$Main$Coin = {$: 'Coin'};
 var $author$project$Main$Deathtimer = {$: 'Deathtimer'};
-var $elm$core$Basics$False = {$: 'False'};
 var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
 var $author$project$Main$Item = F4(
 	function (name, description, stats, equipped) {
@@ -4545,7 +4544,7 @@ var $author$project$Main$tabula_rasa = {
 };
 var $author$project$Main$init = {
 	character: $author$project$Main$tabula_rasa,
-	settings: {editableNumber: $elm$core$Maybe$Nothing, editableText: $elm$core$Maybe$Nothing, editingState: $author$project$Main$NotEditing}
+	settings: {darkMode: false, editingState: $author$project$Main$NotEditing}
 };
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
@@ -4572,6 +4571,7 @@ var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
 };
+var $elm$core$Maybe$Nothing = {$: 'Nothing'};
 var $elm$core$String$all = _String_all;
 var $elm$core$Basics$and = _Basics_and;
 var $elm$core$Basics$append = _Utils_append;
@@ -5274,10 +5274,16 @@ var $elm$browser$Browser$sandbox = function (impl) {
 			view: impl.view
 		});
 };
-var $author$project$Main$EditingItem = function (a) {
-	return {$: 'EditingItem', a: a};
+var $author$project$Main$EditingCharacterNumber = function (a) {
+	return {$: 'EditingCharacterNumber', a: a};
 };
-var $author$project$Main$EditingStats = {$: 'EditingStats'};
+var $author$project$Main$EditingCharacterStats = {$: 'EditingCharacterStats'};
+var $author$project$Main$EditingCharactertext = function (a) {
+	return {$: 'EditingCharactertext', a: a};
+};
+var $author$project$Main$EditingItemAttr = function (a) {
+	return {$: 'EditingItemAttr', a: a};
+};
 var $author$project$Main$asBioformIn = F2(
 	function (_char, newbioform) {
 		return _Utils_update(
@@ -5313,18 +5319,6 @@ var $author$project$Main$asEditValueIn = F2(
 		return _Utils_update(
 			charp,
 			{editvalue: newvalue});
-	});
-var $author$project$Main$asEditableNumberIn = F2(
-	function (setting, editable) {
-		return _Utils_update(
-			setting,
-			{editableNumber: editable});
-	});
-var $author$project$Main$asEditableTextIn = F2(
-	function (setting, editable) {
-		return _Utils_update(
-			setting,
-			{editableText: editable});
 	});
 var $author$project$Main$asEditingStateIn = F2(
 	function (state, newState) {
@@ -5368,23 +5362,11 @@ var $author$project$Main$asSettingsIn = F2(
 			model,
 			{settings: settings});
 	});
-var $author$project$Main$asStatsIn = F2(
-	function (_char, stats) {
-		return _Utils_update(
-			_char,
-			{stats: stats});
-	});
 var $author$project$Main$asStoryIn = F2(
 	function (_char, newstory) {
 		return _Utils_update(
 			_char,
 			{story: newstory});
-	});
-var $author$project$Main$asStrIn = F2(
-	function (stats, change) {
-		return _Utils_update(
-			stats,
-			{str: change});
 	});
 var $author$project$Main$asTextValueIn = F2(
 	function (charp, newvalue) {
@@ -5787,6 +5769,12 @@ var $author$project$Main$updateItemStat = F4(
 			return model;
 		}
 	});
+var $author$project$Main$asStatsIn = F2(
+	function (_char, stats) {
+		return _Utils_update(
+			_char,
+			{stats: stats});
+	});
 var $author$project$Main$updateStat = F3(
 	function (model, stat, value) {
 		var statsToModel = function (newStat) {
@@ -5871,231 +5859,227 @@ var $elm$core$Maybe$withDefault = F2(
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
-			case 'Increment':
-				return A2(
-					$author$project$Main$asCharIn,
-					model,
-					A2(
-						$author$project$Main$asStatsIn,
-						model.character,
-						A2($author$project$Main$asStrIn, model.character.stats, model.character.stats.str + 1)));
-			case 'Decrement':
-				return A2(
-					$author$project$Main$asCharIn,
-					model,
-					A2(
-						$author$project$Main$asStatsIn,
-						model.character,
-						A2($author$project$Main$asStrIn, model.character.stats, model.character.stats.str - 1)));
-			case 'MakeTextEditable':
+			case 'EditText':
 				var id = msg.a;
 				return A2(
 					$author$project$Main$asSettingsIn,
 					model,
 					A2(
-						$author$project$Main$asEditableTextIn,
+						$author$project$Main$asEditingStateIn,
 						model.settings,
-						$elm$core$Maybe$Just(id)));
-			case 'DisableTextEditing':
-				var id = msg.a;
-				var allowEmpty = A2(
-					$author$project$Main$asSettingsIn,
-					model,
-					A2($author$project$Main$asEditableTextIn, model.settings, $elm$core$Maybe$Nothing));
-				var checkEmpty = function (_v2) {
-					return (model.character.name.value === '') ? model : allowEmpty;
-				};
-				switch (id.$) {
-					case 'Name':
-						return checkEmpty(model.character.name.value);
-					case 'Class':
-						return checkEmpty(model.character._class.value);
-					case 'Bioform':
-						return checkEmpty(model.character.bioform.value);
-					default:
-						return allowEmpty;
-				}
-			case 'UpdateTextAttr':
-				var attr = msg.a;
-				var value = msg.b;
-				return A2(
-					$author$project$Main$asCharIn,
-					model,
-					function () {
-						switch (attr.$) {
-							case 'Name':
-								return A2(
-									$author$project$Main$asNameIn,
-									model.character,
-									A2($author$project$Main$asTextValueIn, model.character.name, value));
-							case 'Class':
-								return A2(
-									$author$project$Main$asClassIn,
-									model.character,
-									A2($author$project$Main$asTextValueIn, model.character._class, value));
-							case 'Bioform':
-								return A2(
-									$author$project$Main$asBioformIn,
-									model.character,
-									A2($author$project$Main$asTextValueIn, model.character.bioform, value));
-							default:
-								return A2(
-									$author$project$Main$asStoryIn,
-									model.character,
-									A2($author$project$Main$asTextValueIn, model.character.story, value));
-						}
-					}());
-			case 'MakeNumberEditable':
+						$author$project$Main$EditingCharactertext(id)));
+			case 'EditNumber':
 				var id = msg.a;
 				return A2(
 					$author$project$Main$asSettingsIn,
 					model,
 					A2(
-						$author$project$Main$asEditableNumberIn,
+						$author$project$Main$asEditingStateIn,
 						model.settings,
-						$elm$core$Maybe$Just(id)));
-			case 'DisableNumberEditing':
-				return A2(
-					$author$project$Main$asSettingsIn,
-					model,
-					A2($author$project$Main$asEditableNumberIn, model.settings, $elm$core$Maybe$Nothing));
-			case 'IncreaseNumberAttribute':
-				var id = msg.a;
-				switch (id.$) {
-					case 'Coin':
-						return A2(
-							$author$project$Main$asCharIn,
-							model,
-							A2(
-								$author$project$Main$asCoinIn,
-								model.character,
-								A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value + model.character.coin.editvalue)));
-					case 'Hitpoints':
-						var result = model.character.hitpoints.value + model.character.hitpoints.editvalue;
-						var maxResult = (_Utils_cmp(
-							result,
-							model.character.stats.hearts + (function ($) {
-								return $.hearts;
-							}(
-								$author$project$Main$totalEquippedStats(model.character.items)) * 10)) > 0) ? ((model.character.stats.hearts + function ($) {
-							return $.hearts;
-						}(
-							$author$project$Main$totalEquippedStats(model.character.items))) * 10) : result;
-						return A2(
-							$author$project$Main$asCharIn,
-							model,
-							A2(
-								$author$project$Main$asHitpointsIn,
-								model.character,
-								A2($author$project$Main$asNumberValueIn, model.character.hitpoints, maxResult)));
-					default:
-						var result = model.character.deathtimer.value + model.character.deathtimer.editvalue;
-						var maxResult = (result > 6) ? 6 : result;
-						return A2(
-							$author$project$Main$asCharIn,
-							model,
-							A2(
-								$author$project$Main$asDeathtimerIn,
-								model.character,
-								A2($author$project$Main$asNumberValueIn, model.character.deathtimer, maxResult)));
-				}
-			case 'DecreaseNumberAttribute':
-				var id = msg.a;
-				switch (id.$) {
-					case 'Coin':
-						return A2(
-							$author$project$Main$asCharIn,
-							model,
-							A2(
-								$author$project$Main$asCoinIn,
-								model.character,
-								A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value - model.character.coin.editvalue)));
-					case 'Hitpoints':
-						return (model.character.hitpoints.value <= 0) ? model : A2(
-							$author$project$Main$asCharIn,
-							model,
-							A2(
-								$author$project$Main$asHitpointsIn,
-								model.character,
-								A2($author$project$Main$asNumberValueIn, model.character.hitpoints, model.character.hitpoints.value - model.character.hitpoints.editvalue)));
-					default:
-						return (model.character.deathtimer.value <= 0) ? model : A2(
-							$author$project$Main$asCharIn,
-							model,
-							A2(
-								$author$project$Main$asDeathtimerIn,
-								model.character,
-								A2($author$project$Main$asNumberValueIn, model.character.deathtimer, model.character.deathtimer.value - model.character.deathtimer.editvalue)));
-				}
-			case 'UpdateEditField':
-				var id = msg.a;
-				var value = msg.b;
-				switch (id.$) {
-					case 'Coin':
-						return A2(
-							$author$project$Main$asCharIn,
-							model,
-							A2(
-								$author$project$Main$asCoinIn,
-								model.character,
-								A2(
-									$author$project$Main$asEditValueIn,
-									model.character.coin,
-									A2(
-										$elm$core$Maybe$withDefault,
-										0,
-										$elm$core$String$toInt(value)))));
-					case 'Hitpoints':
-						return A2(
-							$author$project$Main$asCharIn,
-							model,
-							A2(
-								$author$project$Main$asHitpointsIn,
-								model.character,
-								A2(
-									$author$project$Main$asEditValueIn,
-									model.character.hitpoints,
-									A2(
-										$elm$core$Maybe$withDefault,
-										0,
-										$elm$core$String$toInt(value)))));
-					default:
-						return A2(
-							$author$project$Main$asCharIn,
-							model,
-							A2(
-								$author$project$Main$asDeathtimerIn,
-								model.character,
-								A2(
-									$author$project$Main$asEditValueIn,
-									model.character.deathtimer,
-									A2(
-										$elm$core$Maybe$withDefault,
-										0,
-										$elm$core$String$toInt(value)))));
-				}
+						$author$project$Main$EditingCharacterNumber(id)));
 			case 'EditBaseStats':
 				return A2(
 					$author$project$Main$asSettingsIn,
 					model,
-					A2($author$project$Main$asEditingStateIn, model.settings, $author$project$Main$EditingStats));
+					A2($author$project$Main$asEditingStateIn, model.settings, $author$project$Main$EditingCharacterStats));
+			case 'EditItem':
+				var ix = msg.a;
+				return A2(
+					$author$project$Main$asSettingsIn,
+					model,
+					A2(
+						$author$project$Main$asEditingStateIn,
+						model.settings,
+						$author$project$Main$EditingItemAttr(ix)));
 			case 'DisableEdit':
 				return A2(
 					$author$project$Main$asSettingsIn,
 					model,
 					A2($author$project$Main$asEditingStateIn, model.settings, $author$project$Main$NotEditing));
+			case 'UpdateTextAttr':
+				var value = msg.a;
+				return A2(
+					$author$project$Main$asCharIn,
+					model,
+					function () {
+						var _v1 = model.settings.editingState;
+						if (_v1.$ === 'EditingCharactertext') {
+							switch (_v1.a.$) {
+								case 'Name':
+									var _v2 = _v1.a;
+									return A2(
+										$author$project$Main$asNameIn,
+										model.character,
+										A2($author$project$Main$asTextValueIn, model.character.name, value));
+								case 'Class':
+									var _v3 = _v1.a;
+									return A2(
+										$author$project$Main$asClassIn,
+										model.character,
+										A2($author$project$Main$asTextValueIn, model.character._class, value));
+								case 'Bioform':
+									var _v4 = _v1.a;
+									return A2(
+										$author$project$Main$asBioformIn,
+										model.character,
+										A2($author$project$Main$asTextValueIn, model.character.bioform, value));
+								default:
+									var _v5 = _v1.a;
+									return A2(
+										$author$project$Main$asStoryIn,
+										model.character,
+										A2($author$project$Main$asTextValueIn, model.character.story, value));
+							}
+						} else {
+							return model.character;
+						}
+					}());
+			case 'IncreaseNumberAttribute':
+				var _v6 = model.settings.editingState;
+				if (_v6.$ === 'EditingCharacterNumber') {
+					switch (_v6.a.$) {
+						case 'Coin':
+							var _v7 = _v6.a;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asCoinIn,
+									model.character,
+									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value + model.character.coin.editvalue)));
+						case 'Hitpoints':
+							var _v8 = _v6.a;
+							var result = model.character.hitpoints.value + model.character.hitpoints.editvalue;
+							var maxHitpoints = (model.character.stats.hearts + function ($) {
+								return $.hearts;
+							}(
+								$author$project$Main$totalEquippedStats(model.character.items))) * 10;
+							var maxResult = (_Utils_cmp(result, maxHitpoints) > 0) ? maxHitpoints : result;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asHitpointsIn,
+									model.character,
+									A2($author$project$Main$asNumberValueIn, model.character.hitpoints, maxResult)));
+						default:
+							var _v9 = _v6.a;
+							var result = model.character.deathtimer.value + model.character.deathtimer.editvalue;
+							var maxResult = (result > 6) ? 6 : result;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asDeathtimerIn,
+									model.character,
+									A2($author$project$Main$asNumberValueIn, model.character.deathtimer, maxResult)));
+					}
+				} else {
+					return model;
+				}
+			case 'DecreaseNumberAttribute':
+				var _v10 = model.settings.editingState;
+				if (_v10.$ === 'EditingCharacterNumber') {
+					switch (_v10.a.$) {
+						case 'Coin':
+							var _v11 = _v10.a;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asCoinIn,
+									model.character,
+									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value - model.character.coin.editvalue)));
+						case 'Hitpoints':
+							var _v12 = _v10.a;
+							var resultHitpoints = model.character.hitpoints.value - model.character.hitpoints.editvalue;
+							var newHitpoints = (resultHitpoints <= 0) ? 0 : resultHitpoints;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asHitpointsIn,
+									model.character,
+									A2($author$project$Main$asNumberValueIn, model.character.hitpoints, newHitpoints)));
+						default:
+							var _v13 = _v10.a;
+							return (model.character.deathtimer.value <= 0) ? model : A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asDeathtimerIn,
+									model.character,
+									A2($author$project$Main$asNumberValueIn, model.character.deathtimer, model.character.deathtimer.value - model.character.deathtimer.editvalue)));
+					}
+				} else {
+					return model;
+				}
+			case 'UpdateEditField':
+				var value = msg.a;
+				var _v14 = model.settings.editingState;
+				if (_v14.$ === 'EditingCharacterNumber') {
+					switch (_v14.a.$) {
+						case 'Coin':
+							var _v15 = _v14.a;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asCoinIn,
+									model.character,
+									A2(
+										$author$project$Main$asEditValueIn,
+										model.character.coin,
+										A2(
+											$elm$core$Maybe$withDefault,
+											0,
+											$elm$core$String$toInt(value)))));
+						case 'Hitpoints':
+							var _v16 = _v14.a;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asHitpointsIn,
+									model.character,
+									A2(
+										$author$project$Main$asEditValueIn,
+										model.character.hitpoints,
+										A2(
+											$elm$core$Maybe$withDefault,
+											0,
+											$elm$core$String$toInt(value)))));
+						default:
+							var _v17 = _v14.a;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asDeathtimerIn,
+									model.character,
+									A2(
+										$author$project$Main$asEditValueIn,
+										model.character.deathtimer,
+										A2(
+											$elm$core$Maybe$withDefault,
+											0,
+											$elm$core$String$toInt(value)))));
+					}
+				} else {
+					return model;
+				}
 			case 'ChangeStatAttribute':
 				var stat = msg.a;
 				var value = msg.b;
-				var _v7 = $elm$core$String$toInt(value);
-				if (_v7.$ === 'Just') {
-					var intVal = _v7.a;
-					var _v8 = model.settings.editingState;
-					switch (_v8.$) {
-						case 'EditingStats':
+				var _v18 = $elm$core$String$toInt(value);
+				if (_v18.$ === 'Just') {
+					var intVal = _v18.a;
+					var _v19 = model.settings.editingState;
+					switch (_v19.$) {
+						case 'EditingCharacterStats':
 							return A3($author$project$Main$updateStat, model, stat, intVal);
-						case 'EditingItem':
-							var ix = _v8.a;
+						case 'EditingItemAttr':
+							var ix = _v19.a;
 							return A4($author$project$Main$updateItemStat, model, stat, intVal, ix);
 						default:
 							return model;
@@ -6106,18 +6090,18 @@ var $author$project$Main$update = F2(
 			case 'ChangeItemAttribute':
 				var attr = msg.a;
 				var value = msg.b;
-				var _v9 = model.settings.editingState;
-				if (_v9.$ === 'EditingItem') {
-					var ix = _v9.a;
+				var _v20 = model.settings.editingState;
+				if (_v20.$ === 'EditingItemAttr') {
+					var ix = _v20.a;
 					return A4($author$project$Main$updateItemAttribute, model, attr, value, ix);
 				} else {
 					return model;
 				}
 			case 'ToggleItem':
 				var ix = msg.a;
-				var _v10 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
-				if (_v10.$ === 'Just') {
-					var item = _v10.a;
+				var _v21 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
+				if (_v21.$ === 'Just') {
+					var item = _v21.a;
 					var totalItems = $elm$core$List$length(
 						A2(
 							$elm$core$List$filter,
@@ -6202,7 +6186,7 @@ var $author$project$Main$update = F2(
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.story, true)));
 				}
-			case 'Unhovered':
+			default:
 				var attribute = msg.a;
 				switch (attribute.$) {
 					case 'Name':
@@ -6238,15 +6222,6 @@ var $author$project$Main$update = F2(
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.story, false)));
 				}
-			default:
-				var ix = msg.a;
-				return A2(
-					$author$project$Main$asSettingsIn,
-					model,
-					A2(
-						$author$project$Main$asEditingStateIn,
-						model.settings,
-						$author$project$Main$EditingItem(ix)));
 		}
 	});
 var $mdgriffith$elm_ui$Internal$Model$AlignY = function (a) {
@@ -13865,20 +13840,14 @@ var $mdgriffith$elm_ui$Element$Font$family = function (families) {
 			families));
 };
 var $mdgriffith$elm_ui$Element$fillPortion = $mdgriffith$elm_ui$Internal$Model$Fill;
-var $author$project$Main$DecreaseNumberAttribute = function (a) {
-	return {$: 'DecreaseNumberAttribute', a: a};
+var $author$project$Main$DecreaseNumberAttribute = {$: 'DecreaseNumberAttribute'};
+var $author$project$Main$EditNumber = function (a) {
+	return {$: 'EditNumber', a: a};
 };
-var $author$project$Main$DisableNumberEditing = {$: 'DisableNumberEditing'};
-var $author$project$Main$IncreaseNumberAttribute = function (a) {
-	return {$: 'IncreaseNumberAttribute', a: a};
+var $author$project$Main$IncreaseNumberAttribute = {$: 'IncreaseNumberAttribute'};
+var $author$project$Main$UpdateEditField = function (a) {
+	return {$: 'UpdateEditField', a: a};
 };
-var $author$project$Main$MakeNumberEditable = function (a) {
-	return {$: 'MakeNumberEditable', a: a};
-};
-var $author$project$Main$UpdateEditField = F2(
-	function (a, b) {
-		return {$: 'UpdateEditField', a: a, b: b};
-	});
 var $mdgriffith$elm_ui$Element$Border$dotted = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$borderStyle, $mdgriffith$elm_ui$Internal$Style$classes.borderDotted);
 var $mdgriffith$elm_ui$Element$Input$HiddenLabel = function (a) {
 	return {$: 'HiddenLabel', a: a};
@@ -13895,7 +13864,7 @@ var $author$project$Main$printNumberAttribute = function (attr) {
 	}
 };
 var $author$project$Main$editableNumberField = F3(
-	function (style, editable, prop) {
+	function (style, editstate, prop) {
 		var labelEl = A2(
 			$mdgriffith$elm_ui$Element$el,
 			_List_fromArray(
@@ -13917,7 +13886,7 @@ var $author$project$Main$editableNumberField = F3(
 					{
 						label: labelEl,
 						onPress: $elm$core$Maybe$Just(
-							$author$project$Main$MakeNumberEditable(prop.id))
+							$author$project$Main$EditNumber(prop.id))
 					})
 				]));
 		var writeField = A2(
@@ -13930,7 +13899,7 @@ var $author$project$Main$editableNumberField = F3(
 					_List_Nil,
 					{
 						label: labelEl,
-						onPress: $elm$core$Maybe$Just($author$project$Main$DisableNumberEditing)
+						onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
 					}),
 					A2(
 					$mdgriffith$elm_ui$Element$Input$text,
@@ -13943,7 +13912,7 @@ var $author$project$Main$editableNumberField = F3(
 					{
 						label: $mdgriffith$elm_ui$Element$Input$labelHidden(
 							$author$project$Main$printNumberAttribute(prop.id)),
-						onChange: $author$project$Main$UpdateEditField(prop.id),
+						onChange: $author$project$Main$UpdateEditField,
 						placeholder: $elm$core$Maybe$Nothing,
 						text: $elm$core$String$fromInt(prop.editvalue)
 					}),
@@ -13957,8 +13926,7 @@ var $author$project$Main$editableNumberField = F3(
 						]),
 					{
 						label: $mdgriffith$elm_ui$Element$text('+'),
-						onPress: $elm$core$Maybe$Just(
-							$author$project$Main$IncreaseNumberAttribute(prop.id))
+						onPress: $elm$core$Maybe$Just($author$project$Main$IncreaseNumberAttribute)
 					}),
 					A2(
 					$mdgriffith$elm_ui$Element$Input$button,
@@ -13970,12 +13938,11 @@ var $author$project$Main$editableNumberField = F3(
 						]),
 					{
 						label: $mdgriffith$elm_ui$Element$text('-'),
-						onPress: $elm$core$Maybe$Just(
-							$author$project$Main$DecreaseNumberAttribute(prop.id))
+						onPress: $elm$core$Maybe$Just($author$project$Main$DecreaseNumberAttribute)
 					})
 				]));
-		if (editable.$ === 'Just') {
-			var n = editable.a;
+		if (editstate.$ === 'EditingCharacterNumber') {
+			var n = editstate.a;
 			return _Utils_eq(n, prop.id) ? writeField : readField;
 		} else {
 			return readField;
@@ -14120,7 +14087,7 @@ var $author$project$Main$heartRow = function (model) {
 								_List_fromArray(
 									[
 										$mdgriffith$elm_ui$Element$text('Hit Points: '),
-										A3($author$project$Main$editableNumberField, fieldStyle, model.settings.editableNumber, model.character.hitpoints)
+										A3($author$project$Main$editableNumberField, fieldStyle, model.settings.editingState, model.character.hitpoints)
 									])),
 								A2(
 								$mdgriffith$elm_ui$Element$row,
@@ -14152,7 +14119,7 @@ var $author$project$Main$heartRow = function (model) {
 								_List_fromArray(
 									[$mdgriffith$elm_ui$Element$centerX]),
 								$mdgriffith$elm_ui$Element$text('Coin: ')),
-								A3($author$project$Main$editableNumberField, fieldStyle, model.settings.editableNumber, model.character.coin)
+								A3($author$project$Main$editableNumberField, fieldStyle, model.settings.editingState, model.character.coin)
 							])),
 						A2(
 						$mdgriffith$elm_ui$Element$row,
@@ -14171,7 +14138,7 @@ var $author$project$Main$heartRow = function (model) {
 								_List_fromArray(
 									[$mdgriffith$elm_ui$Element$centerX]),
 								$mdgriffith$elm_ui$Element$text('† Dying?: ')),
-								A3($author$project$Main$editableNumberField, fieldStyle, model.settings.editableNumber, model.character.deathtimer)
+								A3($author$project$Main$editableNumberField, fieldStyle, model.settings.editingState, model.character.deathtimer)
 							]))
 					]))
 			]));
@@ -14227,22 +14194,18 @@ var $mdgriffith$elm_ui$Element$image = F2(
 						$mdgriffith$elm_ui$Internal$Model$Unkeyed(_List_Nil))
 					])));
 	});
-var $author$project$Main$DisableTextEditing = function (a) {
-	return {$: 'DisableTextEditing', a: a};
+var $author$project$Main$EditText = function (a) {
+	return {$: 'EditText', a: a};
 };
 var $author$project$Main$Hovered = function (a) {
 	return {$: 'Hovered', a: a};
 };
-var $author$project$Main$MakeTextEditable = function (a) {
-	return {$: 'MakeTextEditable', a: a};
-};
 var $author$project$Main$Unhovered = function (a) {
 	return {$: 'Unhovered', a: a};
 };
-var $author$project$Main$UpdateTextAttr = F2(
-	function (a, b) {
-		return {$: 'UpdateTextAttr', a: a, b: b};
-	});
+var $author$project$Main$UpdateTextAttr = function (a) {
+	return {$: 'UpdateTextAttr', a: a};
+};
 var $elm$html$Html$Events$onBlur = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
@@ -14277,7 +14240,7 @@ var $author$project$Main$printTextAttribute = function (attr) {
 	}
 };
 var $author$project$Main$editableTextField = F3(
-	function (style, editable, prop) {
+	function (style, editstate, prop) {
 		var writeField = A2(
 			$mdgriffith$elm_ui$Element$row,
 			style,
@@ -14287,15 +14250,14 @@ var $author$project$Main$editableTextField = F3(
 					$mdgriffith$elm_ui$Element$Input$text,
 					_List_fromArray(
 						[
-							$mdgriffith$elm_ui$Element$Events$onLoseFocus(
-							$author$project$Main$DisableTextEditing(prop.id)),
+							$mdgriffith$elm_ui$Element$Events$onLoseFocus($author$project$Main$DisableEdit),
 							A2($mdgriffith$elm_ui$Element$paddingXY, 5, 5),
 							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
 						]),
 					{
 						label: $mdgriffith$elm_ui$Element$Input$labelHidden(
 							$author$project$Main$printTextAttribute(prop.id)),
-						onChange: $author$project$Main$UpdateTextAttr(prop.id),
+						onChange: $author$project$Main$UpdateTextAttr,
 						placeholder: $elm$core$Maybe$Just(
 							A2(
 								$mdgriffith$elm_ui$Element$Input$placeholder,
@@ -14349,11 +14311,11 @@ var $author$project$Main$editableTextField = F3(
 					{
 						label: labelEl,
 						onPress: $elm$core$Maybe$Just(
-							$author$project$Main$MakeTextEditable(prop.id))
+							$author$project$Main$EditText(prop.id))
 					})
 				]));
-		if (editable.$ === 'Just') {
-			var n = editable.a;
+		if (editstate.$ === 'EditingCharactertext') {
+			var n = editstate.a;
 			return _Utils_eq(n, prop.id) ? writeField : readField;
 		} else {
 			return readField;
@@ -14394,7 +14356,7 @@ var $author$project$Main$infoRow = function (model) {
 						$mdgriffith$elm_ui$Element$el,
 						labelStyle,
 						$mdgriffith$elm_ui$Element$text('Name :')),
-						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editableText, model.character.name)
+						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editingState, model.character.name)
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -14405,7 +14367,7 @@ var $author$project$Main$infoRow = function (model) {
 						$mdgriffith$elm_ui$Element$el,
 						labelStyle,
 						$mdgriffith$elm_ui$Element$text('Class :')),
-						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editableText, model.character._class)
+						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editingState, model.character._class)
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -14416,7 +14378,7 @@ var $author$project$Main$infoRow = function (model) {
 						$mdgriffith$elm_ui$Element$el,
 						labelStyle,
 						$mdgriffith$elm_ui$Element$text('Bioform :')),
-						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editableText, model.character.bioform)
+						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editingState, model.character.bioform)
 					]))
 			]));
 };
@@ -15112,7 +15074,7 @@ var $author$project$Main$storyRow = function (model) {
 						$mdgriffith$elm_ui$Element$el,
 						labelStyle,
 						$mdgriffith$elm_ui$Element$text('Story :')),
-						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editableText, model.character.story)
+						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editingState, model.character.story)
 					]))
 			]));
 };
@@ -15122,12 +15084,12 @@ var $author$project$Main$view = function (model) {
 	var activeOverlay = function () {
 		var _v0 = model.settings.editingState;
 		switch (_v0.$) {
-			case 'EditingStats':
+			case 'EditingCharacterStats':
 				return _List_fromArray(
 					[
 						$author$project$Main$editStatsModal(model)
 					]);
-			case 'EditingItem':
+			case 'EditingItemAttr':
 				var ix = _v0.a;
 				var _v1 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
 				if (_v1.$ === 'Just') {

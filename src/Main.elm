@@ -45,19 +45,16 @@ type alias Character =
 
 
 type EditingState
-    = EditingStats
-    | EditingItem Int
+    = EditingCharacterStats
+    | EditingItemAttr Int
+    | EditingCharactertext CharacterTextAttribute
+    | EditingCharacterNumber CharacterNumberAttribute
     | NotEditing
 
 
-
--- TODO: Everything should be an EditingState!
-
-
 type alias AppSettings =
-    { editableText : Maybe CharacterTextAttribute
-    , editableNumber : Maybe CharacterNumberAttribute
-    , editingState : EditingState
+    { editingState : EditingState
+    , darkMode : Bool
     }
 
 
@@ -140,9 +137,8 @@ init : Model
 init =
     { character = tabula_rasa
     , settings =
-        { editableText = Nothing
-        , editableNumber = Nothing
-        , editingState = NotEditing
+        { editingState = NotEditing
+        , darkMode = False
         }
     }
 
@@ -199,25 +195,21 @@ emptyStats =
 
 
 type Msg
-    = Increment
-    | Decrement
-    | MakeTextEditable CharacterTextAttribute
-    | UpdateTextAttr CharacterTextAttribute String
-    | DisableTextEditing CharacterTextAttribute
-    | MakeNumberEditable CharacterNumberAttribute
-    | DisableNumberEditing
-    | IncreaseNumberAttribute CharacterNumberAttribute
-    | DecreaseNumberAttribute CharacterNumberAttribute
-    | UpdateEditField CharacterNumberAttribute String
+    = EditText CharacterTextAttribute
+    | EditNumber CharacterNumberAttribute
+    | EditItem Int
+    | DisableEdit
+    | UpdateTextAttr String
+    | IncreaseNumberAttribute
+    | DecreaseNumberAttribute
+    | UpdateEditField String
     | EditBaseStats
     | ChangeStatAttribute StatAttribute String
     | ChangeItemAttribute ItemAttribute String
     | ToggleItem Int
     | Hovered CharacterTextAttribute
     | Unhovered CharacterTextAttribute
-    | EditItem Int
     | NewItem Bool
-    | DisableEdit
 
 
 
@@ -227,99 +219,76 @@ type Msg
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Increment ->
-            (model.character.stats.str + 1)
-                |> asStrIn model.character.stats
-                |> asStatsIn model.character
-                |> asCharIn model
-
-        Decrement ->
-            (model.character.stats.str - 1)
-                |> asStrIn model.character.stats
-                |> asStatsIn model.character
-                |> asCharIn model
-
-        MakeTextEditable id ->
-            Just id
-                |> asEditableTextIn model.settings
+        EditText id ->
+            EditingCharactertext id
+                |> asEditingStateIn model.settings
                 |> asSettingsIn model
 
-        DisableTextEditing id ->
-            let
-                allowEmpty =
-                    Nothing
-                        |> asEditableTextIn model.settings
-                        |> asSettingsIn model
+        EditNumber id ->
+            EditingCharacterNumber id
+                |> asEditingStateIn model.settings
+                |> asSettingsIn model
 
-                checkEmpty _ =
-                    if model.character.name.value == "" then
-                        model
+        EditBaseStats ->
+            EditingCharacterStats
+                |> asEditingStateIn model.settings
+                |> asSettingsIn model
 
-                    else
-                        allowEmpty
-            in
-            case id of
-                Name ->
-                    checkEmpty model.character.name.value
+        EditItem ix ->
+            EditingItemAttr ix
+                |> asEditingStateIn model.settings
+                |> asSettingsIn model
 
-                Class ->
-                    checkEmpty model.character.class.value
+        DisableEdit ->
+            NotEditing
+                |> asEditingStateIn model.settings
+                |> asSettingsIn model
 
-                Bioform ->
-                    checkEmpty model.character.bioform.value
-
-                Story ->
-                    allowEmpty
-
-        UpdateTextAttr attr value ->
+        UpdateTextAttr value ->
             asCharIn model <|
-                case attr of
-                    Name ->
+                case model.settings.editingState of
+                    EditingCharactertext Name ->
                         value
                             |> asTextValueIn model.character.name
                             |> asNameIn model.character
 
-                    Class ->
+                    EditingCharactertext Class ->
                         value
                             |> asTextValueIn model.character.class
                             |> asClassIn model.character
 
-                    Bioform ->
+                    EditingCharactertext Bioform ->
                         value
                             |> asTextValueIn model.character.bioform
                             |> asBioformIn model.character
 
-                    Story ->
+                    EditingCharactertext Story ->
                         value
                             |> asTextValueIn model.character.story
                             |> asStoryIn model.character
 
-        MakeNumberEditable id ->
-            Just id
-                |> asEditableNumberIn model.settings
-                |> asSettingsIn model
+                    _ ->
+                        model.character
 
-        DisableNumberEditing ->
-            Nothing
-                |> asEditableNumberIn model.settings
-                |> asSettingsIn model
-
-        IncreaseNumberAttribute id ->
-            case id of
-                Coin ->
+        IncreaseNumberAttribute ->
+            case model.settings.editingState of
+                EditingCharacterNumber Coin ->
                     (model.character.coin.value + model.character.coin.editvalue)
                         |> asNumberValueIn model.character.coin
                         |> asCoinIn model.character
                         |> asCharIn model
 
-                Hitpoints ->
+                EditingCharacterNumber Hitpoints ->
                     let
                         result =
                             model.character.hitpoints.value + model.character.hitpoints.editvalue
 
+                        maxHitpoints =
+                            (model.character.stats.hearts + .hearts (totalEquippedStats model.character.items)) * 10
+
                         maxResult =
-                            if result > (model.character.stats.hearts + .hearts (totalEquippedStats model.character.items) * 10) then
-                                (model.character.stats.hearts + .hearts (totalEquippedStats model.character.items)) * 10
+                            if result > maxHitpoints then
+                                maxHitpoints
 
                             else
                                 result
@@ -329,7 +298,7 @@ update msg model =
                         |> asHitpointsIn model.character
                         |> asCharIn model
 
-                Deathtimer ->
+                EditingCharacterNumber Deathtimer ->
                     let
                         result =
                             model.character.deathtimer.value + model.character.deathtimer.editvalue
@@ -346,25 +315,35 @@ update msg model =
                         |> asDeathtimerIn model.character
                         |> asCharIn model
 
-        DecreaseNumberAttribute id ->
-            case id of
-                Coin ->
+                _ ->
+                    model
+
+        DecreaseNumberAttribute ->
+            case model.settings.editingState of
+                EditingCharacterNumber Coin ->
                     (model.character.coin.value - model.character.coin.editvalue)
                         |> asNumberValueIn model.character.coin
                         |> asCoinIn model.character
                         |> asCharIn model
 
-                Hitpoints ->
-                    if model.character.hitpoints.value <= 0 then
-                        model
+                EditingCharacterNumber Hitpoints ->
+                    let
+                        resultHitpoints =
+                            model.character.hitpoints.value - model.character.hitpoints.editvalue
 
-                    else
-                        (model.character.hitpoints.value - model.character.hitpoints.editvalue)
-                            |> asNumberValueIn model.character.hitpoints
-                            |> asHitpointsIn model.character
-                            |> asCharIn model
+                        newHitpoints =
+                            if resultHitpoints <= 0 then
+                                0
 
-                Deathtimer ->
+                            else
+                                resultHitpoints
+                    in
+                    newHitpoints
+                        |> asNumberValueIn model.character.hitpoints
+                        |> asHitpointsIn model.character
+                        |> asCharIn model
+
+                EditingCharacterNumber Deathtimer ->
                     if model.character.deathtimer.value <= 0 then
                         model
 
@@ -374,56 +353,51 @@ update msg model =
                             |> asDeathtimerIn model.character
                             |> asCharIn model
 
-        UpdateEditField id value ->
-            case id of
-                Coin ->
+                _ ->
+                    model
+
+        UpdateEditField value ->
+            case model.settings.editingState of
+                EditingCharacterNumber Coin ->
                     Maybe.withDefault 0 (String.toInt value)
                         |> asEditValueIn model.character.coin
                         |> asCoinIn model.character
                         |> asCharIn model
 
-                Hitpoints ->
+                EditingCharacterNumber Hitpoints ->
                     Maybe.withDefault 0 (String.toInt value)
                         |> asEditValueIn model.character.hitpoints
                         |> asHitpointsIn model.character
                         |> asCharIn model
 
-                Deathtimer ->
+                EditingCharacterNumber Deathtimer ->
                     Maybe.withDefault 0 (String.toInt value)
                         |> asEditValueIn model.character.deathtimer
                         |> asDeathtimerIn model.character
                         |> asCharIn model
 
-        EditBaseStats ->
-            EditingStats
-                |> asEditingStateIn model.settings
-                |> asSettingsIn model
-
-        DisableEdit ->
-            NotEditing
-                |> asEditingStateIn model.settings
-                |> asSettingsIn model
+                _ ->
+                    model
 
         ChangeStatAttribute stat value ->
             case String.toInt value of
                 Just intVal ->
                     case model.settings.editingState of
-                        EditingStats ->
+                        EditingCharacterStats ->
                             updateStat model stat intVal
 
-                        EditingItem ix ->
+                        EditingItemAttr ix ->
                             updateItemStat model stat intVal ix
 
                         _ ->
                             model
 
                 Nothing ->
-                    -- updateStat model stat 0
                     model
 
         ChangeItemAttribute attr value ->
             case model.settings.editingState of
-                EditingItem ix ->
+                EditingItemAttr ix ->
                     updateItemAttribute model attr value ix
 
                 _ ->
@@ -524,11 +498,6 @@ update msg model =
                         |> asHoveredIn model.character.story
                         |> asStoryIn model.character
                         |> asCharIn model
-
-        EditItem ix ->
-            EditingItem ix
-                |> asEditingStateIn model.settings
-                |> asSettingsIn model
 
 
 itemsIndexed : Bool -> List Item -> List ( Int, Item )
@@ -696,10 +665,10 @@ view model =
     let
         activeOverlay =
             case model.settings.editingState of
-                EditingStats ->
+                EditingCharacterStats ->
                     [ editStatsModal model ]
 
-                EditingItem ix ->
+                EditingItemAttr ix ->
                     case List.Extra.getAt ix model.character.items of
                         Just item ->
                             [ editItemModal item ]
@@ -931,15 +900,15 @@ infoRow model =
     row [ width fill, spacingXY 10 0, Background.color <| Element.rgb255 244 244 244, padding 10 ]
         [ row groupStyle
             [ el labelStyle (text "Name :")
-            , editableTextField fieldStyle model.settings.editableText model.character.name
+            , editableTextField fieldStyle model.settings.editingState model.character.name
             ]
         , row groupStyle
             [ el labelStyle (text "Class :")
-            , editableTextField fieldStyle model.settings.editableText model.character.class
+            , editableTextField fieldStyle model.settings.editingState model.character.class
             ]
         , row groupStyle
             [ el labelStyle (text "Bioform :")
-            , editableTextField fieldStyle model.settings.editableText model.character.bioform
+            , editableTextField fieldStyle model.settings.editingState model.character.bioform
             ]
         ]
 
@@ -956,13 +925,13 @@ storyRow model =
     row [ width fill, Background.color <| Element.rgb255 244 244 244, padding 10 ]
         [ row [ spacingXY 10 0, centerX ]
             [ el labelStyle (text "Story :")
-            , editableTextField fieldStyle model.settings.editableText model.character.story
+            , editableTextField fieldStyle model.settings.editingState model.character.story
             ]
         ]
 
 
-editableTextField : List (Attribute Msg) -> Maybe CharacterTextAttribute -> CharacterTextProp -> Element Msg
-editableTextField style editable prop =
+editableTextField : List (Attribute Msg) -> EditingState -> CharacterTextProp -> Element Msg
+editableTextField style editstate prop =
     let
         labelEl =
             el
@@ -989,38 +958,38 @@ editableTextField style editable prop =
             row style
                 [ Input.button buttonStyle
                     { label = labelEl
-                    , onPress = Just <| MakeTextEditable prop.id
+                    , onPress = Just <| EditText prop.id
                     }
                 ]
 
         writeField =
             row style
                 [ Input.text
-                    [ Events.onLoseFocus <| DisableTextEditing prop.id
+                    [ Events.onLoseFocus <| DisableEdit
                     , paddingXY 5 5
                     , width fill
                     ]
-                    { onChange = UpdateTextAttr prop.id
+                    { onChange = UpdateTextAttr
                     , text = prop.value
                     , placeholder = Just <| Input.placeholder [] <| text "Start typing"
                     , label = Input.labelHidden (printTextAttribute prop.id)
                     }
                 ]
     in
-    case editable of
-        Just n ->
+    case editstate of
+        EditingCharactertext n ->
             if n == prop.id then
                 writeField
 
             else
                 readField
 
-        Nothing ->
+        _ ->
             readField
 
 
-editableNumberField : List (Attribute Msg) -> Maybe CharacterNumberAttribute -> CharacterNumberProp -> Element Msg
-editableNumberField style editable prop =
+editableNumberField : List (Attribute Msg) -> EditingState -> CharacterNumberProp -> Element Msg
+editableNumberField style editstate prop =
     let
         labelEl =
             el
@@ -1036,7 +1005,7 @@ editableNumberField style editable prop =
                 style
                 [ Input.button [] <|
                     { label = labelEl
-                    , onPress = Just <| MakeNumberEditable prop.id
+                    , onPress = Just <| EditNumber prop.id
                     }
                 ]
 
@@ -1048,7 +1017,7 @@ editableNumberField style editable prop =
                         labelEl
                     , onPress =
                         Just <|
-                            DisableNumberEditing
+                            DisableEdit
                     }
                 , Input.text
                     [ paddingXY 5 0
@@ -1057,24 +1026,24 @@ editableNumberField style editable prop =
                   <|
                     { label = Input.labelHidden (printNumberAttribute prop.id)
                     , text = String.fromInt prop.editvalue
-                    , onChange = UpdateEditField prop.id
+                    , onChange = UpdateEditField
                     , placeholder = Nothing
                     }
                 , Input.button [ Font.size (scaled -1), paddingXY 0 0 ] <|
-                    { label = text <| "+", onPress = Just <| IncreaseNumberAttribute prop.id }
+                    { label = text <| "+", onPress = Just <| IncreaseNumberAttribute }
                 , Input.button [ Font.size (scaled -1), paddingXY 0 0 ] <|
-                    { label = text <| "-", onPress = Just <| DecreaseNumberAttribute prop.id }
+                    { label = text <| "-", onPress = Just <| DecreaseNumberAttribute }
                 ]
     in
-    case editable of
-        Just n ->
+    case editstate of
+        EditingCharacterNumber n ->
             if n == prop.id then
                 writeField
 
             else
                 readField
 
-        Nothing ->
+        _ ->
             readField
 
 
@@ -1108,7 +1077,7 @@ heartRow model =
             [ column [ width <| fill, height <| px 65, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ row [ centerX ]
                     [ text <| "Hit Points: "
-                    , editableNumberField fieldStyle model.settings.editableNumber model.character.hitpoints
+                    , editableNumberField fieldStyle model.settings.editingState model.character.hitpoints
                     ]
                 , row [ centerX, scrollbarX, height <| px 65 ] <|
                     List.repeat heartCount filledHearts
@@ -1116,11 +1085,11 @@ heartRow model =
                 ]
             , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ el [ centerX ] <| text <| "Coin: "
-                , editableNumberField fieldStyle model.settings.editableNumber model.character.coin
+                , editableNumberField fieldStyle model.settings.editingState model.character.coin
                 ]
             , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ el [ centerX ] <| text <| "† Dying?: "
-                , editableNumberField fieldStyle model.settings.editableNumber model.character.deathtimer
+                , editableNumberField fieldStyle model.settings.editingState model.character.deathtimer
                 ]
             ]
         ]
@@ -1611,16 +1580,6 @@ asTextValueIn charp newvalue =
 asNumberValueIn : CharacterNumberProp -> Int -> CharacterNumberProp
 asNumberValueIn charp newvalue =
     { charp | value = newvalue }
-
-
-asEditableTextIn : AppSettings -> Maybe CharacterTextAttribute -> AppSettings
-asEditableTextIn setting editable =
-    { setting | editableText = editable }
-
-
-asEditableNumberIn : AppSettings -> Maybe CharacterNumberAttribute -> AppSettings
-asEditableNumberIn setting editable =
-    { setting | editableNumber = editable }
 
 
 asSettingsIn : Model -> AppSettings -> Model
