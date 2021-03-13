@@ -680,8 +680,7 @@ view model =
                     []
     in
     Element.layout
-        [ width fill
-        , Font.family
+        [ Font.family
             [ Font.typeface "Patrick Hand"
             ]
         , Font.size (scaled 1)
@@ -689,8 +688,7 @@ view model =
         ]
     <|
         Element.column
-            ([ width <| px 1280
-             , centerX
+            ([ width fill
              , Element.height Element.fill
              , Background.color <| Element.rgb255 255 255 255
              , paddingXY 50 23
@@ -751,9 +749,7 @@ editStatsModal : Model -> Attribute Msg
 editStatsModal model =
     inFront <|
         el
-            [ paddingXY 70 0
-            , width fill
-            , centerY
+            [ width fill
             , height fill
             , Background.color (Element.rgba 0 0 0 0.5)
             ]
@@ -797,9 +793,7 @@ editItemModal : Item -> Attribute Msg
 editItemModal item =
     inFront <|
         el
-            [ paddingXY 70 0
-            , width fill
-            , centerY
+            [ width fill
             , height fill
             , Background.color (Element.rgba 0 0 0 0.5)
             ]
@@ -1250,10 +1244,6 @@ fillListUntil filler amount list =
         list ++ List.repeat fillerCount filler
 
 
-
--- ANCHOR itemCol
-
-
 itemCol : Bool -> String -> String -> List Item -> Element Msg
 itemCol equippedState label modifyLabel items =
     column
@@ -1323,10 +1313,6 @@ newItemButton equipped =
             <|
                 text "Add item"
         }
-
-
-
--- ANCHOR itemrow
 
 
 itemRow : (Int -> Element Msg) -> (Int -> Element Msg) -> ( Int, Item ) -> Element Msg

@@ -13312,9 +13312,7 @@ var $author$project$Main$editItemModal = function (item) {
 			$mdgriffith$elm_ui$Element$el,
 			_List_fromArray(
 				[
-					A2($mdgriffith$elm_ui$Element$paddingXY, 70, 0),
 					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-					$mdgriffith$elm_ui$Element$centerY,
 					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
 					$mdgriffith$elm_ui$Element$Background$color(
 					A4($mdgriffith$elm_ui$Element$rgba, 0, 0, 0, 0.5))
@@ -13430,9 +13428,7 @@ var $author$project$Main$editStatsModal = function (model) {
 			$mdgriffith$elm_ui$Element$el,
 			_List_fromArray(
 				[
-					A2($mdgriffith$elm_ui$Element$paddingXY, 70, 0),
 					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-					$mdgriffith$elm_ui$Element$centerY,
 					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
 					$mdgriffith$elm_ui$Element$Background$color(
 					A4($mdgriffith$elm_ui$Element$rgba, 0, 0, 0, 0.5))
@@ -15109,7 +15105,6 @@ var $author$project$Main$view = function (model) {
 		$mdgriffith$elm_ui$Element$layout,
 		_List_fromArray(
 			[
-				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 				$mdgriffith$elm_ui$Element$Font$family(
 				_List_fromArray(
 					[
@@ -15125,9 +15120,7 @@ var $author$project$Main$view = function (model) {
 			_Utils_ap(
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$width(
-						$mdgriffith$elm_ui$Element$px(1280)),
-						$mdgriffith$elm_ui$Element$centerX,
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 						$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
 						$mdgriffith$elm_ui$Element$Background$color(
 						A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255)),
