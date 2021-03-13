@@ -1,0 +1,101 @@
+{
+    "name": "Dendron",
+    "bioform": "Firbolg-Birch",
+    "class": "Druid",
+    "story": "After losing his home to the evil scum that lives in Akmon, Dendron sets out to restore what was lost.",
+    "hitpoints": 10,
+    "items": [
+        {
+            "name": "Heartstone",
+            "description": "Adds 1 heart",
+            "stats": {
+                "str": 0,
+                "dex": 0,
+                "con": 0,
+                "wis": 0,
+                "int": 0,
+                "cha": 0,
+                "basic": 0,
+                "weapon": 0,
+                "magic": 0,
+                "ultimate": 0,
+                "armor": 0,
+                "hearts": 1
+            },
+            "equipped": true
+        },
+        {
+            "name": "Sword",
+            "description": "Makes you strong!",
+            "stats": {
+                "str": 1,
+                "dex": 1,
+                "con": 0,
+                "wis": 0,
+                "int": 0,
+                "cha": 0,
+                "basic": 0,
+                "weapon": 0,
+                "magic": 0,
+                "ultimate": 0,
+                "armor": 0,
+                "hearts": 0
+            },
+            "equipped": true
+        },
+        {
+            "name": "Unicorn",
+            "description": "WIS power: Summon 1d4 unicorns to aid you",
+            "stats": {
+                "str": 0,
+                "dex": 0,
+                "con": 0,
+                "wis": 0,
+                "int": 0,
+                "cha": 0,
+                "basic": 0,
+                "weapon": 0,
+                "magic": 0,
+                "ultimate": 0,
+                "armor": 0,
+                "hearts": 0
+            },
+            "equipped": false
+        },
+        {
+            "name": "Heal",
+            "description": "Wis Spell: Heal an ally",
+            "stats": {
+                "str": 0,
+                "dex": 0,
+                "con": 0,
+                "wis": 0,
+                "int": 0,
+                "cha": 0,
+                "basic": 0,
+                "weapon": 0,
+                "magic": 0,
+                "ultimate": 0,
+                "armor": 0,
+                "hearts": 1
+            },
+            "equipped": true
+        }
+    ],
+    "stats": {
+        "str": 0,
+        "dex": 0,
+        "con": 2,
+        "wis": 4,
+        "int": 2,
+        "cha": 0,
+        "basic": 0,
+        "weapon": 0,
+        "magic": 3,
+        "ultimate": 0,
+        "armor": 0,
+        "hearts": 1
+    },
+    "coin": 0,
+    "deathtimer": 0
+}

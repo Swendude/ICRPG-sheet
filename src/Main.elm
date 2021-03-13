@@ -1,24 +1,45 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (Attr, Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, image, inFront, minimum, newTabLink, none, padding, paddingEach, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
+import Element exposing (Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, image, inFront, minimum, newTabLink, none, padding, paddingEach, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
 import Element.Font as Font
 import Element.Input as Input
+import File exposing (File)
+import File.Download as Download
+import File.Select as Select
 import Html exposing (Html)
+import Json.Decode as Decode
+import Json.Decode.Pipeline as Pipeline
+import Json.Encode as Encode
 import List
 import List.Extra
 import Maybe
 import String
 import Svg
 import Svg.Attributes
+import Task
 
 
 main : Program () Model Msg
 main =
-    Browser.sandbox { init = init, update = update, view = view }
+    Browser.element
+        { init = init
+        , update = updateWithCommands
+        , subscriptions = subscriptions
+        , view = view
+        }
+
+
+
+-- ANCHOR SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.none
 
 
 
@@ -49,6 +70,7 @@ type EditingState
     | EditingItemAttr Int
     | EditingCharactertext CharacterTextAttribute
     | EditingCharacterNumber CharacterNumberAttribute
+    | ShowError String
     | NotEditing
 
 
@@ -133,14 +155,16 @@ type alias Item =
 -- ANCHOR init
 
 
-init : Model
-init =
-    { character = tabula_rasa
-    , settings =
-        { editingState = NotEditing
-        , darkMode = False
-        }
-    }
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { character = tabula_rasa
+      , settings =
+            { editingState = NotEditing
+            , darkMode = False
+            }
+      }
+    , Cmd.none
+    )
 
 
 tabula_rasa : Character
@@ -210,10 +234,41 @@ type Msg
     | Hovered CharacterTextAttribute
     | Unhovered CharacterTextAttribute
     | NewItem Bool
+    | SaveCharacter
+    | LoadCharacter
+    | CharacterSelected File
+    | CharacterLoaded String
 
 
 
 -- ANCHOR Update
+
+
+updateWithCommands : Msg -> Model -> ( Model, Cmd Msg )
+updateWithCommands msg model =
+    case msg of
+        SaveCharacter ->
+            ( model, Download.string (model.character.name.value ++ ".json") "application/json" (encodeCharacter model.character) )
+
+        LoadCharacter ->
+            ( model, Select.file [ "application/json" ] CharacterSelected )
+
+        CharacterSelected file ->
+            ( model
+            , Task.perform CharacterLoaded <| File.toString file
+            )
+
+        CharacterLoaded content ->
+            case Decode.decodeString decodeCharacter content of
+                Ok char ->
+                    ( { model | character = char }, Cmd.none )
+
+                Err e ->
+                    ( ShowError (Decode.errorToString e) |> asEditingStateIn model.settings |> asSettingsIn model, Cmd.none )
+
+        -- ( { model | character =  , Cmd.none )
+        _ ->
+            ( update msg model, Cmd.none )
 
 
 update : Msg -> Model -> Model
@@ -499,6 +554,9 @@ update msg model =
                         |> asStoryIn model.character
                         |> asCharIn model
 
+        _ ->
+            model
+
 
 itemsIndexed : Bool -> List Item -> List ( Int, Item )
 itemsIndexed b =
@@ -663,7 +721,7 @@ printTextAttribute attr =
 view : Model -> Html Msg
 view model =
     let
-        activeOverlay =
+        activeModal =
             case model.settings.editingState of
                 EditingCharacterStats ->
                     [ editStatsModal model ]
@@ -675,6 +733,9 @@ view model =
 
                         Nothing ->
                             []
+
+                ShowError err ->
+                    [ showErrorModal err ]
 
                 _ ->
                     []
@@ -694,9 +755,10 @@ view model =
              , paddingXY 50 23
              , spacingXY 0 23
              ]
-                ++ activeOverlay
+                ++ activeModal
             )
-            [ infoRow model
+            [ headerRow
+            , infoRow model
             , storyRow model
             , heartRow model
             , effortRow model.character
@@ -837,6 +899,36 @@ editItemModal item =
                 ]
 
 
+showErrorModal : String -> Attribute Msg
+showErrorModal err =
+    inFront <|
+        el
+            [ width fill
+            , height fill
+            , Background.color (Element.rgba 0 0 0 0.5)
+            ]
+        <|
+            column
+                [ paddingXY 70 30
+                , width fill
+                , spacingXY 0 10
+                , centerY
+                , Background.color (rgb 0 0 0)
+                , Font.color (rgb 255 255 255)
+                ]
+                [ row [ spacingXY 10 0, centerX ]
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 2) ] <| text "Error"
+                    ]
+                , row [ centerX ]
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 1) ] <| text err
+                    ]
+                , Input.button [ centerX ]
+                    { onPress = Just DisableEdit
+                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Close"
+                    }
+                ]
+
+
 statEditor : StatAttribute -> Int -> String -> Element Msg
 statEditor stat value label =
     el [ width fill ] <|
@@ -859,11 +951,6 @@ textEditor attr value label =
             }
 
 
-debugbg : Attr decorative msg
-debugbg =
-    Background.color <| Element.rgb255 0 255 255
-
-
 spacerRow : Element Msg
 spacerRow =
     el
@@ -877,6 +964,47 @@ spacerRow =
         ]
     <|
         none
+
+
+headerRow : Element Msg
+headerRow =
+    row
+        [ width fill
+        , Background.color (rgb255 0 0 0)
+        , Font.color (rgb255 255 255 255)
+        , padding 12
+        , spacingXY 12 0
+        ]
+        [ el [ Font.size (scaled 3) ] <| text "ICRPG Character Sheet"
+        , Input.button [ alignRight ]
+            { onPress = Just SaveCharacter
+            , label =
+                el
+                    [ width fill
+                    , Border.width 1
+                    , padding 5
+                    , Border.dotted
+                    , Font.center
+                    , Font.size (scaled -2)
+                    ]
+                <|
+                    text "Save"
+            }
+        , Input.button [ alignRight ]
+            { onPress = Just LoadCharacter
+            , label =
+                el
+                    [ width fill
+                    , Border.width 1
+                    , padding 5
+                    , Border.dotted
+                    , Font.center
+                    , Font.size (scaled -2)
+                    ]
+                <|
+                    text "Load"
+            }
+        ]
 
 
 infoRow : Model -> Element Msg
@@ -1581,3 +1709,115 @@ asItemsIn char items =
 asHoveredIn : CharacterTextProp -> Bool -> CharacterTextProp
 asHoveredIn charp hovered =
     { charp | hovered = hovered }
+
+
+
+-- ANCHOR Encoders
+
+
+encodeCharacter : Character -> String
+encodeCharacter char =
+    Encode.encode 0 <|
+        Encode.object
+            [ ( "name", encodeTextProp char.name )
+            , ( "bioform", encodeTextProp char.bioform )
+            , ( "class", encodeTextProp char.class )
+            , ( "story", encodeTextProp char.story )
+            , ( "hitpoints", encodeNumberProp char.hitpoints )
+            , ( "items", Encode.list encodeItem char.items )
+            , ( "stats", encodeStats char.stats )
+            , ( "coin", encodeNumberProp char.coin )
+            , ( "deathtimer", encodeNumberProp char.deathtimer )
+            ]
+
+
+encodeTextProp : CharacterTextProp -> Encode.Value
+encodeTextProp prop =
+    Encode.string prop.value
+
+
+encodeNumberProp : CharacterNumberProp -> Encode.Value
+encodeNumberProp prop =
+    Encode.int prop.value
+
+
+encodeStats : Stats -> Encode.Value
+encodeStats stats =
+    Encode.object
+        [ ( "str", Encode.int stats.str )
+        , ( "dex", Encode.int stats.dex )
+        , ( "con", Encode.int stats.con )
+        , ( "wis", Encode.int stats.wis )
+        , ( "int", Encode.int stats.int )
+        , ( "cha", Encode.int stats.cha )
+        , ( "basic", Encode.int stats.basic )
+        , ( "weapon", Encode.int stats.weapon )
+        , ( "magic", Encode.int stats.magic )
+        , ( "ultimate", Encode.int stats.ultimate )
+        , ( "armor", Encode.int stats.armor )
+        , ( "hearts", Encode.int stats.hearts )
+        ]
+
+
+encodeItem : Item -> Encode.Value
+encodeItem item =
+    Encode.object
+        [ ( "name", Encode.string item.name )
+        , ( "description", Encode.string item.description )
+        , ( "stats", encodeStats item.stats )
+        , ( "equipped", Encode.bool item.equipped )
+        ]
+
+
+
+-- ANCHOR Decoders
+
+
+decodeCharacter : Decode.Decoder Character
+decodeCharacter =
+    Decode.succeed Character
+        |> Pipeline.required "name" (decodeCharacterTextProp Name "name")
+        |> Pipeline.required "bioform" (decodeCharacterTextProp Bioform "bioform")
+        |> Pipeline.required "class" (decodeCharacterTextProp Class "class")
+        |> Pipeline.required "story" (decodeCharacterTextProp Story "story")
+        |> Pipeline.required "hitpoints" (decodeCharacterNumberProp Hitpoints "hitpoints")
+        |> Pipeline.required "items" (Decode.list decodeItem)
+        |> Pipeline.required "stats" decodeStats
+        |> Pipeline.required "coin" (decodeCharacterNumberProp Coin "coin")
+        |> Pipeline.required "deathtimer" (decodeCharacterNumberProp Deathtimer "deathtimer")
+
+
+decodeCharacterTextProp : CharacterTextAttribute -> String -> Decode.Decoder CharacterTextProp
+decodeCharacterTextProp id fieldname =
+    Decode.map3 CharacterTextProp Decode.string (Decode.succeed id) (Decode.succeed False)
+
+
+decodeCharacterNumberProp : CharacterNumberAttribute -> String -> Decode.Decoder CharacterNumberProp
+decodeCharacterNumberProp id fieldname =
+    Decode.map3 CharacterNumberProp Decode.int (Decode.succeed id) (Decode.succeed 0)
+
+
+decodeStats : Decode.Decoder Stats
+decodeStats =
+    Decode.succeed Stats
+        |> Pipeline.required "str" Decode.int
+        |> Pipeline.required "dex" Decode.int
+        |> Pipeline.required "con" Decode.int
+        |> Pipeline.required "wis" Decode.int
+        |> Pipeline.required "int" Decode.int
+        |> Pipeline.required "cha" Decode.int
+        |> Pipeline.required "basic" Decode.int
+        |> Pipeline.required "weapon" Decode.int
+        |> Pipeline.required "magic" Decode.int
+        |> Pipeline.required "ultimate" Decode.int
+        |> Pipeline.required "armor" Decode.int
+        |> Pipeline.required "hearts" Decode.int
+
+
+decodeItem : Decode.Decoder Item
+decodeItem =
+    Decode.succeed Item
+        |> Pipeline.required "name" Decode.string
+        |> Pipeline.required "description" Decode.string
+        |> Pipeline.required "stats" decodeStats
+        |> Pipeline.required "equipped" Decode.bool

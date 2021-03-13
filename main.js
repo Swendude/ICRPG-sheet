@@ -80,6 +80,271 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
 console.warn('Compiled in DEV mode. Follow the advice at https://elm-lang.org/0.19.1/optimize for better performance and smaller assets.');
 
 
+// EQUALITY
+
+function _Utils_eq(x, y)
+{
+	for (
+		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
+		isEqual && (pair = stack.pop());
+		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
+		)
+	{}
+
+	return isEqual;
+}
+
+function _Utils_eqHelp(x, y, depth, stack)
+{
+	if (x === y)
+	{
+		return true;
+	}
+
+	if (typeof x !== 'object' || x === null || y === null)
+	{
+		typeof x === 'function' && _Debug_crash(5);
+		return false;
+	}
+
+	if (depth > 100)
+	{
+		stack.push(_Utils_Tuple2(x,y));
+		return true;
+	}
+
+	/**/
+	if (x.$ === 'Set_elm_builtin')
+	{
+		x = $elm$core$Set$toList(x);
+		y = $elm$core$Set$toList(y);
+	}
+	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	/**_UNUSED/
+	if (x.$ < 0)
+	{
+		x = $elm$core$Dict$toList(x);
+		y = $elm$core$Dict$toList(y);
+	}
+	//*/
+
+	for (var key in x)
+	{
+		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+var _Utils_equal = F2(_Utils_eq);
+var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
+
+
+
+// COMPARISONS
+
+// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// the particular integer values assigned to LT, EQ, and GT.
+
+function _Utils_cmp(x, y, ord)
+{
+	if (typeof x !== 'object')
+	{
+		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
+	}
+
+	/**/
+	if (x instanceof String)
+	{
+		var a = x.valueOf();
+		var b = y.valueOf();
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+	//*/
+
+	/**_UNUSED/
+	if (typeof x.$ === 'undefined')
+	//*/
+	/**/
+	if (x.$[0] === '#')
+	//*/
+	{
+		return (ord = _Utils_cmp(x.a, y.a))
+			? ord
+			: (ord = _Utils_cmp(x.b, y.b))
+				? ord
+				: _Utils_cmp(x.c, y.c);
+	}
+
+	// traverse conses until end of a list or a mismatch
+	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
+	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+}
+
+var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
+var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
+var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
+var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
+
+var _Utils_compare = F2(function(x, y)
+{
+	var n = _Utils_cmp(x, y);
+	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
+});
+
+
+// COMMON VALUES
+
+var _Utils_Tuple0_UNUSED = 0;
+var _Utils_Tuple0 = { $: '#0' };
+
+function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
+
+function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+
+function _Utils_chr_UNUSED(c) { return c; }
+function _Utils_chr(c) { return new String(c); }
+
+
+// RECORDS
+
+function _Utils_update(oldRecord, updatedFields)
+{
+	var newRecord = {};
+
+	for (var key in oldRecord)
+	{
+		newRecord[key] = oldRecord[key];
+	}
+
+	for (var key in updatedFields)
+	{
+		newRecord[key] = updatedFields[key];
+	}
+
+	return newRecord;
+}
+
+
+// APPEND
+
+var _Utils_append = F2(_Utils_ap);
+
+function _Utils_ap(xs, ys)
+{
+	// append Strings
+	if (typeof xs === 'string')
+	{
+		return xs + ys;
+	}
+
+	// append Lists
+	if (!xs.b)
+	{
+		return ys;
+	}
+	var root = _List_Cons(xs.a, ys);
+	xs = xs.b
+	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		curr = curr.b = _List_Cons(xs.a, ys);
+	}
+	return root;
+}
+
+
+
+var _List_Nil_UNUSED = { $: 0 };
+var _List_Nil = { $: '[]' };
+
+function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
+
+
+var _List_cons = F2(_List_Cons);
+
+function _List_fromArray(arr)
+{
+	var out = _List_Nil;
+	for (var i = arr.length; i--; )
+	{
+		out = _List_Cons(arr[i], out);
+	}
+	return out;
+}
+
+function _List_toArray(xs)
+{
+	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		out.push(xs.a);
+	}
+	return out;
+}
+
+var _List_map2 = F3(function(f, xs, ys)
+{
+	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
+	{
+		arr.push(A2(f, xs.a, ys.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map3 = F4(function(f, xs, ys, zs)
+{
+	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A3(f, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map4 = F5(function(f, ws, xs, ys, zs)
+{
+	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
+{
+	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_sortBy = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		return _Utils_cmp(f(a), f(b));
+	}));
+});
+
+var _List_sortWith = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		var ord = A2(f, a, b);
+		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
+	}));
+});
+
+
+
 var _JsArray_empty = [];
 
 function _JsArray_singleton(value)
@@ -525,271 +790,6 @@ function _Debug_regionToString(region)
 	}
 	return 'on lines ' + region.start.line + ' through ' + region.end.line;
 }
-
-
-
-// EQUALITY
-
-function _Utils_eq(x, y)
-{
-	for (
-		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
-		isEqual && (pair = stack.pop());
-		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
-		)
-	{}
-
-	return isEqual;
-}
-
-function _Utils_eqHelp(x, y, depth, stack)
-{
-	if (x === y)
-	{
-		return true;
-	}
-
-	if (typeof x !== 'object' || x === null || y === null)
-	{
-		typeof x === 'function' && _Debug_crash(5);
-		return false;
-	}
-
-	if (depth > 100)
-	{
-		stack.push(_Utils_Tuple2(x,y));
-		return true;
-	}
-
-	/**/
-	if (x.$ === 'Set_elm_builtin')
-	{
-		x = $elm$core$Set$toList(x);
-		y = $elm$core$Set$toList(y);
-	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	/**_UNUSED/
-	if (x.$ < 0)
-	{
-		x = $elm$core$Dict$toList(x);
-		y = $elm$core$Dict$toList(y);
-	}
-	//*/
-
-	for (var key in x)
-	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-var _Utils_equal = F2(_Utils_eq);
-var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
-
-
-
-// COMPARISONS
-
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
-// the particular integer values assigned to LT, EQ, and GT.
-
-function _Utils_cmp(x, y, ord)
-{
-	if (typeof x !== 'object')
-	{
-		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
-	}
-
-	/**/
-	if (x instanceof String)
-	{
-		var a = x.valueOf();
-		var b = y.valueOf();
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-	//*/
-
-	/**_UNUSED/
-	if (typeof x.$ === 'undefined')
-	//*/
-	/**/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
-}
-
-var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
-var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
-var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
-var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
-
-var _Utils_compare = F2(function(x, y)
-{
-	var n = _Utils_cmp(x, y);
-	return n < 0 ? $elm$core$Basics$LT : n ? $elm$core$Basics$GT : $elm$core$Basics$EQ;
-});
-
-
-// COMMON VALUES
-
-var _Utils_Tuple0_UNUSED = 0;
-var _Utils_Tuple0 = { $: '#0' };
-
-function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
-
-function _Utils_chr_UNUSED(c) { return c; }
-function _Utils_chr(c) { return new String(c); }
-
-
-// RECORDS
-
-function _Utils_update(oldRecord, updatedFields)
-{
-	var newRecord = {};
-
-	for (var key in oldRecord)
-	{
-		newRecord[key] = oldRecord[key];
-	}
-
-	for (var key in updatedFields)
-	{
-		newRecord[key] = updatedFields[key];
-	}
-
-	return newRecord;
-}
-
-
-// APPEND
-
-var _Utils_append = F2(_Utils_ap);
-
-function _Utils_ap(xs, ys)
-{
-	// append Strings
-	if (typeof xs === 'string')
-	{
-		return xs + ys;
-	}
-
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = _List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = _List_Cons(xs.a, ys);
-	}
-	return root;
-}
-
-
-
-var _List_Nil_UNUSED = { $: 0 };
-var _List_Nil = { $: '[]' };
-
-function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
-
-
-var _List_cons = F2(_List_Cons);
-
-function _List_fromArray(arr)
-{
-	var out = _List_Nil;
-	for (var i = arr.length; i--; )
-	{
-		out = _List_Cons(arr[i], out);
-	}
-	return out;
-}
-
-function _List_toArray(xs)
-{
-	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		out.push(xs.a);
-	}
-	return out;
-}
-
-var _List_map2 = F3(function(f, xs, ys)
-{
-	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
-	{
-		arr.push(A2(f, xs.a, ys.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map3 = F4(function(f, xs, ys, zs)
-{
-	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A3(f, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map4 = F5(function(f, ws, xs, ys, zs)
-{
-	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
-{
-	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_sortBy = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		return _Utils_cmp(f(a), f(b));
-	}));
-});
-
-var _List_sortWith = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		var ord = A2(f, a, b);
-		return ord === $elm$core$Basics$EQ ? 0 : ord === $elm$core$Basics$LT ? -1 : 1;
-	}));
-});
 
 
 
@@ -4358,6 +4358,184 @@ function _Browser_load(url)
 
 
 
+// DECODER
+
+var _File_decoder = _Json_decodePrim(function(value) {
+	// NOTE: checks if `File` exists in case this is run on node
+	return (typeof File !== 'undefined' && value instanceof File)
+		? $elm$core$Result$Ok(value)
+		: _Json_expecting('a FILE', value);
+});
+
+
+// METADATA
+
+function _File_name(file) { return file.name; }
+function _File_mime(file) { return file.type; }
+function _File_size(file) { return file.size; }
+
+function _File_lastModified(file)
+{
+	return $elm$time$Time$millisToPosix(file.lastModified);
+}
+
+
+// DOWNLOAD
+
+var _File_downloadNode;
+
+function _File_getDownloadNode()
+{
+	return _File_downloadNode || (_File_downloadNode = document.createElement('a'));
+}
+
+var _File_download = F3(function(name, mime, content)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var blob = new Blob([content], {type: mime});
+
+		// for IE10+
+		if (navigator.msSaveOrOpenBlob)
+		{
+			navigator.msSaveOrOpenBlob(blob, name);
+			return;
+		}
+
+		// for HTML5
+		var node = _File_getDownloadNode();
+		var objectUrl = URL.createObjectURL(blob);
+		node.href = objectUrl;
+		node.download = name;
+		_File_click(node);
+		URL.revokeObjectURL(objectUrl);
+	});
+});
+
+function _File_downloadUrl(href)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var node = _File_getDownloadNode();
+		node.href = href;
+		node.download = '';
+		node.origin === location.origin || (node.target = '_blank');
+		_File_click(node);
+	});
+}
+
+
+// IE COMPATIBILITY
+
+function _File_makeBytesSafeForInternetExplorer(bytes)
+{
+	// only needed by IE10 and IE11 to fix https://github.com/elm/file/issues/10
+	// all other browsers can just run `new Blob([bytes])` directly with no problem
+	//
+	return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+}
+
+function _File_click(node)
+{
+	// only needed by IE10 and IE11 to fix https://github.com/elm/file/issues/11
+	// all other browsers have MouseEvent and do not need this conditional stuff
+	//
+	if (typeof MouseEvent === 'function')
+	{
+		node.dispatchEvent(new MouseEvent('click'));
+	}
+	else
+	{
+		var event = document.createEvent('MouseEvents');
+		event.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		document.body.appendChild(node);
+		node.dispatchEvent(event);
+		document.body.removeChild(node);
+	}
+}
+
+
+// UPLOAD
+
+var _File_node;
+
+function _File_uploadOne(mimes)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		_File_node = document.createElement('input');
+		_File_node.type = 'file';
+		_File_node.accept = A2($elm$core$String$join, ',', mimes);
+		_File_node.addEventListener('change', function(event)
+		{
+			callback(_Scheduler_succeed(event.target.files[0]));
+		});
+		_File_click(_File_node);
+	});
+}
+
+function _File_uploadOneOrMore(mimes)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		_File_node = document.createElement('input');
+		_File_node.type = 'file';
+		_File_node.multiple = true;
+		_File_node.accept = A2($elm$core$String$join, ',', mimes);
+		_File_node.addEventListener('change', function(event)
+		{
+			var elmFiles = _List_fromArray(event.target.files);
+			callback(_Scheduler_succeed(_Utils_Tuple2(elmFiles.a, elmFiles.b)));
+		});
+		_File_click(_File_node);
+	});
+}
+
+
+// CONTENT
+
+function _File_toString(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(reader.result));
+		});
+		reader.readAsText(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+function _File_toBytes(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(new DataView(reader.result)));
+		});
+		reader.readAsArrayBuffer(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+function _File_toUrl(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(reader.result));
+		});
+		reader.readAsDataURL(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+
+
+
 var _Bitwise_and = F2(function(a, b)
 {
 	return a & b;
@@ -4392,33 +4570,10 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 {
 	return a >>> offset;
 });
-var $elm$core$Basics$False = {$: 'False'};
-var $author$project$Main$NotEditing = {$: 'NotEditing'};
+var $elm$core$Basics$EQ = {$: 'EQ'};
+var $elm$core$Basics$GT = {$: 'GT'};
+var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
-var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
-var $elm$core$Array$foldr = F3(
-	function (func, baseCase, _v0) {
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (node.$ === 'SubTree') {
-					var subTree = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
-				}
-			});
-		return A3(
-			$elm$core$Elm$JsArray$foldr,
-			helper,
-			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
-			tree);
-	});
-var $elm$core$Array$toList = function (array) {
-	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
-};
 var $elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
@@ -4471,80 +4626,29 @@ var $elm$core$Set$toList = function (_v0) {
 	var dict = _v0.a;
 	return $elm$core$Dict$keys(dict);
 };
-var $elm$core$Basics$EQ = {$: 'EQ'};
-var $elm$core$Basics$GT = {$: 'GT'};
-var $elm$core$Basics$LT = {$: 'LT'};
-var $author$project$Main$Bioform = {$: 'Bioform'};
-var $author$project$Main$Class = {$: 'Class'};
-var $author$project$Main$Coin = {$: 'Coin'};
-var $author$project$Main$Deathtimer = {$: 'Deathtimer'};
-var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
-var $author$project$Main$Item = F4(
-	function (name, description, stats, equipped) {
-		return {description: description, equipped: equipped, name: name, stats: stats};
+var $elm$core$Elm$JsArray$foldr = _JsArray_foldr;
+var $elm$core$Array$foldr = F3(
+	function (func, baseCase, _v0) {
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (node.$ === 'SubTree') {
+					var subTree = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, helper, acc, subTree);
+				} else {
+					var values = node.a;
+					return A3($elm$core$Elm$JsArray$foldr, func, acc, values);
+				}
+			});
+		return A3(
+			$elm$core$Elm$JsArray$foldr,
+			helper,
+			A3($elm$core$Elm$JsArray$foldr, func, baseCase, tail),
+			tree);
 	});
-var $author$project$Main$Name = {$: 'Name'};
-var $author$project$Main$Stats = function (str) {
-	return function (dex) {
-		return function (con) {
-			return function (wis) {
-				return function (_int) {
-					return function (cha) {
-						return function (basic) {
-							return function (weapon) {
-								return function (magic) {
-									return function (ultimate) {
-										return function (armor) {
-											return function (hearts) {
-												return {armor: armor, basic: basic, cha: cha, con: con, dex: dex, hearts: hearts, _int: _int, magic: magic, str: str, ultimate: ultimate, weapon: weapon, wis: wis};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var $author$project$Main$Story = {$: 'Story'};
-var $elm$core$Basics$True = {$: 'True'};
-var $author$project$Main$tabula_rasa = {
-	bioform: {hovered: false, id: $author$project$Main$Bioform, value: 'Dwarf'},
-	_class: {hovered: false, id: $author$project$Main$Class, value: 'Knight'},
-	coin: {editvalue: 0, id: $author$project$Main$Coin, value: 0},
-	deathtimer: {editvalue: 0, id: $author$project$Main$Deathtimer, value: 0},
-	hitpoints: {editvalue: 0, id: $author$project$Main$Hitpoints, value: 10},
-	items: _List_fromArray(
-		[
-			A4(
-			$author$project$Main$Item,
-			'Heartstone',
-			'Adds 1 heart',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
-			true),
-			A4(
-			$author$project$Main$Item,
-			'Sword',
-			'Makes you strong!',
-			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
-			true),
-			A4(
-			$author$project$Main$Item,
-			'Heal',
-			'Wis Spell: Heal an ally',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
-			false)
-		]),
-	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
-	stats: $author$project$Main$Stats(0)(0)(10)(0)(0)(0)(0)(0)(0)(0)(0)(1),
-	story: {hovered: false, id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
-};
-var $author$project$Main$init = {
-	character: $author$project$Main$tabula_rasa,
-	settings: {darkMode: false, editingState: $author$project$Main$NotEditing}
+var $elm$core$Array$toList = function (array) {
+	return A3($elm$core$Array$foldr, $elm$core$List$cons, _List_Nil, array);
 };
 var $elm$core$Result$Err = function (a) {
 	return {$: 'Err', a: a};
@@ -4567,6 +4671,7 @@ var $elm$core$Result$Ok = function (a) {
 var $elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 'OneOf', a: a};
 };
+var $elm$core$Basics$False = {$: 'False'};
 var $elm$core$Basics$add = _Basics_add;
 var $elm$core$Maybe$Just = function (a) {
 	return {$: 'Just', a: a};
@@ -4932,6 +5037,7 @@ var $elm$core$Array$initialize = F2(
 			return A5($elm$core$Array$initializeHelp, fn, initialFromIndex, len, _List_Nil, tail);
 		}
 	});
+var $elm$core$Basics$True = {$: 'True'};
 var $elm$core$Result$isOk = function (result) {
 	if (result.$ === 'Ok') {
 		return true;
@@ -5252,28 +5358,405 @@ var $elm$core$Task$perform = F2(
 			$elm$core$Task$Perform(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
+var $elm$browser$Browser$element = _Browser_element;
+var $author$project$Main$NotEditing = {$: 'NotEditing'};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Main$Bioform = {$: 'Bioform'};
+var $author$project$Main$Class = {$: 'Class'};
+var $author$project$Main$Coin = {$: 'Coin'};
+var $author$project$Main$Deathtimer = {$: 'Deathtimer'};
+var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
+var $author$project$Main$Item = F4(
+	function (name, description, stats, equipped) {
+		return {description: description, equipped: equipped, name: name, stats: stats};
+	});
+var $author$project$Main$Name = {$: 'Name'};
+var $author$project$Main$Stats = function (str) {
+	return function (dex) {
+		return function (con) {
+			return function (wis) {
+				return function (_int) {
+					return function (cha) {
+						return function (basic) {
+							return function (weapon) {
+								return function (magic) {
+									return function (ultimate) {
+										return function (armor) {
+											return function (hearts) {
+												return {armor: armor, basic: basic, cha: cha, con: con, dex: dex, hearts: hearts, _int: _int, magic: magic, str: str, ultimate: ultimate, weapon: weapon, wis: wis};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $author$project$Main$Story = {$: 'Story'};
+var $author$project$Main$tabula_rasa = {
+	bioform: {hovered: false, id: $author$project$Main$Bioform, value: 'Dwarf'},
+	_class: {hovered: false, id: $author$project$Main$Class, value: 'Knight'},
+	coin: {editvalue: 0, id: $author$project$Main$Coin, value: 0},
+	deathtimer: {editvalue: 0, id: $author$project$Main$Deathtimer, value: 0},
+	hitpoints: {editvalue: 0, id: $author$project$Main$Hitpoints, value: 10},
+	items: _List_fromArray(
+		[
+			A4(
+			$author$project$Main$Item,
+			'Heartstone',
+			'Adds 1 heart',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			true),
+			A4(
+			$author$project$Main$Item,
+			'Sword',
+			'Makes you strong!',
+			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+			true),
+			A4(
+			$author$project$Main$Item,
+			'Heal',
+			'Wis Spell: Heal an ally',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			false)
+		]),
+	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
+	stats: $author$project$Main$Stats(0)(0)(10)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+	story: {hovered: false, id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
+};
+var $author$project$Main$init = function (_v0) {
+	return _Utils_Tuple2(
+		{
+			character: $author$project$Main$tabula_rasa,
+			settings: {darkMode: false, editingState: $author$project$Main$NotEditing}
+		},
+		$elm$core$Platform$Cmd$none);
+};
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $elm$browser$Browser$sandbox = function (impl) {
-	return _Browser_element(
-		{
-			init: function (_v0) {
-				return _Utils_Tuple2(impl.init, $elm$core$Platform$Cmd$none);
-			},
-			subscriptions: function (_v1) {
-				return $elm$core$Platform$Sub$none;
-			},
-			update: F2(
-				function (msg, model) {
-					return _Utils_Tuple2(
-						A2(impl.update, msg, model),
-						$elm$core$Platform$Cmd$none);
-				}),
-			view: impl.view
-		});
+var $author$project$Main$subscriptions = function (_v0) {
+	return $elm$core$Platform$Sub$none;
 };
+var $author$project$Main$CharacterLoaded = function (a) {
+	return {$: 'CharacterLoaded', a: a};
+};
+var $author$project$Main$CharacterSelected = function (a) {
+	return {$: 'CharacterSelected', a: a};
+};
+var $author$project$Main$ShowError = function (a) {
+	return {$: 'ShowError', a: a};
+};
+var $author$project$Main$asEditingStateIn = F2(
+	function (state, newState) {
+		return _Utils_update(
+			state,
+			{editingState: newState});
+	});
+var $author$project$Main$asSettingsIn = F2(
+	function (model, settings) {
+		return _Utils_update(
+			model,
+			{settings: settings});
+	});
+var $author$project$Main$Character = F9(
+	function (name, bioform, _class, story, hitpoints, items, stats, coin, deathtimer) {
+		return {bioform: bioform, _class: _class, coin: coin, deathtimer: deathtimer, hitpoints: hitpoints, items: items, name: name, stats: stats, story: story};
+	});
+var $author$project$Main$CharacterNumberProp = F3(
+	function (value, id, editvalue) {
+		return {editvalue: editvalue, id: id, value: value};
+	});
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$map3 = _Json_map3;
+var $author$project$Main$decodeCharacterNumberProp = F2(
+	function (id, fieldname) {
+		return A4(
+			$elm$json$Json$Decode$map3,
+			$author$project$Main$CharacterNumberProp,
+			$elm$json$Json$Decode$int,
+			$elm$json$Json$Decode$succeed(id),
+			$elm$json$Json$Decode$succeed(0));
+	});
+var $author$project$Main$CharacterTextProp = F3(
+	function (value, id, hovered) {
+		return {hovered: hovered, id: id, value: value};
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$decodeCharacterTextProp = F2(
+	function (id, fieldname) {
+		return A4(
+			$elm$json$Json$Decode$map3,
+			$author$project$Main$CharacterTextProp,
+			$elm$json$Json$Decode$string,
+			$elm$json$Json$Decode$succeed(id),
+			$elm$json$Json$Decode$succeed(false));
+	});
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A2($elm$json$Json$Decode$field, key, valDecoder),
+			decoder);
+	});
+var $author$project$Main$decodeStats = A3(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'hearts',
+	$elm$json$Json$Decode$int,
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'armor',
+		$elm$json$Json$Decode$int,
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'ultimate',
+			$elm$json$Json$Decode$int,
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'magic',
+				$elm$json$Json$Decode$int,
+				A3(
+					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+					'weapon',
+					$elm$json$Json$Decode$int,
+					A3(
+						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+						'basic',
+						$elm$json$Json$Decode$int,
+						A3(
+							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+							'cha',
+							$elm$json$Json$Decode$int,
+							A3(
+								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+								'int',
+								$elm$json$Json$Decode$int,
+								A3(
+									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+									'wis',
+									$elm$json$Json$Decode$int,
+									A3(
+										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+										'con',
+										$elm$json$Json$Decode$int,
+										A3(
+											$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+											'dex',
+											$elm$json$Json$Decode$int,
+											A3(
+												$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+												'str',
+												$elm$json$Json$Decode$int,
+												$elm$json$Json$Decode$succeed($author$project$Main$Stats)))))))))))));
+var $author$project$Main$decodeItem = A3(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'equipped',
+	$elm$json$Json$Decode$bool,
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'stats',
+		$author$project$Main$decodeStats,
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'description',
+			$elm$json$Json$Decode$string,
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'name',
+				$elm$json$Json$Decode$string,
+				$elm$json$Json$Decode$succeed($author$project$Main$Item)))));
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$Main$decodeCharacter = A3(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'deathtimer',
+	A2($author$project$Main$decodeCharacterNumberProp, $author$project$Main$Deathtimer, 'deathtimer'),
+	A3(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+		'coin',
+		A2($author$project$Main$decodeCharacterNumberProp, $author$project$Main$Coin, 'coin'),
+		A3(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'stats',
+			$author$project$Main$decodeStats,
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'items',
+				$elm$json$Json$Decode$list($author$project$Main$decodeItem),
+				A3(
+					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+					'hitpoints',
+					A2($author$project$Main$decodeCharacterNumberProp, $author$project$Main$Hitpoints, 'hitpoints'),
+					A3(
+						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+						'story',
+						A2($author$project$Main$decodeCharacterTextProp, $author$project$Main$Story, 'story'),
+						A3(
+							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+							'class',
+							A2($author$project$Main$decodeCharacterTextProp, $author$project$Main$Class, 'class'),
+							A3(
+								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+								'bioform',
+								A2($author$project$Main$decodeCharacterTextProp, $author$project$Main$Bioform, 'bioform'),
+								A3(
+									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+									'name',
+									A2($author$project$Main$decodeCharacterTextProp, $author$project$Main$Name, 'name'),
+									$elm$json$Json$Decode$succeed($author$project$Main$Character))))))))));
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $author$project$Main$encodeStats = function (stats) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'str',
+				$elm$json$Json$Encode$int(stats.str)),
+				_Utils_Tuple2(
+				'dex',
+				$elm$json$Json$Encode$int(stats.dex)),
+				_Utils_Tuple2(
+				'con',
+				$elm$json$Json$Encode$int(stats.con)),
+				_Utils_Tuple2(
+				'wis',
+				$elm$json$Json$Encode$int(stats.wis)),
+				_Utils_Tuple2(
+				'int',
+				$elm$json$Json$Encode$int(stats._int)),
+				_Utils_Tuple2(
+				'cha',
+				$elm$json$Json$Encode$int(stats.cha)),
+				_Utils_Tuple2(
+				'basic',
+				$elm$json$Json$Encode$int(stats.basic)),
+				_Utils_Tuple2(
+				'weapon',
+				$elm$json$Json$Encode$int(stats.weapon)),
+				_Utils_Tuple2(
+				'magic',
+				$elm$json$Json$Encode$int(stats.magic)),
+				_Utils_Tuple2(
+				'ultimate',
+				$elm$json$Json$Encode$int(stats.ultimate)),
+				_Utils_Tuple2(
+				'armor',
+				$elm$json$Json$Encode$int(stats.armor)),
+				_Utils_Tuple2(
+				'hearts',
+				$elm$json$Json$Encode$int(stats.hearts))
+			]));
+};
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Main$encodeItem = function (item) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'name',
+				$elm$json$Json$Encode$string(item.name)),
+				_Utils_Tuple2(
+				'description',
+				$elm$json$Json$Encode$string(item.description)),
+				_Utils_Tuple2(
+				'stats',
+				$author$project$Main$encodeStats(item.stats)),
+				_Utils_Tuple2(
+				'equipped',
+				$elm$json$Json$Encode$bool(item.equipped))
+			]));
+};
+var $author$project$Main$encodeNumberProp = function (prop) {
+	return $elm$json$Json$Encode$int(prop.value);
+};
+var $author$project$Main$encodeTextProp = function (prop) {
+	return $elm$json$Json$Encode$string(prop.value);
+};
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $author$project$Main$encodeCharacter = function (_char) {
+	return A2(
+		$elm$json$Json$Encode$encode,
+		0,
+		$elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'name',
+					$author$project$Main$encodeTextProp(_char.name)),
+					_Utils_Tuple2(
+					'bioform',
+					$author$project$Main$encodeTextProp(_char.bioform)),
+					_Utils_Tuple2(
+					'class',
+					$author$project$Main$encodeTextProp(_char._class)),
+					_Utils_Tuple2(
+					'story',
+					$author$project$Main$encodeTextProp(_char.story)),
+					_Utils_Tuple2(
+					'hitpoints',
+					$author$project$Main$encodeNumberProp(_char.hitpoints)),
+					_Utils_Tuple2(
+					'items',
+					A2($elm$json$Json$Encode$list, $author$project$Main$encodeItem, _char.items)),
+					_Utils_Tuple2(
+					'stats',
+					$author$project$Main$encodeStats(_char.stats)),
+					_Utils_Tuple2(
+					'coin',
+					$author$project$Main$encodeNumberProp(_char.coin)),
+					_Utils_Tuple2(
+					'deathtimer',
+					$author$project$Main$encodeNumberProp(_char.deathtimer))
+				])));
+};
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$file$File$Select$file = F2(
+	function (mimes, toMsg) {
+		return A2(
+			$elm$core$Task$perform,
+			toMsg,
+			_File_uploadOne(mimes));
+	});
+var $elm$file$File$Download$string = F3(
+	function (name, mime, content) {
+		return A2(
+			$elm$core$Task$perform,
+			$elm$core$Basics$never,
+			A3(_File_download, name, mime, content));
+	});
+var $elm$file$File$toString = _File_toString;
 var $author$project$Main$EditingCharacterNumber = function (a) {
 	return {$: 'EditingCharacterNumber', a: a};
 };
@@ -5320,12 +5803,6 @@ var $author$project$Main$asEditValueIn = F2(
 			charp,
 			{editvalue: newvalue});
 	});
-var $author$project$Main$asEditingStateIn = F2(
-	function (state, newState) {
-		return _Utils_update(
-			state,
-			{editingState: newState});
-	});
 var $author$project$Main$asHitpointsIn = F2(
 	function (_char, newhitpoints) {
 		return _Utils_update(
@@ -5355,12 +5832,6 @@ var $author$project$Main$asNumberValueIn = F2(
 		return _Utils_update(
 			charp,
 			{value: newvalue});
-	});
-var $author$project$Main$asSettingsIn = F2(
-	function (model, settings) {
-		return _Utils_update(
-			model,
-			{settings: settings});
 	});
 var $author$project$Main$asStoryIn = F2(
 	function (_char, newstory) {
@@ -6186,7 +6657,7 @@ var $author$project$Main$update = F2(
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.story, true)));
 				}
-			default:
+			case 'Unhovered':
 				var attribute = msg.a;
 				switch (attribute.$) {
 					case 'Name':
@@ -6222,6 +6693,64 @@ var $author$project$Main$update = F2(
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.story, false)));
 				}
+			default:
+				return model;
+		}
+	});
+var $author$project$Main$updateWithCommands = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'SaveCharacter':
+				return _Utils_Tuple2(
+					model,
+					A3(
+						$elm$file$File$Download$string,
+						model.character.name.value + '.json',
+						'application/json',
+						$author$project$Main$encodeCharacter(model.character)));
+			case 'LoadCharacter':
+				return _Utils_Tuple2(
+					model,
+					A2(
+						$elm$file$File$Select$file,
+						_List_fromArray(
+							['application/json']),
+						$author$project$Main$CharacterSelected));
+			case 'CharacterSelected':
+				var file = msg.a;
+				return _Utils_Tuple2(
+					model,
+					A2(
+						$elm$core$Task$perform,
+						$author$project$Main$CharacterLoaded,
+						$elm$file$File$toString(file)));
+			case 'CharacterLoaded':
+				var content = msg.a;
+				var _v1 = A2($elm$json$Json$Decode$decodeString, $author$project$Main$decodeCharacter, content);
+				if (_v1.$ === 'Ok') {
+					var _char = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{character: _char}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var e = _v1.a;
+					return _Utils_Tuple2(
+						A2(
+							$author$project$Main$asSettingsIn,
+							model,
+							A2(
+								$author$project$Main$asEditingStateIn,
+								model.settings,
+								$author$project$Main$ShowError(
+									$elm$json$Json$Decode$errorToString(e)))),
+						$elm$core$Platform$Cmd$none);
+				}
+			default:
+				return _Utils_Tuple2(
+					A2($author$project$Main$update, msg, model),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $mdgriffith$elm_ui$Internal$Model$AlignY = function (a) {
@@ -6388,7 +6917,6 @@ var $mdgriffith$elm_ui$Internal$Flag$alignBottom = $mdgriffith$elm_ui$Internal$F
 var $mdgriffith$elm_ui$Internal$Flag$alignRight = $mdgriffith$elm_ui$Internal$Flag$flag(40);
 var $mdgriffith$elm_ui$Internal$Flag$centerX = $mdgriffith$elm_ui$Internal$Flag$flag(42);
 var $mdgriffith$elm_ui$Internal$Flag$centerY = $mdgriffith$elm_ui$Internal$Flag$flag(43);
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -8986,28 +9514,6 @@ var $mdgriffith$elm_ui$Internal$Model$staticRoot = function (opts) {
 					]),
 				_List_Nil);
 	}
-};
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
 };
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
@@ -12148,7 +12654,6 @@ var $mdgriffith$elm_ui$Internal$Model$Button = {$: 'Button'};
 var $mdgriffith$elm_ui$Internal$Model$Describe = function (a) {
 	return {$: 'Describe', a: a};
 };
-var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -12191,7 +12696,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 var $mdgriffith$elm_ui$Element$Events$onClick = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Attr, $elm$html$Html$Events$onClick);
 var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
 	return {$: 'MayPreventDefault', a: a};
 };
@@ -12202,7 +12706,6 @@ var $elm$html$Html$Events$preventDefaultOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
 	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $mdgriffith$elm_ui$Element$Input$onKeyLookup = function (lookup) {
 	var decode = function (code) {
 		var _v0 = lookup(code);
@@ -13836,6 +14339,72 @@ var $mdgriffith$elm_ui$Element$Font$family = function (families) {
 			families));
 };
 var $mdgriffith$elm_ui$Element$fillPortion = $mdgriffith$elm_ui$Internal$Model$Fill;
+var $author$project$Main$LoadCharacter = {$: 'LoadCharacter'};
+var $author$project$Main$SaveCharacter = {$: 'SaveCharacter'};
+var $mdgriffith$elm_ui$Element$Border$dotted = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$borderStyle, $mdgriffith$elm_ui$Internal$Style$classes.borderDotted);
+var $author$project$Main$headerRow = A2(
+	$mdgriffith$elm_ui$Element$row,
+	_List_fromArray(
+		[
+			$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+			$mdgriffith$elm_ui$Element$Background$color(
+			A3($mdgriffith$elm_ui$Element$rgb255, 0, 0, 0)),
+			$mdgriffith$elm_ui$Element$Font$color(
+			A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255)),
+			$mdgriffith$elm_ui$Element$padding(12),
+			A2($mdgriffith$elm_ui$Element$spacingXY, 12, 0)
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$mdgriffith$elm_ui$Element$el,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$Font$size(
+					$author$project$Main$scaled(3))
+				]),
+			$mdgriffith$elm_ui$Element$text('ICRPG Character Sheet')),
+			A2(
+			$mdgriffith$elm_ui$Element$Input$button,
+			_List_fromArray(
+				[$mdgriffith$elm_ui$Element$alignRight]),
+			{
+				label: A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+							$mdgriffith$elm_ui$Element$Border$width(1),
+							$mdgriffith$elm_ui$Element$padding(5),
+							$mdgriffith$elm_ui$Element$Border$dotted,
+							$mdgriffith$elm_ui$Element$Font$center,
+							$mdgriffith$elm_ui$Element$Font$size(
+							$author$project$Main$scaled(-2))
+						]),
+					$mdgriffith$elm_ui$Element$text('Save')),
+				onPress: $elm$core$Maybe$Just($author$project$Main$SaveCharacter)
+			}),
+			A2(
+			$mdgriffith$elm_ui$Element$Input$button,
+			_List_fromArray(
+				[$mdgriffith$elm_ui$Element$alignRight]),
+			{
+				label: A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+							$mdgriffith$elm_ui$Element$Border$width(1),
+							$mdgriffith$elm_ui$Element$padding(5),
+							$mdgriffith$elm_ui$Element$Border$dotted,
+							$mdgriffith$elm_ui$Element$Font$center,
+							$mdgriffith$elm_ui$Element$Font$size(
+							$author$project$Main$scaled(-2))
+						]),
+					$mdgriffith$elm_ui$Element$text('Load')),
+				onPress: $elm$core$Maybe$Just($author$project$Main$LoadCharacter)
+			})
+		]));
 var $author$project$Main$DecreaseNumberAttribute = {$: 'DecreaseNumberAttribute'};
 var $author$project$Main$EditNumber = function (a) {
 	return {$: 'EditNumber', a: a};
@@ -13844,7 +14413,6 @@ var $author$project$Main$IncreaseNumberAttribute = {$: 'IncreaseNumberAttribute'
 var $author$project$Main$UpdateEditField = function (a) {
 	return {$: 'UpdateEditField', a: a};
 };
-var $mdgriffith$elm_ui$Element$Border$dotted = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$borderStyle, $mdgriffith$elm_ui$Internal$Style$classes.borderDotted);
 var $mdgriffith$elm_ui$Element$Input$HiddenLabel = function (a) {
 	return {$: 'HiddenLabel', a: a};
 };
@@ -14874,6 +15442,90 @@ var $mdgriffith$elm_ui$Element$newTabLink = F2(
 				_List_fromArray(
 					[label])));
 	});
+var $author$project$Main$showErrorModal = function (err) {
+	return $mdgriffith$elm_ui$Element$inFront(
+		A2(
+			$mdgriffith$elm_ui$Element$el,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$Background$color(
+					A4($mdgriffith$elm_ui$Element$rgba, 0, 0, 0, 0.5))
+				]),
+			A2(
+				$mdgriffith$elm_ui$Element$column,
+				_List_fromArray(
+					[
+						A2($mdgriffith$elm_ui$Element$paddingXY, 70, 30),
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+						A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
+						$mdgriffith$elm_ui$Element$centerY,
+						$mdgriffith$elm_ui$Element$Background$color(
+						A3($mdgriffith$elm_ui$Element$rgb, 0, 0, 0)),
+						$mdgriffith$elm_ui$Element$Font$color(
+						A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255))
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$row,
+						_List_fromArray(
+							[
+								A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+								$mdgriffith$elm_ui$Element$centerX
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$padding(5),
+										$mdgriffith$elm_ui$Element$Border$color(
+										A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255)),
+										$mdgriffith$elm_ui$Element$Font$size(
+										$author$project$Main$scaled(2))
+									]),
+								$mdgriffith$elm_ui$Element$text('Error'))
+							])),
+						A2(
+						$mdgriffith$elm_ui$Element$row,
+						_List_fromArray(
+							[$mdgriffith$elm_ui$Element$centerX]),
+						_List_fromArray(
+							[
+								A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$padding(5),
+										$mdgriffith$elm_ui$Element$Border$color(
+										A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255)),
+										$mdgriffith$elm_ui$Element$Font$size(
+										$author$project$Main$scaled(1))
+									]),
+								$mdgriffith$elm_ui$Element$text(err))
+							])),
+						A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_List_fromArray(
+							[$mdgriffith$elm_ui$Element$centerX]),
+						{
+							label: A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$padding(5),
+										$mdgriffith$elm_ui$Element$Border$width(1),
+										$mdgriffith$elm_ui$Element$Border$color(
+										A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255))
+									]),
+								$mdgriffith$elm_ui$Element$text('Close')),
+							onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
+						})
+					]))));
+};
 var $mdgriffith$elm_ui$Internal$Model$Empty = {$: 'Empty'};
 var $mdgriffith$elm_ui$Element$none = $mdgriffith$elm_ui$Internal$Model$Empty;
 var $author$project$Main$spacerRow = A2(
@@ -15077,7 +15729,7 @@ var $author$project$Main$storyRow = function (model) {
 var $mdgriffith$elm_ui$Element$Font$typeface = $mdgriffith$elm_ui$Internal$Model$Typeface;
 var $mdgriffith$elm_ui$Element$Font$underline = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.underline);
 var $author$project$Main$view = function (model) {
-	var activeOverlay = function () {
+	var activeModal = function () {
 		var _v0 = model.settings.editingState;
 		switch (_v0.$) {
 			case 'EditingCharacterStats':
@@ -15097,6 +15749,12 @@ var $author$project$Main$view = function (model) {
 				} else {
 					return _List_Nil;
 				}
+			case 'ShowError':
+				var err = _v0.a;
+				return _List_fromArray(
+					[
+						$author$project$Main$showErrorModal(err)
+					]);
 			default:
 				return _List_Nil;
 		}
@@ -15127,9 +15785,10 @@ var $author$project$Main$view = function (model) {
 						A2($mdgriffith$elm_ui$Element$paddingXY, 50, 23),
 						A2($mdgriffith$elm_ui$Element$spacingXY, 0, 23)
 					]),
-				activeOverlay),
+				activeModal),
 			_List_fromArray(
 				[
+					$author$project$Main$headerRow,
 					$author$project$Main$infoRow(model),
 					$author$project$Main$storyRow(model),
 					$author$project$Main$heartRow(model),
@@ -15254,7 +15913,7 @@ var $author$project$Main$view = function (model) {
 					{description: 'For use with ICRPG', src: 'public/icrpg.png'})
 				])));
 };
-var $author$project$Main$main = $elm$browser$Browser$sandbox(
-	{init: $author$project$Main$init, update: $author$project$Main$update, view: $author$project$Main$view});
+var $author$project$Main$main = $elm$browser$Browser$element(
+	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$updateWithCommands, view: $author$project$Main$view});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
