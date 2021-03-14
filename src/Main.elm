@@ -67,7 +67,7 @@ type alias Character =
 
 type EditingState
     = EditingCharacterStats
-    | EditingItemAttr Int
+    | EditingItem Int
     | EditingCharactertext CharacterTextAttribute
     | EditingCharacterNumber CharacterNumberAttribute
     | ShowError String
@@ -197,7 +197,7 @@ tabula_rasa =
     , items =
         [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) True
         , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
-        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) False
+        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 1 0 0 0) False
         ]
     , stats = Stats 0 0 10 0 0 0 0 0 0 0 0 1
     , coin =
@@ -238,6 +238,7 @@ type Msg
     | LoadCharacter
     | CharacterSelected File
     | CharacterLoaded String
+    | DeleteItem
 
 
 
@@ -266,7 +267,6 @@ updateWithCommands msg model =
                 Err e ->
                     ( ShowError (Decode.errorToString e) |> asEditingStateIn model.settings |> asSettingsIn model, Cmd.none )
 
-        -- ( { model | character =  , Cmd.none )
         _ ->
             ( update msg model, Cmd.none )
 
@@ -290,7 +290,7 @@ update msg model =
                 |> asSettingsIn model
 
         EditItem ix ->
-            EditingItemAttr ix
+            EditingItem ix
                 |> asEditingStateIn model.settings
                 |> asSettingsIn model
 
@@ -441,7 +441,7 @@ update msg model =
                         EditingCharacterStats ->
                             updateStat model stat intVal
 
-                        EditingItemAttr ix ->
+                        EditingItem ix ->
                             updateItemStat model stat intVal ix
 
                         _ ->
@@ -452,8 +452,22 @@ update msg model =
 
         ChangeItemAttribute attr value ->
             case model.settings.editingState of
-                EditingItemAttr ix ->
+                EditingItem ix ->
                     updateItemAttribute model attr value ix
+
+                _ ->
+                    model
+
+        DeleteItem ->
+            case model.settings.editingState of
+                EditingItem i ->
+                    NotEditing
+                        |> asEditingStateIn model.settings
+                        |> asSettingsIn
+                            (List.Extra.removeAt i model.character.items
+                                |> asItemsIn model.character
+                                |> asCharIn model
+                            )
 
                 _ ->
                     model
@@ -726,7 +740,7 @@ view model =
                 EditingCharacterStats ->
                     [ editStatsModal model ]
 
-                EditingItemAttr ix ->
+                EditingItem ix ->
                     case List.Extra.getAt ix model.character.items of
                         Just item ->
                             [ editItemModal item ]
@@ -894,7 +908,7 @@ editItemModal item =
                     ]
                 , row [ centerX, spacingXY 10 0 ]
                     [ Input.button [ centerX ]
-                        { onPress = Just DisableEdit
+                        { onPress = Just DeleteItem
                         , label =
                             el
                                 [ padding 5

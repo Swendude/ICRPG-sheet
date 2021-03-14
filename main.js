@@ -5422,7 +5422,7 @@ var $author$project$Main$tabula_rasa = {
 			$author$project$Main$Item,
 			'Heal',
 			'Wis Spell: Heal an ally',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(1)(0)(0)(0),
 			false)
 		]),
 	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
@@ -5764,8 +5764,8 @@ var $author$project$Main$EditingCharacterStats = {$: 'EditingCharacterStats'};
 var $author$project$Main$EditingCharactertext = function (a) {
 	return {$: 'EditingCharactertext', a: a};
 };
-var $author$project$Main$EditingItemAttr = function (a) {
-	return {$: 'EditingItemAttr', a: a};
+var $author$project$Main$EditingItem = function (a) {
+	return {$: 'EditingItem', a: a};
 };
 var $author$project$Main$asBioformIn = F2(
 	function (_char, newbioform) {
@@ -6361,7 +6361,7 @@ var $author$project$Main$update = F2(
 					A2(
 						$author$project$Main$asEditingStateIn,
 						model.settings,
-						$author$project$Main$EditingItemAttr(ix)));
+						$author$project$Main$EditingItem(ix)));
 			case 'DisableEdit':
 				return A2(
 					$author$project$Main$asSettingsIn,
@@ -6549,7 +6549,7 @@ var $author$project$Main$update = F2(
 					switch (_v19.$) {
 						case 'EditingCharacterStats':
 							return A3($author$project$Main$updateStat, model, stat, intVal);
-						case 'EditingItemAttr':
+						case 'EditingItem':
 							var ix = _v19.a;
 							return A4($author$project$Main$updateItemStat, model, stat, intVal, ix);
 						default:
@@ -6562,17 +6562,34 @@ var $author$project$Main$update = F2(
 				var attr = msg.a;
 				var value = msg.b;
 				var _v20 = model.settings.editingState;
-				if (_v20.$ === 'EditingItemAttr') {
+				if (_v20.$ === 'EditingItem') {
 					var ix = _v20.a;
 					return A4($author$project$Main$updateItemAttribute, model, attr, value, ix);
 				} else {
 					return model;
 				}
+			case 'DeleteItem':
+				var _v21 = model.settings.editingState;
+				if (_v21.$ === 'EditingItem') {
+					var i = _v21.a;
+					return A2(
+						$author$project$Main$asSettingsIn,
+						A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asItemsIn,
+								model.character,
+								A2($elm_community$list_extra$List$Extra$removeAt, i, model.character.items))),
+						A2($author$project$Main$asEditingStateIn, model.settings, $author$project$Main$NotEditing));
+				} else {
+					return model;
+				}
 			case 'ToggleItem':
 				var ix = msg.a;
-				var _v21 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
-				if (_v21.$ === 'Just') {
-					var item = _v21.a;
+				var _v22 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
+				if (_v22.$ === 'Just') {
+					var item = _v22.a;
 					var totalItems = $elm$core$List$length(
 						A2(
 							$elm$core$List$filter,
@@ -12640,6 +12657,7 @@ var $author$project$Main$Armor = {$: 'Armor'};
 var $author$project$Main$Basic = {$: 'Basic'};
 var $author$project$Main$Cha = {$: 'Cha'};
 var $author$project$Main$Con = {$: 'Con'};
+var $author$project$Main$DeleteItem = {$: 'DeleteItem'};
 var $author$project$Main$Description = {$: 'Description'};
 var $author$project$Main$Dex = {$: 'Dex'};
 var $author$project$Main$DisableEdit = {$: 'DisableEdit'};
@@ -13932,7 +13950,7 @@ var $author$project$Main$editItemModal = function (item) {
 												A3($mdgriffith$elm_ui$Element$rgb255, 194, 0, 0))
 											]),
 										$mdgriffith$elm_ui$Element$text('Delete item')),
-									onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
+									onPress: $elm$core$Maybe$Just($author$project$Main$DeleteItem)
 								}),
 								A2(
 								$mdgriffith$elm_ui$Element$Input$button,
@@ -15766,7 +15784,7 @@ var $author$project$Main$view = function (model) {
 					[
 						$author$project$Main$editStatsModal(model)
 					]);
-			case 'EditingItemAttr':
+			case 'EditingItem':
 				var ix = _v0.a;
 				var _v1 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
 				if (_v1.$ === 'Just') {
