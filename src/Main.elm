@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Element exposing (Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, image, inFront, minimum, newTabLink, none, padding, paddingEach, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
@@ -23,7 +23,7 @@ import Svg.Attributes
 import Task
 
 
-main : Program () Model Msg
+main : Program Encode.Value Model Msg
 main =
     Browser.element
         { init = init
@@ -31,6 +31,9 @@ main =
         , subscriptions = subscriptions
         , view = view
         }
+
+
+port setStorage : Encode.Value -> Cmd msg
 
 
 
@@ -155,16 +158,28 @@ type alias Item =
 -- ANCHOR init
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( { character = tabula_rasa
-      , settings =
-            { editingState = NotEditing
-            , darkMode = False
-            }
-      }
-    , Cmd.none
-    )
+init : Encode.Value -> ( Model, Cmd Msg )
+init flags =
+    case Decode.decodeValue decodeCharacter flags of
+        Ok char ->
+            ( { character = char
+              , settings =
+                    { editingState = NotEditing
+                    , darkMode = False
+                    }
+              }
+            , Cmd.none
+            )
+
+        Err e ->
+            ( { character = tabula_rasa
+              , settings =
+                    { editingState = NotEditing
+                    , darkMode = False
+                    }
+              }
+            , Cmd.none
+            )
 
 
 tabula_rasa : Character
@@ -262,13 +277,13 @@ updateWithCommands msg model =
         CharacterLoaded content ->
             case Decode.decodeString decodeCharacter content of
                 Ok char ->
-                    ( { model | character = char }, Cmd.none )
+                    ( { model | character = char }, setStorage (encodeCharacterObject char) )
 
                 Err e ->
                     ( ShowError (Decode.errorToString e) |> asEditingStateIn model.settings |> asSettingsIn model, Cmd.none )
 
         _ ->
-            ( update msg model, Cmd.none )
+            ( update msg model, setStorage (encodeCharacterObject model.character) )
 
 
 update : Msg -> Model -> Model
@@ -1745,18 +1760,22 @@ asHoveredIn charp hovered =
 
 encodeCharacter : Character -> String
 encodeCharacter char =
-    Encode.encode 0 <|
-        Encode.object
-            [ ( "name", encodeTextProp char.name )
-            , ( "bioform", encodeTextProp char.bioform )
-            , ( "class", encodeTextProp char.class )
-            , ( "story", encodeTextProp char.story )
-            , ( "hitpoints", encodeNumberProp char.hitpoints )
-            , ( "items", Encode.list encodeItem char.items )
-            , ( "stats", encodeStats char.stats )
-            , ( "coin", encodeNumberProp char.coin )
-            , ( "deathtimer", encodeNumberProp char.deathtimer )
-            ]
+    Encode.encode 0 <| encodeCharacterObject char
+
+
+encodeCharacterObject : Character -> Encode.Value
+encodeCharacterObject char =
+    Encode.object
+        [ ( "name", encodeTextProp char.name )
+        , ( "bioform", encodeTextProp char.bioform )
+        , ( "class", encodeTextProp char.class )
+        , ( "story", encodeTextProp char.story )
+        , ( "hitpoints", encodeNumberProp char.hitpoints )
+        , ( "items", Encode.list encodeItem char.items )
+        , ( "stats", encodeStats char.stats )
+        , ( "coin", encodeNumberProp char.coin )
+        , ( "deathtimer", encodeNumberProp char.deathtimer )
+        ]
 
 
 encodeTextProp : CharacterTextProp -> Encode.Value

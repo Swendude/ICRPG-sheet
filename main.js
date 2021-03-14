@@ -5360,113 +5360,17 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$element = _Browser_element;
 var $author$project$Main$NotEditing = {$: 'NotEditing'};
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$Bioform = {$: 'Bioform'};
-var $author$project$Main$Class = {$: 'Class'};
-var $author$project$Main$Coin = {$: 'Coin'};
-var $author$project$Main$Deathtimer = {$: 'Deathtimer'};
-var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
-var $author$project$Main$Item = F4(
-	function (name, description, stats, equipped) {
-		return {description: description, equipped: equipped, name: name, stats: stats};
-	});
-var $author$project$Main$Name = {$: 'Name'};
-var $author$project$Main$Stats = function (str) {
-	return function (dex) {
-		return function (con) {
-			return function (wis) {
-				return function (_int) {
-					return function (cha) {
-						return function (basic) {
-							return function (weapon) {
-								return function (magic) {
-									return function (ultimate) {
-										return function (armor) {
-											return function (hearts) {
-												return {armor: armor, basic: basic, cha: cha, con: con, dex: dex, hearts: hearts, _int: _int, magic: magic, str: str, ultimate: ultimate, weapon: weapon, wis: wis};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var $author$project$Main$Story = {$: 'Story'};
-var $author$project$Main$tabula_rasa = {
-	bioform: {hovered: false, id: $author$project$Main$Bioform, value: 'Dwarf'},
-	_class: {hovered: false, id: $author$project$Main$Class, value: 'Knight'},
-	coin: {editvalue: 0, id: $author$project$Main$Coin, value: 0},
-	deathtimer: {editvalue: 0, id: $author$project$Main$Deathtimer, value: 0},
-	hitpoints: {editvalue: 0, id: $author$project$Main$Hitpoints, value: 10},
-	items: _List_fromArray(
-		[
-			A4(
-			$author$project$Main$Item,
-			'Heartstone',
-			'Adds 1 heart',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
-			true),
-			A4(
-			$author$project$Main$Item,
-			'Sword',
-			'Makes you strong!',
-			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
-			true),
-			A4(
-			$author$project$Main$Item,
-			'Heal',
-			'Wis Spell: Heal an ally',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(1)(0)(0)(0),
-			false)
-		]),
-	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
-	stats: $author$project$Main$Stats(0)(0)(10)(0)(0)(0)(0)(0)(0)(0)(0)(1),
-	story: {hovered: false, id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
-};
-var $author$project$Main$init = function (_v0) {
-	return _Utils_Tuple2(
-		{
-			character: $author$project$Main$tabula_rasa,
-			settings: {darkMode: false, editingState: $author$project$Main$NotEditing}
-		},
-		$elm$core$Platform$Cmd$none);
-};
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Main$subscriptions = function (_v0) {
-	return $elm$core$Platform$Sub$none;
-};
-var $author$project$Main$CharacterLoaded = function (a) {
-	return {$: 'CharacterLoaded', a: a};
-};
-var $author$project$Main$CharacterSelected = function (a) {
-	return {$: 'CharacterSelected', a: a};
-};
-var $author$project$Main$ShowError = function (a) {
-	return {$: 'ShowError', a: a};
-};
-var $author$project$Main$asEditingStateIn = F2(
-	function (state, newState) {
-		return _Utils_update(
-			state,
-			{editingState: newState});
-	});
-var $author$project$Main$asSettingsIn = F2(
-	function (model, settings) {
-		return _Utils_update(
-			model,
-			{settings: settings});
-	});
 var $author$project$Main$Character = F9(
 	function (name, bioform, _class, story, hitpoints, items, stats, coin, deathtimer) {
 		return {bioform: bioform, _class: _class, coin: coin, deathtimer: deathtimer, hitpoints: hitpoints, items: items, name: name, stats: stats, story: story};
 	});
+var $author$project$Main$Class = {$: 'Class'};
+var $author$project$Main$Coin = {$: 'Coin'};
+var $author$project$Main$Deathtimer = {$: 'Deathtimer'};
+var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
+var $author$project$Main$Name = {$: 'Name'};
+var $author$project$Main$Story = {$: 'Story'};
 var $author$project$Main$CharacterNumberProp = F3(
 	function (value, id, editvalue) {
 		return {editvalue: editvalue, id: id, value: value};
@@ -5496,7 +5400,36 @@ var $author$project$Main$decodeCharacterTextProp = F2(
 			$elm$json$Json$Decode$succeed(id),
 			$elm$json$Json$Decode$succeed(false));
 	});
+var $author$project$Main$Item = F4(
+	function (name, description, stats, equipped) {
+		return {description: description, equipped: equipped, name: name, stats: stats};
+	});
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $author$project$Main$Stats = function (str) {
+	return function (dex) {
+		return function (con) {
+			return function (wis) {
+				return function (_int) {
+					return function (cha) {
+						return function (basic) {
+							return function (weapon) {
+								return function (magic) {
+									return function (ultimate) {
+										return function (armor) {
+											return function (hearts) {
+												return {armor: armor, basic: basic, cha: cha, con: con, dex: dex, hearts: hearts, _int: _int, magic: magic, str: str, ultimate: ultimate, weapon: weapon, wis: wis};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
@@ -5610,6 +5543,86 @@ var $author$project$Main$decodeCharacter = A3(
 									'name',
 									A2($author$project$Main$decodeCharacterTextProp, $author$project$Main$Name, 'name'),
 									$elm$json$Json$Decode$succeed($author$project$Main$Character))))))))));
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Main$tabula_rasa = {
+	bioform: {hovered: false, id: $author$project$Main$Bioform, value: 'Dwarf'},
+	_class: {hovered: false, id: $author$project$Main$Class, value: 'Knight'},
+	coin: {editvalue: 0, id: $author$project$Main$Coin, value: 0},
+	deathtimer: {editvalue: 0, id: $author$project$Main$Deathtimer, value: 0},
+	hitpoints: {editvalue: 0, id: $author$project$Main$Hitpoints, value: 10},
+	items: _List_fromArray(
+		[
+			A4(
+			$author$project$Main$Item,
+			'Heartstone',
+			'Adds 1 heart',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			true),
+			A4(
+			$author$project$Main$Item,
+			'Sword',
+			'Makes you strong!',
+			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+			true),
+			A4(
+			$author$project$Main$Item,
+			'Heal',
+			'Wis Spell: Heal an ally',
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(1)(0)(0)(0),
+			false)
+		]),
+	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
+	stats: $author$project$Main$Stats(0)(0)(10)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+	story: {hovered: false, id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
+};
+var $author$project$Main$init = function (flags) {
+	var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$decodeCharacter, flags);
+	if (_v0.$ === 'Ok') {
+		var _char = _v0.a;
+		return _Utils_Tuple2(
+			{
+				character: _char,
+				settings: {darkMode: false, editingState: $author$project$Main$NotEditing}
+			},
+			$elm$core$Platform$Cmd$none);
+	} else {
+		var e = _v0.a;
+		return _Utils_Tuple2(
+			{
+				character: $author$project$Main$tabula_rasa,
+				settings: {darkMode: false, editingState: $author$project$Main$NotEditing}
+			},
+			$elm$core$Platform$Cmd$none);
+	}
+};
+var $elm$core$Platform$Sub$batch = _Platform_batch;
+var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Main$subscriptions = function (_v0) {
+	return $elm$core$Platform$Sub$none;
+};
+var $author$project$Main$CharacterLoaded = function (a) {
+	return {$: 'CharacterLoaded', a: a};
+};
+var $author$project$Main$CharacterSelected = function (a) {
+	return {$: 'CharacterSelected', a: a};
+};
+var $author$project$Main$ShowError = function (a) {
+	return {$: 'ShowError', a: a};
+};
+var $author$project$Main$asEditingStateIn = F2(
+	function (state, newState) {
+		return _Utils_update(
+			state,
+			{editingState: newState});
+	});
+var $author$project$Main$asSettingsIn = F2(
+	function (model, settings) {
+		return _Utils_update(
+			model,
+			{settings: settings});
+	});
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$json$Json$Encode$int = _Json_wrap;
@@ -5702,41 +5715,44 @@ var $elm$json$Json$Encode$list = F2(
 				_Json_emptyArray(_Utils_Tuple0),
 				entries));
 	});
+var $author$project$Main$encodeCharacterObject = function (_char) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'name',
+				$author$project$Main$encodeTextProp(_char.name)),
+				_Utils_Tuple2(
+				'bioform',
+				$author$project$Main$encodeTextProp(_char.bioform)),
+				_Utils_Tuple2(
+				'class',
+				$author$project$Main$encodeTextProp(_char._class)),
+				_Utils_Tuple2(
+				'story',
+				$author$project$Main$encodeTextProp(_char.story)),
+				_Utils_Tuple2(
+				'hitpoints',
+				$author$project$Main$encodeNumberProp(_char.hitpoints)),
+				_Utils_Tuple2(
+				'items',
+				A2($elm$json$Json$Encode$list, $author$project$Main$encodeItem, _char.items)),
+				_Utils_Tuple2(
+				'stats',
+				$author$project$Main$encodeStats(_char.stats)),
+				_Utils_Tuple2(
+				'coin',
+				$author$project$Main$encodeNumberProp(_char.coin)),
+				_Utils_Tuple2(
+				'deathtimer',
+				$author$project$Main$encodeNumberProp(_char.deathtimer))
+			]));
+};
 var $author$project$Main$encodeCharacter = function (_char) {
 	return A2(
 		$elm$json$Json$Encode$encode,
 		0,
-		$elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'name',
-					$author$project$Main$encodeTextProp(_char.name)),
-					_Utils_Tuple2(
-					'bioform',
-					$author$project$Main$encodeTextProp(_char.bioform)),
-					_Utils_Tuple2(
-					'class',
-					$author$project$Main$encodeTextProp(_char._class)),
-					_Utils_Tuple2(
-					'story',
-					$author$project$Main$encodeTextProp(_char.story)),
-					_Utils_Tuple2(
-					'hitpoints',
-					$author$project$Main$encodeNumberProp(_char.hitpoints)),
-					_Utils_Tuple2(
-					'items',
-					A2($elm$json$Json$Encode$list, $author$project$Main$encodeItem, _char.items)),
-					_Utils_Tuple2(
-					'stats',
-					$author$project$Main$encodeStats(_char.stats)),
-					_Utils_Tuple2(
-					'coin',
-					$author$project$Main$encodeNumberProp(_char.coin)),
-					_Utils_Tuple2(
-					'deathtimer',
-					$author$project$Main$encodeNumberProp(_char.deathtimer))
-				])));
+		$author$project$Main$encodeCharacterObject(_char));
 };
 var $elm$time$Time$Posix = function (a) {
 	return {$: 'Posix', a: a};
@@ -5749,6 +5765,7 @@ var $elm$file$File$Select$file = F2(
 			toMsg,
 			_File_uploadOne(mimes));
 	});
+var $author$project$Main$setStorage = _Platform_outgoingPort('setStorage', $elm$core$Basics$identity);
 var $elm$file$File$Download$string = F3(
 	function (name, mime, content) {
 		return A2(
@@ -6750,7 +6767,8 @@ var $author$project$Main$updateWithCommands = F2(
 						_Utils_update(
 							model,
 							{character: _char}),
-						$elm$core$Platform$Cmd$none);
+						$author$project$Main$setStorage(
+							$author$project$Main$encodeCharacterObject(_char)));
 				} else {
 					var e = _v1.a;
 					return _Utils_Tuple2(
@@ -6767,9 +6785,11 @@ var $author$project$Main$updateWithCommands = F2(
 			default:
 				return _Utils_Tuple2(
 					A2($author$project$Main$update, msg, model),
-					$elm$core$Platform$Cmd$none);
+					$author$project$Main$setStorage(
+						$author$project$Main$encodeCharacterObject(model.character)));
 		}
 	});
+var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $mdgriffith$elm_ui$Internal$Model$AlignY = function (a) {
 	return {$: 'AlignY', a: a};
 };
@@ -15962,5 +15982,4 @@ var $author$project$Main$view = function (model) {
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{init: $author$project$Main$init, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$updateWithCommands, view: $author$project$Main$view});
-_Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
+_Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$value)(0)}});}(this));
