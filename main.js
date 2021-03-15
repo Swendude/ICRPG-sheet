@@ -14588,7 +14588,7 @@ var $author$project$Main$emptyHearts = A2(
 			_List_fromArray(
 				[
 					$elm$svg$Svg$Attributes$viewBox('0 0 100 100'),
-					$elm$svg$Svg$Attributes$width('18px')
+					$elm$svg$Svg$Attributes$width('20px')
 				]),
 			_List_fromArray(
 				[
@@ -14597,8 +14597,8 @@ var $author$project$Main$emptyHearts = A2(
 					_List_fromArray(
 						[
 							$elm$svg$Svg$Attributes$strokeWidth('5'),
-							$elm$svg$Svg$Attributes$fill('white'),
-							$elm$svg$Svg$Attributes$stroke('black')
+							$elm$svg$Svg$Attributes$stroke('black'),
+							$elm$svg$Svg$Attributes$fill('white')
 						]),
 					_List_fromArray(
 						[
@@ -14664,16 +14664,30 @@ var $elm$core$List$repeat = F2(
 	function (n, value) {
 		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
 	});
-var $mdgriffith$elm_ui$Element$scrollbarX = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$overflow, $mdgriffith$elm_ui$Internal$Style$classes.scrollbarsX);
 var $author$project$Main$heartRow = function (model) {
-	var heartCount = (model.character.hitpoints.value / 10) | 0;
-	var remainingHearts = function () {
-		var totalHearts = model.character.stats.hearts + function ($) {
-			return $.hearts;
-		}(
-			$author$project$Main$totalEquippedStats(model.character.items));
-		return (_Utils_cmp(heartCount, totalHearts) > -1) ? 0 : (totalHearts - heartCount);
-	}();
+	var heartsTotal = model.character.stats.hearts + function ($) {
+		return $.hearts;
+	}(
+		$author$project$Main$totalEquippedStats(model.character.items));
+	var overTenHearts = (heartsTotal > 10) ? (heartsTotal - 10) : 0;
+	var multiHeartsEl = (heartsTotal > 10) ? _List_fromArray(
+		[
+			A2(
+			$mdgriffith$elm_ui$Element$el,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$Font$size(
+					$author$project$Main$scaled(-3)),
+					$mdgriffith$elm_ui$Element$centerY
+				]),
+			$mdgriffith$elm_ui$Element$text(
+				' + ' + $elm$core$String$fromInt(overTenHearts)))
+		]) : _List_Nil;
+	var heartsLeft = (model.character.hitpoints.value / 10) | 0;
+	var filledHeartsEl = A2(
+		$elm$core$List$repeat,
+		A2($elm$core$Basics$min, 10, heartsLeft),
+		$author$project$Main$filledHearts);
 	var fieldStyle = _List_fromArray(
 		[
 			A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
@@ -14681,6 +14695,10 @@ var $author$project$Main$heartRow = function (model) {
 			$mdgriffith$elm_ui$Element$px(40)),
 			$mdgriffith$elm_ui$Element$centerX
 		]);
+	var emptyHeartsEl = A2($elm$core$List$repeat, (heartsTotal - heartsLeft) - overTenHearts, $author$project$Main$emptyHearts);
+	var heartsRow = _Utils_ap(
+		filledHeartsEl,
+		_Utils_ap(emptyHeartsEl, multiHeartsEl));
 	return A2(
 		$mdgriffith$elm_ui$Element$column,
 		_List_fromArray(
@@ -14723,15 +14741,8 @@ var $author$project$Main$heartRow = function (model) {
 								A2(
 								$mdgriffith$elm_ui$Element$row,
 								_List_fromArray(
-									[
-										$mdgriffith$elm_ui$Element$centerX,
-										$mdgriffith$elm_ui$Element$scrollbarX,
-										$mdgriffith$elm_ui$Element$height(
-										$mdgriffith$elm_ui$Element$px(65))
-									]),
-								_Utils_ap(
-									A2($elm$core$List$repeat, heartCount, $author$project$Main$filledHearts),
-									A2($elm$core$List$repeat, remainingHearts, $author$project$Main$emptyHearts)))
+									[$mdgriffith$elm_ui$Element$centerX]),
+								heartsRow)
 							])),
 						A2(
 						$mdgriffith$elm_ui$Element$row,
@@ -14870,6 +14881,7 @@ var $author$project$Main$printTextAttribute = function (attr) {
 			return 'Bioform';
 	}
 };
+var $mdgriffith$elm_ui$Element$scrollbarX = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$overflow, $mdgriffith$elm_ui$Internal$Style$classes.scrollbarsX);
 var $author$project$Main$editableTextField = F3(
 	function (style, editstate, prop) {
 		var writeField = A2(
@@ -15039,18 +15051,24 @@ var $author$project$Main$editModifier = function (ix) {
 };
 var $mdgriffith$elm_ui$Internal$Flag$fontWeight = $mdgriffith$elm_ui$Internal$Flag$flag(13);
 var $mdgriffith$elm_ui$Element$Font$bold = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$fontWeight, $mdgriffith$elm_ui$Internal$Style$classes.bold);
-var $author$project$Main$joinStrings = F2(
-	function (mstr, res) {
-		if (mstr.$ === 'Just') {
-			var str = mstr.a;
-			if (res === '') {
-				return str;
-			} else {
-				return res + (', ' + str);
-			}
-		} else {
-			return res;
-		}
+var $mdgriffith$elm_ui$Internal$Model$Paragraph = {$: 'Paragraph'};
+var $mdgriffith$elm_ui$Element$paragraph = F2(
+	function (attrs, children) {
+		return A4(
+			$mdgriffith$elm_ui$Internal$Model$element,
+			$mdgriffith$elm_ui$Internal$Model$asParagraph,
+			$mdgriffith$elm_ui$Internal$Model$div,
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Internal$Model$Describe($mdgriffith$elm_ui$Internal$Model$Paragraph),
+				A2(
+					$elm$core$List$cons,
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					A2(
+						$elm$core$List$cons,
+						$mdgriffith$elm_ui$Element$spacing(5),
+						attrs))),
+			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
 	});
 var $author$project$Main$printStat = function (val_stat) {
 	var val = val_stat.a;
@@ -15060,10 +15078,9 @@ var $author$project$Main$printStat = function (val_stat) {
 		val + (' -' + $elm$core$String$fromInt(stat))) : $elm$core$Maybe$Nothing);
 };
 var $author$project$Main$printStats = function (stats) {
-	return A3(
-		$elm$core$List$foldl,
-		$author$project$Main$joinStrings,
-		'',
+	return A2(
+		$elm$core$List$filterMap,
+		$elm$core$Basics$identity,
 		A2(
 			$elm$core$List$map,
 			$author$project$Main$printStat,
@@ -15105,17 +15122,19 @@ var $author$project$Main$itemRow = F3(
 					A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(
-						[$mdgriffith$elm_ui$Element$Font$bold, $mdgriffith$elm_ui$Element$alignBottom]),
+						[$mdgriffith$elm_ui$Element$Font$bold, $mdgriffith$elm_ui$Element$alignTop]),
 					$mdgriffith$elm_ui$Element$text(item.name)),
 					A2(
-					$mdgriffith$elm_ui$Element$el,
+					$mdgriffith$elm_ui$Element$column,
 					_List_fromArray(
 						[
 							$mdgriffith$elm_ui$Element$Font$size(
 							$author$project$Main$scaled(-3)),
-							$mdgriffith$elm_ui$Element$alignBottom
+							$mdgriffith$elm_ui$Element$alignTop
 						]),
-					$mdgriffith$elm_ui$Element$text(
+					A2(
+						$elm$core$List$map,
+						$mdgriffith$elm_ui$Element$text,
 						$author$project$Main$printStats(item.stats))),
 					A2(
 					$mdgriffith$elm_ui$Element$el,
@@ -15123,9 +15142,19 @@ var $author$project$Main$itemRow = F3(
 						[
 							$mdgriffith$elm_ui$Element$Font$size(
 							$author$project$Main$scaled(-2)),
-							$mdgriffith$elm_ui$Element$alignBottom
+							$mdgriffith$elm_ui$Element$alignTop,
+							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
 						]),
-					$mdgriffith$elm_ui$Element$text(item.description)),
+					A2(
+						$mdgriffith$elm_ui$Element$paragraph,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+							]),
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$text(item.description)
+							]))),
 					A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(

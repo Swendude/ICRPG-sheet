@@ -1,7 +1,7 @@
 port module Main exposing (..)
 
 import Browser
-import Element exposing (Attribute, Element, alignBottom, alignLeft, alignRight, alignTop, centerX, centerY, clip, column, el, fill, fillPortion, height, image, inFront, minimum, newTabLink, none, padding, paddingEach, paddingXY, px, rgb, rgb255, row, scrollbarX, spacingXY, text, width)
+import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Events as Events
@@ -1215,21 +1215,36 @@ editableNumberField style editstate prop =
 heartRow : Model -> Element Msg
 heartRow model =
     let
-        heartCount : Int
-        heartCount =
+        heartsLeft : Int
+        heartsLeft =
             model.character.hitpoints.value // 10
 
-        remainingHearts : Int
-        remainingHearts =
-            let
-                totalHearts =
-                    model.character.stats.hearts + .hearts (totalEquippedStats model.character.items)
-            in
-            if heartCount >= totalHearts then
-                0
+        heartsTotal =
+            model.character.stats.hearts + .hearts (totalEquippedStats model.character.items)
+
+        overTenHearts =
+            if heartsTotal > 10 then
+                heartsTotal - 10
 
             else
-                totalHearts - heartCount
+                0
+
+        multiHeartsEl =
+            if heartsTotal > 10 then
+                [ el [ Font.size (scaled -3), centerY ] <| text <| " + " ++ String.fromInt overTenHearts ]
+
+            else
+                []
+
+        filledHeartsEl =
+            List.repeat (min 10 heartsLeft) filledHearts
+
+        emptyHeartsEl =
+            List.repeat (heartsTotal - heartsLeft - overTenHearts) emptyHearts
+
+        heartsRow : List (Element Msg)
+        heartsRow =
+            filledHeartsEl ++ emptyHeartsEl ++ multiHeartsEl
 
         fieldStyle =
             [ spacingXY 10 0
@@ -1244,9 +1259,8 @@ heartRow model =
                     [ text <| "Hit Points: "
                     , editableNumberField fieldStyle model.settings.editingState model.character.hitpoints
                     ]
-                , row [ centerX, scrollbarX, height <| px 65 ] <|
-                    List.repeat heartCount filledHearts
-                        ++ List.repeat remainingHearts emptyHearts
+                , row [ centerX ] <|
+                    heartsRow
                 ]
             , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ el [ centerX ] <| text <| "Coin: "
@@ -1282,10 +1296,10 @@ emptyHearts =
         (Element.html <|
             Svg.svg
                 [ Svg.Attributes.viewBox "0 0 100 100"
-                , Svg.Attributes.width "18px"
+                , Svg.Attributes.width "20px"
                 ]
                 [ Svg.g
-                    [ Svg.Attributes.strokeWidth "5", Svg.Attributes.fill "white", Svg.Attributes.stroke "black" ]
+                    [ Svg.Attributes.strokeWidth "5", Svg.Attributes.stroke "black", Svg.Attributes.fill "white" ]
                     [ Svg.path [ Svg.Attributes.d "M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z" ] []
                     ]
                 ]
@@ -1501,17 +1515,19 @@ itemRow modifierButton editButton ( ix, item ) =
         , Border.rounded 5
         , Background.color (rgb255 255 255 255)
         ]
-        [ el [ Font.bold, alignBottom ] <| text item.name
-        , el [ Font.size (scaled -3), alignBottom ] <| text <| printStats item.stats
-        , el [ Font.size (scaled -2), alignBottom ] <| text item.description
+        [ el [ Font.bold, alignTop ] <| text item.name
+        , column [ Font.size (scaled -3), alignTop ] <|
+            List.map text <|
+                printStats item.stats
+        , el [ Font.size (scaled -2), alignTop, width fill ] <| paragraph [ width fill ] [ text item.description ]
         , el [ alignRight ] <| editButton ix
         , el [ alignRight ] <| modifierButton ix
         ]
 
 
-printStats : Stats -> String
+printStats : Stats -> List String
 printStats stats =
-    List.foldl joinStrings "" <|
+    List.filterMap identity <|
         List.map printStat <|
             [ ( "Str", stats.str )
             , ( "Dex", stats.dex )
@@ -1526,21 +1542,6 @@ printStats stats =
             , ( "Armor", stats.armor )
             , ( "Heart", stats.hearts )
             ]
-
-
-joinStrings : Maybe String -> String -> String
-joinStrings mstr res =
-    case mstr of
-        Just str ->
-            case res of
-                "" ->
-                    str
-
-                _ ->
-                    res ++ ", " ++ str
-
-        Nothing ->
-            res
 
 
 printStat : ( String, Int ) -> Maybe String
