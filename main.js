@@ -15241,7 +15241,8 @@ var $author$project$Main$itemCol = F4(
 				[
 					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 					$mdgriffith$elm_ui$Element$alignTop,
-					A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
+					A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
 				]),
 			_List_fromArray(
 				[
@@ -15277,7 +15278,8 @@ var $author$project$Main$itemCol = F4(
 							A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
 							A2($mdgriffith$elm_ui$Element$paddingXY, 10, 10),
 							$mdgriffith$elm_ui$Element$Background$color(
-							A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244))
+							A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244)),
+							$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
 						]),
 					A2(
 						$elm$core$List$map,

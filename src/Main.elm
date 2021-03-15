@@ -1435,6 +1435,7 @@ itemCol equippedState label modifyLabel items =
         [ width fill
         , Element.alignTop
         , spacingXY 0 10
+        , height fill
         ]
         [ row [ width fill ]
             [ el
@@ -1459,6 +1460,7 @@ itemCol equippedState label modifyLabel items =
             , spacingXY 0 10
             , paddingXY 10 10
             , Background.color (rgb255 244 244 244)
+            , height fill
             ]
           <|
             List.map (itemRow (stateModifier modifyLabel) editModifier)
@@ -1561,28 +1563,6 @@ printStat val_stat =
 
     else
         Nothing
-
-
-unEquippedCol : Character -> Element Msg
-unEquippedCol char =
-    Element.column
-        [ width fill
-        , Element.alignTop
-        ]
-    <|
-        (el [ Font.size (scaled 2), Element.alignTop ] <|
-            text "Carried Gear :"
-        )
-            :: List.repeat
-                1
-                (el
-                    [ Element.paddingEach { bottom = 8, left = scaled 1, right = 0, top = 8 }
-                    , Font.size (scaled 1)
-                    , Element.alignTop
-                    ]
-                 <|
-                    text char.name.value
-                )
 
 
 scaled : Int -> Int
