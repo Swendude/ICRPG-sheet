@@ -14669,7 +14669,6 @@ var $author$project$Main$heartRow = function (model) {
 		return $.hearts;
 	}(
 		$author$project$Main$totalEquippedStats(model.character.items));
-	var overTenHearts = (heartsTotal > 10) ? (heartsTotal - 10) : 0;
 	var multiHeartsEl = (heartsTotal > 10) ? _List_fromArray(
 		[
 			A2(
@@ -14681,8 +14680,9 @@ var $author$project$Main$heartRow = function (model) {
 					$mdgriffith$elm_ui$Element$centerY
 				]),
 			$mdgriffith$elm_ui$Element$text(
-				' + ' + $elm$core$String$fromInt(overTenHearts)))
+				' total: ' + $elm$core$String$fromInt(heartsTotal)))
 		]) : _List_Nil;
+	var overTenHearts = (heartsTotal > 10) ? (heartsTotal - 10) : 0;
 	var heartsLeft = (model.character.hitpoints.value / 10) | 0;
 	var filledHeartsEl = A2(
 		$elm$core$List$repeat,

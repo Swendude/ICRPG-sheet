@@ -1231,7 +1231,7 @@ heartRow model =
 
         multiHeartsEl =
             if heartsTotal > 10 then
-                [ el [ Font.size (scaled -3), centerY ] <| text <| " + " ++ String.fromInt overTenHearts ]
+                [ el [ Font.size (scaled -3), centerY ] <| text <| " total: " ++ String.fromInt heartsTotal ]
 
             else
                 []
