@@ -5377,29 +5377,27 @@ var $author$project$Main$CharacterNumberProp = F3(
 	});
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$map3 = _Json_map3;
-var $author$project$Main$decodeCharacterNumberProp = F2(
-	function (id, fieldname) {
-		return A4(
-			$elm$json$Json$Decode$map3,
-			$author$project$Main$CharacterNumberProp,
-			$elm$json$Json$Decode$int,
-			$elm$json$Json$Decode$succeed(id),
-			$elm$json$Json$Decode$succeed(0));
-	});
+var $author$project$Main$decodeCharacterNumberProp = function (id) {
+	return A4(
+		$elm$json$Json$Decode$map3,
+		$author$project$Main$CharacterNumberProp,
+		$elm$json$Json$Decode$int,
+		$elm$json$Json$Decode$succeed(id),
+		$elm$json$Json$Decode$succeed(0));
+};
 var $author$project$Main$CharacterTextProp = F3(
 	function (value, id, hovered) {
 		return {hovered: hovered, id: id, value: value};
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Main$decodeCharacterTextProp = F2(
-	function (id, fieldname) {
-		return A4(
-			$elm$json$Json$Decode$map3,
-			$author$project$Main$CharacterTextProp,
-			$elm$json$Json$Decode$string,
-			$elm$json$Json$Decode$succeed(id),
-			$elm$json$Json$Decode$succeed(false));
-	});
+var $author$project$Main$decodeCharacterTextProp = function (id) {
+	return A4(
+		$elm$json$Json$Decode$map3,
+		$author$project$Main$CharacterTextProp,
+		$elm$json$Json$Decode$string,
+		$elm$json$Json$Decode$succeed(id),
+		$elm$json$Json$Decode$succeed(false));
+};
 var $author$project$Main$Item = F4(
 	function (name, description, stats, equipped) {
 		return {description: description, equipped: equipped, name: name, stats: stats};
@@ -5432,6 +5430,116 @@ var $author$project$Main$Stats = function (str) {
 };
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optionalDecoder = F3(
+	function (pathDecoder, valDecoder, fallback) {
+		var nullOr = function (decoder) {
+			return $elm$json$Json$Decode$oneOf(
+				_List_fromArray(
+					[
+						decoder,
+						$elm$json$Json$Decode$null(fallback)
+					]));
+		};
+		var handleResult = function (input) {
+			var _v0 = A2($elm$json$Json$Decode$decodeValue, pathDecoder, input);
+			if (_v0.$ === 'Ok') {
+				var rawValue = _v0.a;
+				var _v1 = A2(
+					$elm$json$Json$Decode$decodeValue,
+					nullOr(valDecoder),
+					rawValue);
+				if (_v1.$ === 'Ok') {
+					var finalResult = _v1.a;
+					return $elm$json$Json$Decode$succeed(finalResult);
+				} else {
+					var finalErr = _v1.a;
+					return $elm$json$Json$Decode$fail(
+						$elm$json$Json$Decode$errorToString(finalErr));
+				}
+			} else {
+				return $elm$json$Json$Decode$succeed(fallback);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, handleResult, $elm$json$Json$Decode$value);
+	});
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional = F4(
+	function (key, valDecoder, fallback, decoder) {
+		return A2(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A3(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optionalDecoder,
+				A2($elm$json$Json$Decode$field, key, $elm$json$Json$Decode$value),
+				valDecoder,
+				fallback),
+			decoder);
+	});
+var $author$project$Main$decodeStats = A4(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+	'hearts',
+	$elm$json$Json$Decode$int,
+	0,
+	A4(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+		'armor',
+		$elm$json$Json$Decode$int,
+		0,
+		A4(
+			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+			'ultimate',
+			$elm$json$Json$Decode$int,
+			0,
+			A4(
+				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+				'magic',
+				$elm$json$Json$Decode$int,
+				0,
+				A4(
+					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+					'weapon',
+					$elm$json$Json$Decode$int,
+					0,
+					A4(
+						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+						'basic',
+						$elm$json$Json$Decode$int,
+						0,
+						A4(
+							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+							'cha',
+							$elm$json$Json$Decode$int,
+							0,
+							A4(
+								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+								'int',
+								$elm$json$Json$Decode$int,
+								0,
+								A4(
+									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+									'wis',
+									$elm$json$Json$Decode$int,
+									0,
+									A4(
+										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+										'con',
+										$elm$json$Json$Decode$int,
+										0,
+										A4(
+											$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+											'dex',
+											$elm$json$Json$Decode$int,
+											0,
+											A4(
+												$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+												'str',
+												$elm$json$Json$Decode$int,
+												0,
+												$elm$json$Json$Decode$succeed($author$project$Main$Stats)))))))))))));
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 	function (key, valDecoder, decoder) {
 		return A2(
@@ -5439,55 +5547,6 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 			A2($elm$json$Json$Decode$field, key, valDecoder),
 			decoder);
 	});
-var $author$project$Main$decodeStats = A3(
-	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'hearts',
-	$elm$json$Json$Decode$int,
-	A3(
-		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'armor',
-		$elm$json$Json$Decode$int,
-		A3(
-			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'ultimate',
-			$elm$json$Json$Decode$int,
-			A3(
-				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'magic',
-				$elm$json$Json$Decode$int,
-				A3(
-					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'weapon',
-					$elm$json$Json$Decode$int,
-					A3(
-						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-						'basic',
-						$elm$json$Json$Decode$int,
-						A3(
-							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-							'cha',
-							$elm$json$Json$Decode$int,
-							A3(
-								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-								'int',
-								$elm$json$Json$Decode$int,
-								A3(
-									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-									'wis',
-									$elm$json$Json$Decode$int,
-									A3(
-										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-										'con',
-										$elm$json$Json$Decode$int,
-										A3(
-											$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-											'dex',
-											$elm$json$Json$Decode$int,
-											A3(
-												$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-												'str',
-												$elm$json$Json$Decode$int,
-												$elm$json$Json$Decode$succeed($author$project$Main$Stats)))))))))))));
 var $author$project$Main$decodeItem = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 	'equipped',
@@ -5505,15 +5564,29 @@ var $author$project$Main$decodeItem = A3(
 				'name',
 				$elm$json$Json$Decode$string,
 				$elm$json$Json$Decode$succeed($author$project$Main$Item)))));
+var $author$project$Main$checkListLength = F2(
+	function (n, l) {
+		return (_Utils_cmp(
+			$elm$core$List$length(l),
+			n) > 0) ? $elm$json$Json$Decode$fail(
+			'There are to many objects in this list, there should by max ' + $elm$core$String$fromInt(n)) : $elm$json$Json$Decode$succeed(l);
+	});
 var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$Main$decodeMaxTimes = F2(
+	function (n, a) {
+		return A2(
+			$elm$json$Json$Decode$andThen,
+			$author$project$Main$checkListLength(n),
+			$elm$json$Json$Decode$list(a));
+	});
 var $author$project$Main$decodeCharacter = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 	'deathtimer',
-	A2($author$project$Main$decodeCharacterNumberProp, $author$project$Main$Deathtimer, 'deathtimer'),
+	$author$project$Main$decodeCharacterNumberProp($author$project$Main$Deathtimer),
 	A3(
 		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 		'coin',
-		A2($author$project$Main$decodeCharacterNumberProp, $author$project$Main$Coin, 'coin'),
+		$author$project$Main$decodeCharacterNumberProp($author$project$Main$Coin),
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 			'stats',
@@ -5521,29 +5594,28 @@ var $author$project$Main$decodeCharacter = A3(
 			A3(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 				'items',
-				$elm$json$Json$Decode$list($author$project$Main$decodeItem),
+				A2($author$project$Main$decodeMaxTimes, 20, $author$project$Main$decodeItem),
 				A3(
 					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 					'hitpoints',
-					A2($author$project$Main$decodeCharacterNumberProp, $author$project$Main$Hitpoints, 'hitpoints'),
+					$author$project$Main$decodeCharacterNumberProp($author$project$Main$Hitpoints),
 					A3(
 						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 						'story',
-						A2($author$project$Main$decodeCharacterTextProp, $author$project$Main$Story, 'story'),
+						$author$project$Main$decodeCharacterTextProp($author$project$Main$Story),
 						A3(
 							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 							'class',
-							A2($author$project$Main$decodeCharacterTextProp, $author$project$Main$Class, 'class'),
+							$author$project$Main$decodeCharacterTextProp($author$project$Main$Class),
 							A3(
 								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 								'bioform',
-								A2($author$project$Main$decodeCharacterTextProp, $author$project$Main$Bioform, 'bioform'),
+								$author$project$Main$decodeCharacterTextProp($author$project$Main$Bioform),
 								A3(
 									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 									'name',
-									A2($author$project$Main$decodeCharacterTextProp, $author$project$Main$Name, 'name'),
+									$author$project$Main$decodeCharacterTextProp($author$project$Main$Name),
 									$elm$json$Json$Decode$succeed($author$project$Main$Character))))))))));
-var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$tabula_rasa = {
@@ -5625,7 +5697,19 @@ var $author$project$Main$asSettingsIn = F2(
 	});
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
 var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
 		A3(
@@ -5639,47 +5723,39 @@ var $elm$json$Json$Encode$object = function (pairs) {
 			_Json_emptyObject(_Utils_Tuple0),
 			pairs));
 };
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
 var $author$project$Main$encodeStats = function (stats) {
 	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'str',
-				$elm$json$Json$Encode$int(stats.str)),
-				_Utils_Tuple2(
-				'dex',
-				$elm$json$Json$Encode$int(stats.dex)),
-				_Utils_Tuple2(
-				'con',
-				$elm$json$Json$Encode$int(stats.con)),
-				_Utils_Tuple2(
-				'wis',
-				$elm$json$Json$Encode$int(stats.wis)),
-				_Utils_Tuple2(
-				'int',
-				$elm$json$Json$Encode$int(stats._int)),
-				_Utils_Tuple2(
-				'cha',
-				$elm$json$Json$Encode$int(stats.cha)),
-				_Utils_Tuple2(
-				'basic',
-				$elm$json$Json$Encode$int(stats.basic)),
-				_Utils_Tuple2(
-				'weapon',
-				$elm$json$Json$Encode$int(stats.weapon)),
-				_Utils_Tuple2(
-				'magic',
-				$elm$json$Json$Encode$int(stats.magic)),
-				_Utils_Tuple2(
-				'ultimate',
-				$elm$json$Json$Encode$int(stats.ultimate)),
-				_Utils_Tuple2(
-				'armor',
-				$elm$json$Json$Encode$int(stats.armor)),
-				_Utils_Tuple2(
-				'hearts',
-				$elm$json$Json$Encode$int(stats.hearts))
-			]));
+		A2(
+			$elm$core$List$map,
+			function (s) {
+				return _Utils_Tuple2(
+					s.a,
+					$elm$json$Json$Encode$int(s.b));
+			},
+			A2(
+				$elm$core$List$filter,
+				function (s) {
+					return !(!s.b);
+				},
+				_List_fromArray(
+					[
+						_Utils_Tuple2('str', stats.str),
+						_Utils_Tuple2('dex', stats.dex),
+						_Utils_Tuple2('con', stats.con),
+						_Utils_Tuple2('wis', stats.wis),
+						_Utils_Tuple2('int', stats._int),
+						_Utils_Tuple2('cha', stats.cha),
+						_Utils_Tuple2('basic', stats.basic),
+						_Utils_Tuple2('weapon', stats.weapon),
+						_Utils_Tuple2('magic', stats.magic),
+						_Utils_Tuple2('ultimate', stats.ultimate),
+						_Utils_Tuple2('armor', stats.armor),
+						_Utils_Tuple2('hearts', stats.hearts)
+					]))));
 };
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$Main$encodeItem = function (item) {
@@ -5868,17 +5944,6 @@ var $elm$core$Basics$composeL = F3(
 			f(x));
 	});
 var $author$project$Main$emptyStats = $author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0);
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $elm$core$List$drop = F2(
 	function (n, list) {
 		drop:
@@ -5914,7 +5979,6 @@ var $elm_community$list_extra$List$Extra$getAt = F2(
 		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
 			A2($elm$core$List$drop, idx, xs));
 	});
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$core$Basics$not = _Basics_not;
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
@@ -6789,7 +6853,6 @@ var $author$project$Main$updateWithCommands = F2(
 						$author$project$Main$encodeCharacterObject(model.character)));
 		}
 	});
-var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $mdgriffith$elm_ui$Internal$Model$AlignY = function (a) {
 	return {$: 'AlignY', a: a};
 };
@@ -6988,10 +7051,6 @@ var $mdgriffith$elm_ui$Internal$Model$lengthClassName = function (x) {
 			var len = x.b;
 			return 'max' + ($elm$core$String$fromInt(max) + $mdgriffith$elm_ui$Internal$Model$lengthClassName(len));
 	}
-};
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
 };
 var $mdgriffith$elm_ui$Internal$Model$transformClass = function (transform) {
 	switch (transform.$) {
@@ -12732,8 +12791,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		$elm$json$Json$Decode$succeed(msg));
 };
 var $mdgriffith$elm_ui$Element$Events$onClick = A2($elm$core$Basics$composeL, $mdgriffith$elm_ui$Internal$Model$Attr, $elm$html$Html$Events$onClick);
-var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $elm$json$Json$Decode$fail = _Json_fail;
 var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
 	return {$: 'MayPreventDefault', a: a};
 };

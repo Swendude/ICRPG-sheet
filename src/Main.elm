@@ -1771,20 +1771,22 @@ encodeNumberProp prop =
 
 encodeStats : Stats -> Encode.Value
 encodeStats stats =
-    Encode.object
-        [ ( "str", Encode.int stats.str )
-        , ( "dex", Encode.int stats.dex )
-        , ( "con", Encode.int stats.con )
-        , ( "wis", Encode.int stats.wis )
-        , ( "int", Encode.int stats.int )
-        , ( "cha", Encode.int stats.cha )
-        , ( "basic", Encode.int stats.basic )
-        , ( "weapon", Encode.int stats.weapon )
-        , ( "magic", Encode.int stats.magic )
-        , ( "ultimate", Encode.int stats.ultimate )
-        , ( "armor", Encode.int stats.armor )
-        , ( "hearts", Encode.int stats.hearts )
-        ]
+    Encode.object <|
+        List.map (\s -> ( Tuple.first s, Encode.int <| Tuple.second s )) <|
+            List.filter (\s -> Tuple.second s /= 0) <|
+                [ ( "str", stats.str )
+                , ( "dex", stats.dex )
+                , ( "con", stats.con )
+                , ( "wis", stats.wis )
+                , ( "int", stats.int )
+                , ( "cha", stats.cha )
+                , ( "basic", stats.basic )
+                , ( "weapon", stats.weapon )
+                , ( "magic", stats.magic )
+                , ( "ultimate", stats.ultimate )
+                , ( "armor", stats.armor )
+                , ( "hearts", stats.hearts )
+                ]
 
 
 encodeItem : Item -> Encode.Value
@@ -1804,42 +1806,56 @@ encodeItem item =
 decodeCharacter : Decode.Decoder Character
 decodeCharacter =
     Decode.succeed Character
-        |> Pipeline.required "name" (decodeCharacterTextProp Name "name")
-        |> Pipeline.required "bioform" (decodeCharacterTextProp Bioform "bioform")
-        |> Pipeline.required "class" (decodeCharacterTextProp Class "class")
-        |> Pipeline.required "story" (decodeCharacterTextProp Story "story")
-        |> Pipeline.required "hitpoints" (decodeCharacterNumberProp Hitpoints "hitpoints")
-        |> Pipeline.required "items" (Decode.list decodeItem)
+        |> Pipeline.required "name" (decodeCharacterTextProp Name)
+        |> Pipeline.required "bioform" (decodeCharacterTextProp Bioform)
+        |> Pipeline.required "class" (decodeCharacterTextProp Class)
+        |> Pipeline.required "story" (decodeCharacterTextProp Story)
+        |> Pipeline.required "hitpoints" (decodeCharacterNumberProp Hitpoints)
+        |> Pipeline.required "items" (decodeMaxTimes 20 decodeItem)
         |> Pipeline.required "stats" decodeStats
-        |> Pipeline.required "coin" (decodeCharacterNumberProp Coin "coin")
-        |> Pipeline.required "deathtimer" (decodeCharacterNumberProp Deathtimer "deathtimer")
+        |> Pipeline.required "coin" (decodeCharacterNumberProp Coin)
+        |> Pipeline.required "deathtimer" (decodeCharacterNumberProp Deathtimer)
 
 
-decodeCharacterTextProp : CharacterTextAttribute -> String -> Decode.Decoder CharacterTextProp
-decodeCharacterTextProp id fieldname =
+decodeMaxTimes : Int -> Decode.Decoder a -> Decode.Decoder (List a)
+decodeMaxTimes n a =
+    Decode.list a |> Decode.andThen (checkListLength n)
+
+
+checkListLength : Int -> List a -> Decode.Decoder (List a)
+checkListLength n l =
+    if List.length l > n then
+        Decode.fail <| "There are to many objects in this list, there should by max " ++ String.fromInt n
+
+    else
+        Decode.succeed l
+
+
+decodeCharacterTextProp : CharacterTextAttribute -> Decode.Decoder CharacterTextProp
+decodeCharacterTextProp id =
     Decode.map3 CharacterTextProp Decode.string (Decode.succeed id) (Decode.succeed False)
 
 
-decodeCharacterNumberProp : CharacterNumberAttribute -> String -> Decode.Decoder CharacterNumberProp
-decodeCharacterNumberProp id fieldname =
+decodeCharacterNumberProp : CharacterNumberAttribute -> Decode.Decoder CharacterNumberProp
+decodeCharacterNumberProp id =
     Decode.map3 CharacterNumberProp Decode.int (Decode.succeed id) (Decode.succeed 0)
 
 
 decodeStats : Decode.Decoder Stats
 decodeStats =
     Decode.succeed Stats
-        |> Pipeline.required "str" Decode.int
-        |> Pipeline.required "dex" Decode.int
-        |> Pipeline.required "con" Decode.int
-        |> Pipeline.required "wis" Decode.int
-        |> Pipeline.required "int" Decode.int
-        |> Pipeline.required "cha" Decode.int
-        |> Pipeline.required "basic" Decode.int
-        |> Pipeline.required "weapon" Decode.int
-        |> Pipeline.required "magic" Decode.int
-        |> Pipeline.required "ultimate" Decode.int
-        |> Pipeline.required "armor" Decode.int
-        |> Pipeline.required "hearts" Decode.int
+        |> Pipeline.optional "str" Decode.int 0
+        |> Pipeline.optional "dex" Decode.int 0
+        |> Pipeline.optional "con" Decode.int 0
+        |> Pipeline.optional "wis" Decode.int 0
+        |> Pipeline.optional "int" Decode.int 0
+        |> Pipeline.optional "cha" Decode.int 0
+        |> Pipeline.optional "basic" Decode.int 0
+        |> Pipeline.optional "weapon" Decode.int 0
+        |> Pipeline.optional "magic" Decode.int 0
+        |> Pipeline.optional "ultimate" Decode.int 0
+        |> Pipeline.optional "armor" Decode.int 0
+        |> Pipeline.optional "hearts" Decode.int 0
 
 
 decodeItem : Decode.Decoder Item

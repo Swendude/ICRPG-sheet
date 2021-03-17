@@ -7,11 +7,12 @@
     "elm": "^0.19.1-5",
     "elm-format": "^0.8.5",
     "elm-live": "^4.0.2",
+    "elm-test": "^0.19.1-revision6",
     "package-lock.json": "^1.0.0"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "elm test",
+    "test": "elm-test",
     "start": "elm-live src/Main.elm --open -- --output=main.js",
     "debug": "elm-live src/Main.elm --open -- --output=main.js --debug"
   },
