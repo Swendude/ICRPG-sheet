@@ -37,7 +37,7 @@ jobs:
         run: npm install
 
       - name: Run elm-test
-        run: elm-test
+        run: npm run test
         
         
   
