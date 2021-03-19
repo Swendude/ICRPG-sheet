@@ -5361,14 +5361,32 @@ var $elm$core$Task$perform = F2(
 var $elm$browser$Browser$element = _Browser_element;
 var $author$project$Main$NotEditing = {$: 'NotEditing'};
 var $author$project$Main$Bioform = {$: 'Bioform'};
-var $author$project$Main$Character = F9(
-	function (name, bioform, _class, story, hitpoints, items, stats, coin, deathtimer) {
-		return {bioform: bioform, _class: _class, coin: coin, deathtimer: deathtimer, hitpoints: hitpoints, items: items, name: name, stats: stats, story: story};
-	});
+var $author$project$Main$Character = function (name) {
+	return function (bioform) {
+		return function (_class) {
+			return function (story) {
+				return function (hitpoints) {
+					return function (items) {
+						return function (stats) {
+							return function (coin) {
+								return function (deathtimer) {
+									return function (journal) {
+										return {bioform: bioform, _class: _class, coin: coin, deathtimer: deathtimer, hitpoints: hitpoints, items: items, journal: journal, name: name, stats: stats, story: story};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 var $author$project$Main$Class = {$: 'Class'};
 var $author$project$Main$Coin = {$: 'Coin'};
 var $author$project$Main$Deathtimer = {$: 'Deathtimer'};
 var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
+var $author$project$Main$Journal = {$: 'Journal'};
 var $author$project$Main$Name = {$: 'Name'};
 var $author$project$Main$Story = {$: 'Story'};
 var $author$project$Main$CharacterNumberProp = F3(
@@ -5579,43 +5597,49 @@ var $author$project$Main$decodeMaxTimes = F2(
 			$author$project$Main$checkListLength(n),
 			$elm$json$Json$Decode$list(a));
 	});
-var $author$project$Main$decodeCharacter = A3(
-	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-	'deathtimer',
-	$author$project$Main$decodeCharacterNumberProp($author$project$Main$Deathtimer),
+var $author$project$Main$emptyJournal = {hovered: false, id: $author$project$Main$Journal, value: ''};
+var $author$project$Main$decodeCharacter = A4(
+	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+	'journal',
+	$author$project$Main$decodeCharacterTextProp($author$project$Main$Journal),
+	$author$project$Main$emptyJournal,
 	A3(
 		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'coin',
-		$author$project$Main$decodeCharacterNumberProp($author$project$Main$Coin),
+		'deathtimer',
+		$author$project$Main$decodeCharacterNumberProp($author$project$Main$Deathtimer),
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'stats',
-			$author$project$Main$decodeStats,
+			'coin',
+			$author$project$Main$decodeCharacterNumberProp($author$project$Main$Coin),
 			A3(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'items',
-				A2($author$project$Main$decodeMaxTimes, 20, $author$project$Main$decodeItem),
+				'stats',
+				$author$project$Main$decodeStats,
 				A3(
 					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'hitpoints',
-					$author$project$Main$decodeCharacterNumberProp($author$project$Main$Hitpoints),
+					'items',
+					A2($author$project$Main$decodeMaxTimes, 20, $author$project$Main$decodeItem),
 					A3(
 						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-						'story',
-						$author$project$Main$decodeCharacterTextProp($author$project$Main$Story),
+						'hitpoints',
+						$author$project$Main$decodeCharacterNumberProp($author$project$Main$Hitpoints),
 						A3(
 							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-							'class',
-							$author$project$Main$decodeCharacterTextProp($author$project$Main$Class),
+							'story',
+							$author$project$Main$decodeCharacterTextProp($author$project$Main$Story),
 							A3(
 								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-								'bioform',
-								$author$project$Main$decodeCharacterTextProp($author$project$Main$Bioform),
+								'class',
+								$author$project$Main$decodeCharacterTextProp($author$project$Main$Class),
 								A3(
 									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-									'name',
-									$author$project$Main$decodeCharacterTextProp($author$project$Main$Name),
-									$elm$json$Json$Decode$succeed($author$project$Main$Character))))))))));
+									'bioform',
+									$author$project$Main$decodeCharacterTextProp($author$project$Main$Bioform),
+									A3(
+										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+										'name',
+										$author$project$Main$decodeCharacterTextProp($author$project$Main$Name),
+										$elm$json$Json$Decode$succeed($author$project$Main$Character)))))))))));
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$tabula_rasa = {
@@ -5645,6 +5669,7 @@ var $author$project$Main$tabula_rasa = {
 			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(1)(0)(0)(0),
 			false)
 		]),
+	journal: $author$project$Main$emptyJournal,
 	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
 	stats: $author$project$Main$Stats(0)(0)(10)(0)(0)(0)(0)(0)(0)(0)(0)(1),
 	story: {hovered: false, id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
@@ -5660,7 +5685,6 @@ var $author$project$Main$init = function (flags) {
 			},
 			$elm$core$Platform$Cmd$none);
 	} else {
-		var e = _v0.a;
 		return _Utils_Tuple2(
 			{
 				character: $author$project$Main$tabula_rasa,
@@ -5854,8 +5878,8 @@ var $author$project$Main$EditingCharacterNumber = function (a) {
 	return {$: 'EditingCharacterNumber', a: a};
 };
 var $author$project$Main$EditingCharacterStats = {$: 'EditingCharacterStats'};
-var $author$project$Main$EditingCharactertext = function (a) {
-	return {$: 'EditingCharactertext', a: a};
+var $author$project$Main$EditingCharacterText = function (a) {
+	return {$: 'EditingCharacterText', a: a};
 };
 var $author$project$Main$EditingItem = function (a) {
 	return {$: 'EditingItem', a: a};
@@ -5913,6 +5937,12 @@ var $author$project$Main$asItemsIn = F2(
 		return _Utils_update(
 			_char,
 			{items: items});
+	});
+var $author$project$Main$asJournalIn = F2(
+	function (_char, newjournal) {
+		return _Utils_update(
+			_char,
+			{journal: newjournal});
 	});
 var $author$project$Main$asNameIn = F2(
 	function (_char, newname) {
@@ -6419,7 +6449,7 @@ var $author$project$Main$update = F2(
 					A2(
 						$author$project$Main$asEditingStateIn,
 						model.settings,
-						$author$project$Main$EditingCharactertext(id)));
+						$author$project$Main$EditingCharacterText(id)));
 			case 'EditNumber':
 				var id = msg.a;
 				return A2(
@@ -6455,43 +6485,45 @@ var $author$project$Main$update = F2(
 					model,
 					function () {
 						var _v1 = model.settings.editingState;
-						if (_v1.$ === 'EditingCharactertext') {
-							switch (_v1.a.$) {
+						if (_v1.$ === 'EditingCharacterText') {
+							var id = _v1.a;
+							switch (id.$) {
 								case 'Name':
-									var _v2 = _v1.a;
 									return A2(
 										$author$project$Main$asNameIn,
 										model.character,
 										A2($author$project$Main$asTextValueIn, model.character.name, value));
 								case 'Class':
-									var _v3 = _v1.a;
 									return A2(
 										$author$project$Main$asClassIn,
 										model.character,
 										A2($author$project$Main$asTextValueIn, model.character._class, value));
 								case 'Bioform':
-									var _v4 = _v1.a;
 									return A2(
 										$author$project$Main$asBioformIn,
 										model.character,
 										A2($author$project$Main$asTextValueIn, model.character.bioform, value));
-								default:
-									var _v5 = _v1.a;
+								case 'Story':
 									return A2(
 										$author$project$Main$asStoryIn,
 										model.character,
 										A2($author$project$Main$asTextValueIn, model.character.story, value));
+								default:
+									return A2(
+										$author$project$Main$asJournalIn,
+										model.character,
+										A2($author$project$Main$asTextValueIn, model.character.journal, value));
 							}
 						} else {
 							return model.character;
 						}
 					}());
 			case 'IncreaseNumberAttribute':
-				var _v6 = model.settings.editingState;
-				if (_v6.$ === 'EditingCharacterNumber') {
-					switch (_v6.a.$) {
+				var _v3 = model.settings.editingState;
+				if (_v3.$ === 'EditingCharacterNumber') {
+					switch (_v3.a.$) {
 						case 'Coin':
-							var _v7 = _v6.a;
+							var _v4 = _v3.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6500,7 +6532,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value + model.character.coin.editvalue)));
 						case 'Hitpoints':
-							var _v8 = _v6.a;
+							var _v5 = _v3.a;
 							var result = model.character.hitpoints.value + model.character.hitpoints.editvalue;
 							var maxHitpoints = (model.character.stats.hearts + function ($) {
 								return $.hearts;
@@ -6515,7 +6547,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.hitpoints, maxResult)));
 						default:
-							var _v9 = _v6.a;
+							var _v6 = _v3.a;
 							var result = model.character.deathtimer.value + model.character.deathtimer.editvalue;
 							var maxResult = (result > 6) ? 6 : result;
 							return A2(
@@ -6530,11 +6562,11 @@ var $author$project$Main$update = F2(
 					return model;
 				}
 			case 'DecreaseNumberAttribute':
-				var _v10 = model.settings.editingState;
-				if (_v10.$ === 'EditingCharacterNumber') {
-					switch (_v10.a.$) {
+				var _v7 = model.settings.editingState;
+				if (_v7.$ === 'EditingCharacterNumber') {
+					switch (_v7.a.$) {
 						case 'Coin':
-							var _v11 = _v10.a;
+							var _v8 = _v7.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6543,7 +6575,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value - model.character.coin.editvalue)));
 						case 'Hitpoints':
-							var _v12 = _v10.a;
+							var _v9 = _v7.a;
 							var resultHitpoints = model.character.hitpoints.value - model.character.hitpoints.editvalue;
 							var newHitpoints = (resultHitpoints <= 0) ? 0 : resultHitpoints;
 							return A2(
@@ -6554,7 +6586,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.hitpoints, newHitpoints)));
 						default:
-							var _v13 = _v10.a;
+							var _v10 = _v7.a;
 							return (model.character.deathtimer.value <= 0) ? model : A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6568,11 +6600,11 @@ var $author$project$Main$update = F2(
 				}
 			case 'UpdateEditField':
 				var value = msg.a;
-				var _v14 = model.settings.editingState;
-				if (_v14.$ === 'EditingCharacterNumber') {
-					switch (_v14.a.$) {
+				var _v11 = model.settings.editingState;
+				if (_v11.$ === 'EditingCharacterNumber') {
+					switch (_v11.a.$) {
 						case 'Coin':
-							var _v15 = _v14.a;
+							var _v12 = _v11.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6587,7 +6619,7 @@ var $author$project$Main$update = F2(
 											0,
 											$elm$core$String$toInt(value)))));
 						case 'Hitpoints':
-							var _v16 = _v14.a;
+							var _v13 = _v11.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6602,7 +6634,7 @@ var $author$project$Main$update = F2(
 											0,
 											$elm$core$String$toInt(value)))));
 						default:
-							var _v17 = _v14.a;
+							var _v14 = _v11.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6623,15 +6655,15 @@ var $author$project$Main$update = F2(
 			case 'ChangeStatAttribute':
 				var stat = msg.a;
 				var value = msg.b;
-				var _v18 = $elm$core$String$toInt(value);
-				if (_v18.$ === 'Just') {
-					var intVal = _v18.a;
-					var _v19 = model.settings.editingState;
-					switch (_v19.$) {
+				var _v15 = $elm$core$String$toInt(value);
+				if (_v15.$ === 'Just') {
+					var intVal = _v15.a;
+					var _v16 = model.settings.editingState;
+					switch (_v16.$) {
 						case 'EditingCharacterStats':
 							return A3($author$project$Main$updateStat, model, stat, intVal);
 						case 'EditingItem':
-							var ix = _v19.a;
+							var ix = _v16.a;
 							return A4($author$project$Main$updateItemStat, model, stat, intVal, ix);
 						default:
 							return model;
@@ -6642,17 +6674,17 @@ var $author$project$Main$update = F2(
 			case 'ChangeItemAttribute':
 				var attr = msg.a;
 				var value = msg.b;
-				var _v20 = model.settings.editingState;
-				if (_v20.$ === 'EditingItem') {
-					var ix = _v20.a;
+				var _v17 = model.settings.editingState;
+				if (_v17.$ === 'EditingItem') {
+					var ix = _v17.a;
 					return A4($author$project$Main$updateItemAttribute, model, attr, value, ix);
 				} else {
 					return model;
 				}
 			case 'DeleteItem':
-				var _v21 = model.settings.editingState;
-				if (_v21.$ === 'EditingItem') {
-					var i = _v21.a;
+				var _v18 = model.settings.editingState;
+				if (_v18.$ === 'EditingItem') {
+					var i = _v18.a;
 					return A2(
 						$author$project$Main$asSettingsIn,
 						A2(
@@ -6668,9 +6700,9 @@ var $author$project$Main$update = F2(
 				}
 			case 'ToggleItem':
 				var ix = msg.a;
-				var _v22 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
-				if (_v22.$ === 'Just') {
-					var item = _v22.a;
+				var _v19 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
+				if (_v19.$ === 'Just') {
+					var item = _v19.a;
 					var totalItems = $elm$core$List$length(
 						A2(
 							$elm$core$List$filter,
@@ -6746,7 +6778,7 @@ var $author$project$Main$update = F2(
 								$author$project$Main$asBioformIn,
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.bioform, true)));
-					default:
+					case 'Story':
 						return A2(
 							$author$project$Main$asCharIn,
 							model,
@@ -6754,6 +6786,14 @@ var $author$project$Main$update = F2(
 								$author$project$Main$asStoryIn,
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.story, true)));
+					default:
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asJournalIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.journal, true)));
 				}
 			case 'Unhovered':
 				var attribute = msg.a;
@@ -6782,7 +6822,7 @@ var $author$project$Main$update = F2(
 								$author$project$Main$asBioformIn,
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.bioform, false)));
-					default:
+					case 'Story':
 						return A2(
 							$author$project$Main$asCharIn,
 							model,
@@ -6790,6 +6830,14 @@ var $author$project$Main$update = F2(
 								$author$project$Main$asStoryIn,
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.story, false)));
+					default:
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asJournalIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.journal, false)));
 				}
 			default:
 				return model;
@@ -14934,8 +14982,10 @@ var $author$project$Main$printTextAttribute = function (attr) {
 			return 'Class';
 		case 'Story':
 			return 'Story';
-		default:
+		case 'Bioform':
 			return 'Bioform';
+		default:
+			return 'Journal';
 	}
 };
 var $mdgriffith$elm_ui$Element$scrollbarX = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$overflow, $mdgriffith$elm_ui$Internal$Style$classes.scrollbarsX);
@@ -15014,7 +15064,7 @@ var $author$project$Main$editableTextField = F3(
 							$author$project$Main$EditText(prop.id))
 					})
 				]));
-		if (editstate.$ === 'EditingCharactertext') {
+		if (editstate.$ === 'EditingCharacterText') {
 			var n = editstate.a;
 			return _Utils_eq(n, prop.id) ? writeField : readField;
 		} else {
@@ -15347,6 +15397,45 @@ var $author$project$Main$itemCol = F4(
 						A2($author$project$Main$itemsIndexed, equippedState, items)))
 				]));
 	});
+var $author$project$Main$journalRow = function (model) {
+	var labelStyle = _List_Nil;
+	var fieldStyle = _List_fromArray(
+		[
+			$mdgriffith$elm_ui$Element$Font$size(
+			$author$project$Main$scaled(-3)),
+			$mdgriffith$elm_ui$Element$height(
+			$mdgriffith$elm_ui$Element$px(36)),
+			$mdgriffith$elm_ui$Element$width(
+			$mdgriffith$elm_ui$Element$px(600))
+		]);
+	return A2(
+		$mdgriffith$elm_ui$Element$row,
+		_List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$Background$color(
+				A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244)),
+				$mdgriffith$elm_ui$Element$padding(10)
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$mdgriffith$elm_ui$Element$row,
+				_List_fromArray(
+					[
+						A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+						$mdgriffith$elm_ui$Element$centerX
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$el,
+						labelStyle,
+						$mdgriffith$elm_ui$Element$text('Journal :')),
+						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editingState, model.character.journal)
+					]))
+			]));
+};
 var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
 	function (a, b) {
 		return {$: 'OnlyDynamic', a: a, b: b};
@@ -15948,6 +16037,7 @@ var $author$project$Main$view = function (model) {
 					$author$project$Main$storyRow(model),
 					$author$project$Main$heartRow(model),
 					$author$project$Main$effortRow(model.character),
+					$author$project$Main$journalRow(model),
 					A2(
 					$mdgriffith$elm_ui$Element$row,
 					_List_fromArray(

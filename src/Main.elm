@@ -65,13 +65,14 @@ type alias Character =
     , stats : Stats
     , coin : CharacterNumberProp
     , deathtimer : CharacterNumberProp
+    , journal : CharacterTextProp
     }
 
 
 type EditingState
     = EditingCharacterStats
     | EditingItem Int
-    | EditingCharactertext CharacterTextAttribute
+    | EditingCharacterText CharacterTextAttribute
     | EditingCharacterNumber CharacterNumberAttribute
     | ShowError String
     | NotEditing
@@ -102,6 +103,7 @@ type CharacterTextAttribute
     | Story
     | Class
     | Bioform
+    | Journal
 
 
 type CharacterNumberAttribute
@@ -225,6 +227,15 @@ tabula_rasa =
         , id = Deathtimer
         , editvalue = 0
         }
+    , journal = emptyJournal
+    }
+
+
+emptyJournal : CharacterTextProp
+emptyJournal =
+    { value = ""
+    , id = Journal
+    , hovered = False
     }
 
 
@@ -290,7 +301,7 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         EditText id ->
-            EditingCharactertext id
+            EditingCharacterText id
                 |> asEditingStateIn model.settings
                 |> asSettingsIn model
 
@@ -317,25 +328,32 @@ update msg model =
         UpdateTextAttr value ->
             asCharIn model <|
                 case model.settings.editingState of
-                    EditingCharactertext Name ->
-                        value
-                            |> asTextValueIn model.character.name
-                            |> asNameIn model.character
+                    EditingCharacterText id ->
+                        case id of
+                            Name ->
+                                value
+                                    |> asTextValueIn model.character.name
+                                    |> asNameIn model.character
 
-                    EditingCharactertext Class ->
-                        value
-                            |> asTextValueIn model.character.class
-                            |> asClassIn model.character
+                            Class ->
+                                value
+                                    |> asTextValueIn model.character.class
+                                    |> asClassIn model.character
 
-                    EditingCharactertext Bioform ->
-                        value
-                            |> asTextValueIn model.character.bioform
-                            |> asBioformIn model.character
+                            Bioform ->
+                                value
+                                    |> asTextValueIn model.character.bioform
+                                    |> asBioformIn model.character
 
-                    EditingCharactertext Story ->
-                        value
-                            |> asTextValueIn model.character.story
-                            |> asStoryIn model.character
+                            Story ->
+                                value
+                                    |> asTextValueIn model.character.story
+                                    |> asStoryIn model.character
+
+                            Journal ->
+                                value
+                                    |> asTextValueIn model.character.journal
+                                    |> asJournalIn model.character
 
                     _ ->
                         model.character
@@ -557,6 +575,12 @@ update msg model =
                         |> asStoryIn model.character
                         |> asCharIn model
 
+                Journal ->
+                    True
+                        |> asHoveredIn model.character.journal
+                        |> asJournalIn model.character
+                        |> asCharIn model
+
         Unhovered attribute ->
             case attribute of
                 Name ->
@@ -581,6 +605,12 @@ update msg model =
                     False
                         |> asHoveredIn model.character.story
                         |> asStoryIn model.character
+                        |> asCharIn model
+
+                Journal ->
+                    False
+                        |> asHoveredIn model.character.journal
+                        |> asJournalIn model.character
                         |> asCharIn model
 
         _ ->
@@ -742,6 +772,9 @@ printTextAttribute attr =
         Bioform ->
             "Bioform"
 
+        Journal ->
+            "Journal"
+
 
 
 -- ANCHOR View
@@ -791,6 +824,7 @@ view model =
             , storyRow model
             , heartRow model
             , effortRow model.character
+            , journalRow model
             , row [ width fill, spacingXY 10 0 ]
                 [ el
                     [ width (fillPortion 1)
@@ -1095,6 +1129,23 @@ storyRow model =
         ]
 
 
+journalRow : Model -> Element Msg
+journalRow model =
+    let
+        labelStyle =
+            []
+
+        fieldStyle =
+            [ Font.size (scaled -3), height (px <| 36), width (px 600) ]
+    in
+    row [ width fill, Background.color <| Element.rgb255 244 244 244, padding 10 ]
+        [ row [ spacingXY 10 0, centerX ]
+            [ el labelStyle (text "Journal :")
+            , editableTextField fieldStyle model.settings.editingState model.character.journal
+            ]
+        ]
+
+
 editableTextField : List (Attribute Msg) -> EditingState -> CharacterTextProp -> Element Msg
 editableTextField style editstate prop =
     let
@@ -1142,7 +1193,7 @@ editableTextField style editstate prop =
                 ]
     in
     case editstate of
-        EditingCharactertext n ->
+        EditingCharacterText n ->
             if n == prop.id then
                 writeField
 
@@ -1705,6 +1756,11 @@ asStoryIn char newstory =
     { char | story = newstory }
 
 
+asJournalIn : Character -> CharacterTextProp -> Character
+asJournalIn char newjournal =
+    { char | journal = newjournal }
+
+
 asClassIn : Character -> CharacterTextProp -> Character
 asClassIn char newclass =
     { char | class = newclass }
@@ -1815,6 +1871,7 @@ decodeCharacter =
         |> Pipeline.required "stats" decodeStats
         |> Pipeline.required "coin" (decodeCharacterNumberProp Coin)
         |> Pipeline.required "deathtimer" (decodeCharacterNumberProp Deathtimer)
+        |> Pipeline.optional "journal" (decodeCharacterTextProp Journal) emptyJournal
 
 
 decodeMaxTimes : Int -> Decode.Decoder a -> Decode.Decoder (List a)
