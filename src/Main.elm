@@ -171,7 +171,7 @@ init flags =
             , Cmd.none
             )
 
-        Err e ->
+        Err _ ->
             ( { character = tabula_rasa
               , settings =
                     { editingState = NotEditing
