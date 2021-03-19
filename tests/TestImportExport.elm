@@ -1,8 +1,7 @@
 module TestImportExport exposing (..)
 
 import Examples
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
+import Expect exposing (..)
 import Json.Decode as Decode
 import Main exposing (decodeCharacter)
 import Test exposing (..)
