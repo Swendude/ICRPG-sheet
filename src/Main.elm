@@ -1,6 +1,7 @@
 port module Main exposing (..)
 
 import Browser
+import Browser.Events as E
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
@@ -23,7 +24,7 @@ import Svg.Attributes
 import Task
 
 
-main : Program Encode.Value Model Msg
+main : Program ( Encode.Value, Int, Int ) Model Msg
 main =
     Browser.element
         { init = init
@@ -42,7 +43,7 @@ port setStorage : Encode.Value -> Cmd msg
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    E.onResize (\w h -> ScreenResize h w)
 
 
 
@@ -80,6 +81,7 @@ type EditingState
 type alias AppSettings =
     { editingState : EditingState
     , darkMode : Bool
+    , device : Device
     }
 
 
@@ -158,14 +160,15 @@ type alias Item =
 -- ANCHOR init
 
 
-init : Encode.Value -> ( Model, Cmd Msg )
-init flags =
-    case Decode.decodeValue decodeCharacter flags of
+init : ( Encode.Value, Int, Int ) -> ( Model, Cmd Msg )
+init ( charValue, h, w ) =
+    case Decode.decodeValue decodeCharacter charValue of
         Ok char ->
             ( { character = char
               , settings =
                     { editingState = NotEditing
                     , darkMode = False
+                    , device = classifyDevice { width = w, height = h }
                     }
               }
             , Cmd.none
@@ -176,6 +179,7 @@ init flags =
               , settings =
                     { editingState = NotEditing
                     , darkMode = False
+                    , device = classifyDevice { width = w, height = h }
                     }
               }
             , Cmd.none
@@ -254,6 +258,7 @@ type Msg
     | CharacterSelected File
     | CharacterLoaded String
     | DeleteItem
+    | ScreenResize Int Int
 
 
 
@@ -289,6 +294,11 @@ updateWithCommands msg model =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
+        ScreenResize h w ->
+            classifyDevice { width = w, height = h }
+                |> asDeviceIn model.settings
+                |> asSettingsIn model
+
         EditText id ->
             EditingCharactertext id
                 |> asEditingStateIn model.settings
@@ -747,6 +757,27 @@ printTextAttribute attr =
 -- ANCHOR View
 
 
+pickStyle model =
+    case model.settings.device.class of
+        Phone ->
+            { mainWidth = fill
+            , fontBase = 24
+            , fieldWidth = px 300
+            }
+
+        Tablet ->
+            { mainWidth = fill
+            , fontBase = 24
+            , fieldWidth = px 300
+            }
+
+        _ ->
+            { mainWidth = px 1200
+            , fontBase = 24
+            , fieldWidth = px 300
+            }
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -758,13 +789,13 @@ view model =
                 EditingItem ix ->
                     case List.Extra.getAt ix model.character.items of
                         Just item ->
-                            [ editItemModal item ]
+                            [ editItemModal model item ]
 
                         Nothing ->
                             []
 
                 ShowError err ->
-                    [ showErrorModal err ]
+                    [ showErrorModal model err ]
 
                 _ ->
                     []
@@ -773,24 +804,25 @@ view model =
         [ Font.family
             [ Font.typeface "Patrick Hand"
             ]
-        , Font.size (scaled 1)
+        , Font.size (scaled model 1)
         , Background.color <| Element.rgb255 0 0 0
         ]
     <|
         Element.column
-            ([ width fill
+            ([ width <| (pickStyle model).mainWidth
              , Element.height Element.fill
              , Background.color <| Element.rgb255 255 255 255
-             , paddingXY 50 23
+             , paddingXY 21 23
              , spacingXY 0 23
+             , centerX
              ]
                 ++ activeModal
             )
-            [ headerRow
+            [ headerRow model
             , infoRow model
             , storyRow model
             , heartRow model
-            , effortRow model.character
+            , effortRow model
             , row [ width fill, spacingXY 10 0 ]
                 [ el
                     [ width (fillPortion 1)
@@ -798,26 +830,26 @@ view model =
                     , paddingXY 10 10
                     ]
                   <|
-                    armorBlock "Armor" model.character.stats.armor <|
+                    armorBlock model "Armor" model.character.stats.armor <|
                         .armor (totalEquippedStats model.character.items)
                 , column [ width (fillPortion 7), spacingXY 0 10 ]
-                    [ statRow1 model.character
-                    , statRow2 model.character
+                    [ statRow1 model
+                    , statRow2 model
                     ]
                 ]
             , row
                 [ width fill
                 , spacingXY 10 0
                 ]
-                [ itemCol True "Equipped " "Carry" model.character.items
-                , itemCol False "Carried " "Equip" model.character.items
+                [ itemCol model True "Equipped " "Carry"
+                , itemCol model False "Carried " "Equip"
                 ]
             , spacerRow
             , row
                 [ paddingEach { top = 20, right = 0, bottom = 10, left = 0 }
                 , centerX
                 , spacingXY 10 0
-                , Font.size (scaled -1)
+                , Font.size (scaled model -1)
                 ]
                 [ row [ alignBottom ]
                     [ text "Made "
@@ -854,10 +886,10 @@ editStatsModal model =
                 , Font.color (rgb 255 255 255)
                 ]
                 [ row [ spacingXY 10 0, centerX ]
-                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 2) ] <| text "Edit base stats"
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled model 2) ] <| text "Edit base stats"
                     ]
                 , row [ spacingXY 10 0, centerX ]
-                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled -1) ] <| text "These mostly come from your choice of Bioform and Class, but your GM might give you other reasons to add base stats!"
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled model -1) ] <| text "These mostly come from your choice of Bioform and Class, but your GM might give you other reasons to add base stats!"
                     ]
                 , row [ spacingXY 10 0, centerX ]
                     [ statEditor Basic model.character.stats.basic "Basic"
@@ -880,8 +912,8 @@ editStatsModal model =
                 ]
 
 
-editItemModal : Item -> Attribute Msg
-editItemModal item =
+editItemModal : Model -> Item -> Attribute Msg
+editItemModal model item =
     inFront <|
         el
             [ width fill
@@ -898,7 +930,7 @@ editItemModal item =
                 , Font.color (rgb 255 255 255)
                 ]
                 [ row [ spacingXY 10 0, centerX ]
-                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 2) ] <| text "Edit item"
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled model 2) ] <| text "Edit item"
                     ]
                 , row [ centerX ]
                     [ textEditor ItemName item.name "Name"
@@ -942,8 +974,8 @@ editItemModal item =
                 ]
 
 
-showErrorModal : String -> Attribute Msg
-showErrorModal err =
+showErrorModal : Model -> String -> Attribute Msg
+showErrorModal model err =
     inFront <|
         el
             [ width fill
@@ -960,10 +992,10 @@ showErrorModal err =
                 , Font.color (rgb 255 255 255)
                 ]
                 [ row [ spacingXY 10 0, centerX ]
-                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 2) ] <| text "Error"
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled model 2) ] <| text "Error"
                     ]
                 , row [ centerX ]
-                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 1) ] <| text err
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled model 1) ] <| text err
                     ]
                 , Input.button [ centerX ]
                     { onPress = Just DisableEdit
@@ -1009,16 +1041,16 @@ spacerRow =
         none
 
 
-headerRow : Element Msg
-headerRow =
+headerRow : Model -> Element Msg
+headerRow model =
     row
         [ width fill
         , Background.color (rgb255 0 0 0)
         , Font.color (rgb255 255 255 255)
-        , padding 12
+        , padding 5
         , spacingXY 12 0
         ]
-        [ el [ Font.size (scaled 3) ] <| text "ICRPG Character Sheet"
+        [ el [ Font.size (scaled model 3) ] <| text "ICRPG Character Sheet"
         , Input.button [ alignRight ]
             { onPress = Just SaveCharacter
             , label =
@@ -1028,7 +1060,7 @@ headerRow =
                     , padding 5
                     , Border.dotted
                     , Font.center
-                    , Font.size (scaled -2)
+                    , Font.size (scaled model -2)
                     ]
                 <|
                     text "Save"
@@ -1042,7 +1074,7 @@ headerRow =
                     , padding 5
                     , Border.dotted
                     , Font.center
-                    , Font.size (scaled -2)
+                    , Font.size (scaled model -2)
                     ]
                 <|
                     text "Load"
@@ -1053,29 +1085,66 @@ headerRow =
 infoRow : Model -> Element Msg
 infoRow model =
     let
-        labelStyle =
-            []
+        rows =
+            [ row [ spacingXY 5 0 ]
+                [ el [] (text "Name :")
+                , editableTextField
+                    [ height (px <| 36)
+                    , width <| (pickStyle model).fieldWidth
+                    ]
+                    model.settings.editingState
+                    model.character.name
+                ]
+            , row [ spacingXY 5 0 ]
+                [ el [] (text "Class :")
+                , editableTextField
+                    [ height (px <| 36)
+                    , width <| (pickStyle model).fieldWidth
+                    ]
+                    model.settings.editingState
+                    model.character.class
+                ]
+            , row [ spacingXY 5 0 ]
+                [ el [] (text "Bioform :")
+                , editableTextField
+                    [ height (px <| 36)
+                    , width <| (pickStyle model).fieldWidth
+                    ]
+                    model.settings.editingState
+                    model.character.bioform
+                ]
+            ]
 
-        groupStyle =
-            [ spacingXY 5 0, centerX ]
+        singleRow =
+            row
+                [ width fill
+                , spaceEvenly
+                , Background.color <| Element.rgb255 244 244 244
+                , paddingXY 40 5
+                ]
+                rows
 
-        fieldStyle =
-            [ height (px <| 36), width <| px 150 ]
+        singleCol =
+            column
+                [ width fill
+                , spaceEvenly
+                , Background.color <| Element.rgb255 244 244 244
+                , paddingXY 15 15
+                ]
+                rows
     in
-    row [ width fill, spacingXY 10 0, Background.color <| Element.rgb255 244 244 244, padding 10 ]
-        [ row groupStyle
-            [ el labelStyle (text "Name :")
-            , editableTextField fieldStyle model.settings.editingState model.character.name
-            ]
-        , row groupStyle
-            [ el labelStyle (text "Class :")
-            , editableTextField fieldStyle model.settings.editingState model.character.class
-            ]
-        , row groupStyle
-            [ el labelStyle (text "Bioform :")
-            , editableTextField fieldStyle model.settings.editingState model.character.bioform
-            ]
-        ]
+    case model.settings.device.class of
+        Tablet ->
+            singleRow
+
+        Phone ->
+            singleCol
+
+        Desktop ->
+            singleRow
+
+        BigDesktop ->
+            singleRow
 
 
 storyRow : Model -> Element Msg
@@ -1085,7 +1154,7 @@ storyRow model =
             []
 
         fieldStyle =
-            [ Font.size (scaled -3), height (px <| 36), width (px 600) ]
+            [ Font.size (scaled model -3), height (px <| 36), width (px 600) ]
     in
     row [ width fill, Background.color <| Element.rgb255 244 244 244, padding 10 ]
         [ row [ spacingXY 10 0, centerX ]
@@ -1153,8 +1222,8 @@ editableTextField style editstate prop =
             readField
 
 
-editableNumberField : List (Attribute Msg) -> EditingState -> CharacterNumberProp -> Element Msg
-editableNumberField style editstate prop =
+editableNumberField : List (Attribute Msg) -> Model -> CharacterNumberProp -> Element Msg
+editableNumberField style model prop =
     let
         labelEl =
             el
@@ -1194,13 +1263,13 @@ editableNumberField style editstate prop =
                     , onChange = UpdateEditField
                     , placeholder = Nothing
                     }
-                , Input.button [ Font.size (scaled -1), paddingXY 0 0 ] <|
+                , Input.button [ Font.size (scaled model -1), paddingXY 0 0 ] <|
                     { label = text <| "+", onPress = Just <| IncreaseNumberAttribute }
-                , Input.button [ Font.size (scaled -1), paddingXY 0 0 ] <|
+                , Input.button [ Font.size (scaled model -1), paddingXY 0 0 ] <|
                     { label = text <| "-", onPress = Just <| DecreaseNumberAttribute }
                 ]
     in
-    case editstate of
+    case model.settings.editingState of
         EditingCharacterNumber n ->
             if n == prop.id then
                 writeField
@@ -1231,7 +1300,7 @@ heartRow model =
 
         multiHeartsEl =
             if heartsTotal > 10 then
-                [ el [ Font.size (scaled -3), centerY ] <| text <| " total: " ++ String.fromInt heartsTotal ]
+                [ el [ Font.size (scaled model -3), centerY ] <| text <| " total: " ++ String.fromInt heartsTotal ]
 
             else
                 []
@@ -1257,18 +1326,18 @@ heartRow model =
             [ column [ width <| fill, height <| px 65, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ row [ centerX ]
                     [ text <| "Hit Points: "
-                    , editableNumberField fieldStyle model.settings.editingState model.character.hitpoints
+                    , editableNumberField fieldStyle model model.character.hitpoints
                     ]
                 , row [ centerX ] <|
                     heartsRow
                 ]
             , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ el [ centerX ] <| text <| "Coin: "
-                , editableNumberField fieldStyle model.settings.editingState model.character.coin
+                , editableNumberField fieldStyle model model.character.coin
                 ]
             , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ el [ centerX ] <| text <| "† Dying?: "
-                , editableNumberField fieldStyle model.settings.editingState model.character.deathtimer
+                , editableNumberField fieldStyle model model.character.deathtimer
                 ]
             ]
         ]
@@ -1321,53 +1390,53 @@ blockRowStyle =
     [ spacingXY 10 0, Background.color <| Element.rgb255 244 244 244, padding 5, width (fill |> minimum 150) ]
 
 
-statRow1 : Character -> Element Msg
-statRow1 char =
+statRow1 : Model -> Element Msg
+statRow1 model =
     row
         [ width fill
         , spacingXY 10 0
         ]
         [ row blockRowStyle
             [ el blockRowLabelStyle <| text "Str"
-            , el blockRowBlockStyle <| statBlock char.stats.str <| Debug.log "lootStr" (.str (totalEquippedStats char.items))
+            , el blockRowBlockStyle <| statBlock model model.character.stats.str <| .str (totalEquippedStats model.character.items)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Dex"
-            , el blockRowBlockStyle <| statBlock char.stats.dex <| .dex (totalEquippedStats char.items)
+            , el blockRowBlockStyle <| statBlock model model.character.stats.dex <| .dex (totalEquippedStats model.character.items)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Con"
-            , el blockRowBlockStyle <| statBlock char.stats.con <| .con (totalEquippedStats char.items)
+            , el blockRowBlockStyle <| statBlock model model.character.stats.con <| .con (totalEquippedStats model.character.items)
             ]
         ]
 
 
-statRow2 : Character -> Element Msg
-statRow2 char =
+statRow2 : Model -> Element Msg
+statRow2 model =
     row
         [ width fill
         , spacingXY 10 0
         ]
         [ row blockRowStyle
             [ el blockRowLabelStyle <| text "Int"
-            , el blockRowBlockStyle <| statBlock char.stats.int <| .int (totalEquippedStats char.items)
+            , el blockRowBlockStyle <| statBlock model model.character.stats.int <| .int (totalEquippedStats model.character.items)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Wis"
-            , el blockRowBlockStyle <| statBlock char.stats.wis <| .wis (totalEquippedStats char.items)
+            , el blockRowBlockStyle <| statBlock model model.character.stats.wis <| .wis (totalEquippedStats model.character.items)
             ]
         , row blockRowStyle
             [ el blockRowLabelStyle <| text "Cha"
-            , el blockRowBlockStyle <| statBlock char.stats.cha <| .cha (totalEquippedStats char.items)
+            , el blockRowBlockStyle <| statBlock model model.character.stats.cha <| .cha (totalEquippedStats model.character.items)
             ]
         ]
 
 
-effortRow : Character -> Element Msg
-effortRow char =
+effortRow : Model -> Element Msg
+effortRow model =
     let
         labelStyle =
-            [ centerX, Font.size (scaled -1) ]
+            [ centerX, Font.size (scaled model -1) ]
     in
     row
         [ width fill
@@ -1375,19 +1444,19 @@ effortRow char =
         ]
         [ row blockRowStyle
             [ el labelStyle <| text "Basic (D4)"
-            , el blockRowBlockStyle <| statBlock char.stats.basic <| .basic (totalEquippedStats char.items)
+            , el blockRowBlockStyle <| statBlock model model.character.stats.basic <| .basic (totalEquippedStats model.character.items)
             ]
         , row blockRowStyle
             [ el labelStyle <| text "Weapon (D6)"
-            , el blockRowBlockStyle <| statBlock char.stats.weapon <| .weapon (totalEquippedStats char.items)
+            , el blockRowBlockStyle <| statBlock model model.character.stats.weapon <| .weapon (totalEquippedStats model.character.items)
             ]
         , row blockRowStyle
             [ el labelStyle <| text "Magic (D8)"
-            , el blockRowBlockStyle <| statBlock char.stats.magic <| .magic (totalEquippedStats char.items)
+            , el blockRowBlockStyle <| statBlock model model.character.stats.magic <| .magic (totalEquippedStats model.character.items)
             ]
         , row blockRowStyle
             [ el labelStyle <| text "Ultimate (D12)"
-            , el blockRowBlockStyle <| statBlock char.stats.ultimate <| .ultimate (totalEquippedStats char.items)
+            , el blockRowBlockStyle <| statBlock model model.character.stats.ultimate <| .ultimate (totalEquippedStats model.character.items)
             ]
         , row [ Background.color <| Element.rgb255 244 244 244, padding 5, width (px 52) ]
             [ el [ centerX, centerY ] <|
@@ -1429,8 +1498,8 @@ fillListUntil filler amount list =
         list ++ List.repeat fillerCount filler
 
 
-itemCol : Bool -> String -> String -> List Item -> Element Msg
-itemCol equippedState label modifyLabel items =
+itemCol : Model -> Bool -> String -> String -> Element Msg
+itemCol model equippedState label modifyLabel =
     column
         [ width fill
         , Element.alignTop
@@ -1441,7 +1510,7 @@ itemCol equippedState label modifyLabel items =
             [ el
                 [ alignLeft
                 , alignTop
-                , Font.size (scaled -1)
+                , Font.size (scaled model -1)
                 , paddingXY 0 10
                 ]
               <|
@@ -1449,11 +1518,11 @@ itemCol equippedState label modifyLabel items =
                     (label
                         ++ (String.fromInt <|
                                 List.length <|
-                                    itemsIndexed equippedState items
+                                    itemsIndexed equippedState model.character.items
                            )
                         ++ "/10"
                     )
-            , newItemButton equippedState
+            , newItemButton model equippedState
             ]
         , column
             [ width fill
@@ -1461,10 +1530,11 @@ itemCol equippedState label modifyLabel items =
             , paddingXY 10 10
             , Background.color (rgb255 244 244 244)
             , height fill
+            , Font.size (scaled model -1)
             ]
           <|
-            List.map (itemRow (stateModifier modifyLabel) editModifier)
-                (itemsIndexed equippedState items)
+            List.map (itemRow model (stateModifier modifyLabel) editModifier)
+                (itemsIndexed equippedState model.character.items)
         ]
 
 
@@ -1472,7 +1542,7 @@ stateModifier : String -> Int -> Element Msg
 stateModifier label ix =
     Input.button []
         { onPress = Just <| ToggleItem ix
-        , label = el [ Font.size (scaled -1) ] <| text label
+        , label = el [] <| text label
         }
 
 
@@ -1480,12 +1550,12 @@ editModifier : Int -> Element Msg
 editModifier ix =
     Input.button []
         { onPress = Just <| EditItem ix
-        , label = el [ Font.size (scaled -1) ] <| text "Edit"
+        , label = el [] <| text "Edit"
         }
 
 
-newItemButton : Bool -> Element Msg
-newItemButton equipped =
+newItemButton : Model -> Bool -> Element Msg
+newItemButton model equipped =
     Input.button [ alignRight ]
         { onPress = Just <| NewItem equipped
         , label =
@@ -1495,15 +1565,15 @@ newItemButton equipped =
                 , padding 5
                 , Border.dotted
                 , Font.center
-                , Font.size (scaled -2)
+                , Font.size (scaled model -2)
                 ]
             <|
                 text "Add item"
         }
 
 
-itemRow : (Int -> Element Msg) -> (Int -> Element Msg) -> ( Int, Item ) -> Element Msg
-itemRow modifierButton editButton ( ix, item ) =
+itemRow : Model -> (Int -> Element Msg) -> (Int -> Element Msg) -> ( Int, Item ) -> Element Msg
+itemRow model modifierButton editButton ( ix, item ) =
     row
         [ spacingXY 10 0
         , width fill
@@ -1518,10 +1588,10 @@ itemRow modifierButton editButton ( ix, item ) =
         , Background.color (rgb255 255 255 255)
         ]
         [ el [ Font.bold, alignTop ] <| text item.name
-        , column [ Font.size (scaled -3), alignTop ] <|
+        , column [ Font.size (scaled model -3), alignTop ] <|
             List.map text <|
                 printStats item.stats
-        , el [ Font.size (scaled -2), alignTop, width fill ] <| paragraph [ width fill ] [ text item.description ]
+        , el [ Font.size (scaled model -2), alignTop, width fill ] <| paragraph [ width fill ] [ text item.description ]
         , el [ alignRight ] <| editButton ix
         , el [ alignRight ] <| modifierButton ix
         ]
@@ -1565,9 +1635,9 @@ printStat val_stat =
         Nothing
 
 
-scaled : Int -> Int
-scaled f =
-    Basics.round <| Element.modular 24 1.2 f
+scaled : Model -> Int -> Int
+scaled model f =
+    Basics.round <| Element.modular (pickStyle model).fontBase 1.2 f
 
 
 blockStyle : List (Element.Attribute Msg)
@@ -1583,20 +1653,20 @@ blockStyle =
     ]
 
 
-statBlock : Int -> Int -> Element Msg
-statBlock basestat lootstat =
+statBlock : Model -> Int -> Int -> Element Msg
+statBlock model basestat lootstat =
     Element.row [ Element.spacing 5 ] <|
         [ el blockStyle <|
             text (String.fromInt <| basestat + lootstat)
-        , Element.column [ Font.size (scaled -3), Element.alignRight ]
+        , Element.column [ Font.size (scaled model -3), Element.alignRight ]
             [ text ("Base\t" ++ String.fromInt basestat)
             , text ("Loot\t" ++ String.fromInt lootstat)
             ]
         ]
 
 
-armorBlock : String -> Int -> Int -> Element Msg
-armorBlock label basestat lootstat =
+armorBlock : Model -> String -> Int -> Int -> Element Msg
+armorBlock model label basestat lootstat =
     Element.column [ Element.spacing 5, Element.centerX ] <|
         [ el
             [ Element.paddingXY 5 5
@@ -1613,7 +1683,7 @@ armorBlock label basestat lootstat =
           <|
             text (String.fromInt (lootstat + basestat + 10))
         , el [ Element.centerX ] <| text label
-        , Element.row [ Element.centerX, Font.size (scaled -3) ]
+        , Element.row [ Element.centerX, Font.size (scaled model -3) ]
             [ text "Base "
             , text <| String.fromInt basestat
             , text " "
@@ -1653,6 +1723,11 @@ sumStatsEquipped s1 s2 =
 asEditingStateIn : AppSettings -> EditingState -> AppSettings
 asEditingStateIn state newState =
     { state | editingState = newState }
+
+
+asDeviceIn : AppSettings -> Device -> AppSettings
+asDeviceIn state newDevice =
+    { state | device = newDevice }
 
 
 asDeathtimerIn : Character -> CharacterNumberProp -> Character
