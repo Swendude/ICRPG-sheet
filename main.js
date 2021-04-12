@@ -13116,9 +13116,9 @@ var $author$project$Main$statEditor = F3(
 								label: A2(
 									$mdgriffith$elm_ui$Element$el,
 									buttonStyle,
-									$mdgriffith$elm_ui$Element$text('+')),
+									$mdgriffith$elm_ui$Element$text('-')),
 								onPress: $elm$core$Maybe$Just(
-									A2($author$project$Main$ChangeStatAttribute, stat, value + 1))
+									A2($author$project$Main$ChangeStatAttribute, stat, value - 1))
 							}),
 							A2(
 							$mdgriffith$elm_ui$Element$el,
@@ -13141,9 +13141,9 @@ var $author$project$Main$statEditor = F3(
 								label: A2(
 									$mdgriffith$elm_ui$Element$el,
 									buttonStyle,
-									$mdgriffith$elm_ui$Element$text('-')),
+									$mdgriffith$elm_ui$Element$text('+')),
 								onPress: $elm$core$Maybe$Just(
-									A2($author$project$Main$ChangeStatAttribute, stat, value - 1))
+									A2($author$project$Main$ChangeStatAttribute, stat, value + 1))
 							})
 						]))
 				]));

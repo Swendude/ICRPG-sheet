@@ -1040,8 +1040,8 @@ statEditor stat value label =
             , Border.color <| rgb255 255 255 255
             ]
             [ Input.button []
-                { onPress = Just <| ChangeStatAttribute stat (value + 1)
-                , label = el buttonStyle <| text "+"
+                { onPress = Just <| ChangeStatAttribute stat (value - 1)
+                , label = el buttonStyle <| text "-"
                 }
             , el
                 [ paddingXY 10 5
@@ -1052,8 +1052,8 @@ statEditor stat value label =
               <|
                 text (String.fromInt value)
             , Input.button []
-                { onPress = Just <| ChangeStatAttribute stat (value - 1)
-                , label = el buttonStyle <| text "-"
+                { onPress = Just <| ChangeStatAttribute stat (value + 1)
+                , label = el buttonStyle <| text "+"
                 }
             ]
         ]
