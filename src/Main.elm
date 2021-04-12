@@ -243,7 +243,7 @@ type Msg
     | DecreaseNumberAttribute
     | UpdateEditField String
     | EditBaseStats
-    | ChangeStatAttribute StatAttribute String
+    | ChangeStatAttribute StatAttribute Int
     | ChangeItemAttribute ItemAttribute String
     | ToggleItem Int
     | Hovered CharacterTextAttribute
@@ -283,7 +283,11 @@ updateWithCommands msg model =
                     ( ShowError (Decode.errorToString e) |> asEditingStateIn model.settings |> asSettingsIn model, Cmd.none )
 
         _ ->
-            ( update msg model, setStorage (encodeCharacterObject model.character) )
+            let
+                newModel =
+                    update msg model
+            in
+            ( newModel, setStorage (encodeCharacterObject newModel.character) )
 
 
 update : Msg -> Model -> Model
@@ -450,19 +454,14 @@ update msg model =
                     model
 
         ChangeStatAttribute stat value ->
-            case String.toInt value of
-                Just intVal ->
-                    case model.settings.editingState of
-                        EditingCharacterStats ->
-                            updateStat model stat intVal
+            case model.settings.editingState of
+                EditingCharacterStats ->
+                    updateStat model stat value
 
-                        EditingItem ix ->
-                            updateItemStat model stat intVal ix
+                EditingItem ix ->
+                    updateItemStat model stat value ix
 
-                        _ ->
-                            model
-
-                Nothing ->
+                _ ->
                     model
 
         ChangeItemAttribute attr value ->
@@ -974,13 +973,50 @@ showErrorModal err =
 
 statEditor : StatAttribute -> Int -> String -> Element Msg
 statEditor stat value label =
-    el [ width fill ] <|
-        Input.text [ Font.color (rgb 0 0 0) ]
-            { onChange = ChangeStatAttribute stat
-            , text = String.fromInt value
-            , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
-            , label = Input.labelAbove [ centerX ] <| text label
-            }
+    let
+        buttonStyle =
+            [ paddingXY 10 5
+            , Font.size (scaled 2)
+            , centerY
+            , height fill
+            ]
+    in
+    column
+        [ width fill
+        , spacingXY 0 10
+        ]
+        [ el [ centerX ] <| text label
+        , row
+            [ Border.width 1
+            , Border.color <| rgb255 255 255 255
+            ]
+            [ Input.button []
+                { onPress = Just <| ChangeStatAttribute stat (value + 1)
+                , label = el buttonStyle <| text "+"
+                }
+            , el
+                [ paddingXY 10 5
+                , Font.size (scaled 2)
+                , Font.color <| rgb255 0 0 0
+                , Background.color <| rgb255 255 255 255
+                ]
+              <|
+                text (String.fromInt value)
+            , Input.button []
+                { onPress = Just <| ChangeStatAttribute stat (value - 1)
+                , label = el buttonStyle <| text "-"
+                }
+            ]
+        ]
+
+
+
+-- Input.text [ Font.color (rgb 0 0 0) ]
+--     { onChange = ChangeStatAttribute stat
+--     , text = String.fromInt value
+--     , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
+--     , label = Input.labelAbove [ centerX ] <| text label
+--     }
 
 
 textEditor : ItemAttribute -> String -> String -> Element Msg

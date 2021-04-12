@@ -6623,36 +6623,30 @@ var $author$project$Main$update = F2(
 			case 'ChangeStatAttribute':
 				var stat = msg.a;
 				var value = msg.b;
-				var _v18 = $elm$core$String$toInt(value);
-				if (_v18.$ === 'Just') {
-					var intVal = _v18.a;
-					var _v19 = model.settings.editingState;
-					switch (_v19.$) {
-						case 'EditingCharacterStats':
-							return A3($author$project$Main$updateStat, model, stat, intVal);
-						case 'EditingItem':
-							var ix = _v19.a;
-							return A4($author$project$Main$updateItemStat, model, stat, intVal, ix);
-						default:
-							return model;
-					}
-				} else {
-					return model;
+				var _v18 = model.settings.editingState;
+				switch (_v18.$) {
+					case 'EditingCharacterStats':
+						return A3($author$project$Main$updateStat, model, stat, value);
+					case 'EditingItem':
+						var ix = _v18.a;
+						return A4($author$project$Main$updateItemStat, model, stat, value, ix);
+					default:
+						return model;
 				}
 			case 'ChangeItemAttribute':
 				var attr = msg.a;
 				var value = msg.b;
-				var _v20 = model.settings.editingState;
-				if (_v20.$ === 'EditingItem') {
-					var ix = _v20.a;
+				var _v19 = model.settings.editingState;
+				if (_v19.$ === 'EditingItem') {
+					var ix = _v19.a;
 					return A4($author$project$Main$updateItemAttribute, model, attr, value, ix);
 				} else {
 					return model;
 				}
 			case 'DeleteItem':
-				var _v21 = model.settings.editingState;
-				if (_v21.$ === 'EditingItem') {
-					var i = _v21.a;
+				var _v20 = model.settings.editingState;
+				if (_v20.$ === 'EditingItem') {
+					var i = _v20.a;
 					return A2(
 						$author$project$Main$asSettingsIn,
 						A2(
@@ -6668,9 +6662,9 @@ var $author$project$Main$update = F2(
 				}
 			case 'ToggleItem':
 				var ix = msg.a;
-				var _v22 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
-				if (_v22.$ === 'Just') {
-					var item = _v22.a;
+				var _v21 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
+				if (_v21.$ === 'Just') {
+					var item = _v21.a;
 					var totalItems = $elm$core$List$length(
 						A2(
 							$elm$core$List$filter,
@@ -6847,10 +6841,11 @@ var $author$project$Main$updateWithCommands = F2(
 						$elm$core$Platform$Cmd$none);
 				}
 			default:
+				var newModel = A2($author$project$Main$update, msg, model);
 				return _Utils_Tuple2(
-					A2($author$project$Main$update, msg, model),
+					newModel,
 					$author$project$Main$setStorage(
-						$author$project$Main$encodeCharacterObject(model.character)));
+						$author$project$Main$encodeCharacterObject(newModel.character)));
 		}
 	});
 var $mdgriffith$elm_ui$Internal$Model$AlignY = function (a) {
@@ -12960,6 +12955,83 @@ var $author$project$Main$ChangeStatAttribute = F2(
 	function (a, b) {
 		return {$: 'ChangeStatAttribute', a: a, b: b};
 	});
+var $author$project$Main$statEditor = F3(
+	function (stat, value, label) {
+		var buttonStyle = _List_fromArray(
+			[
+				A2($mdgriffith$elm_ui$Element$paddingXY, 10, 5),
+				$mdgriffith$elm_ui$Element$Font$size(
+				$author$project$Main$scaled(2)),
+				$mdgriffith$elm_ui$Element$centerY,
+				$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
+			]);
+		return A2(
+			$mdgriffith$elm_ui$Element$column,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$centerX]),
+					$mdgriffith$elm_ui$Element$text(label)),
+					A2(
+					$mdgriffith$elm_ui$Element$row,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$Border$width(1),
+							$mdgriffith$elm_ui$Element$Border$color(
+							A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255))
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$mdgriffith$elm_ui$Element$Input$button,
+							_List_Nil,
+							{
+								label: A2(
+									$mdgriffith$elm_ui$Element$el,
+									buttonStyle,
+									$mdgriffith$elm_ui$Element$text('+')),
+								onPress: $elm$core$Maybe$Just(
+									A2($author$project$Main$ChangeStatAttribute, stat, value + 1))
+							}),
+							A2(
+							$mdgriffith$elm_ui$Element$el,
+							_List_fromArray(
+								[
+									A2($mdgriffith$elm_ui$Element$paddingXY, 10, 5),
+									$mdgriffith$elm_ui$Element$Font$size(
+									$author$project$Main$scaled(2)),
+									$mdgriffith$elm_ui$Element$Font$color(
+									A3($mdgriffith$elm_ui$Element$rgb255, 0, 0, 0)),
+									$mdgriffith$elm_ui$Element$Background$color(
+									A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255))
+								]),
+							$mdgriffith$elm_ui$Element$text(
+								$elm$core$String$fromInt(value))),
+							A2(
+							$mdgriffith$elm_ui$Element$Input$button,
+							_List_Nil,
+							{
+								label: A2(
+									$mdgriffith$elm_ui$Element$el,
+									buttonStyle,
+									$mdgriffith$elm_ui$Element$text('-')),
+								onPress: $elm$core$Maybe$Just(
+									A2($author$project$Main$ChangeStatAttribute, stat, value - 1))
+							})
+						]))
+				]));
+	});
+var $author$project$Main$ChangeItemAttribute = F2(
+	function (a, b) {
+		return {$: 'ChangeItemAttribute', a: a, b: b};
+	});
 var $mdgriffith$elm_ui$Element$Input$Above = {$: 'Above'};
 var $mdgriffith$elm_ui$Element$Input$Label = F3(
 	function (a, b, c) {
@@ -13831,44 +13903,6 @@ var $mdgriffith$elm_ui$Element$Input$text = $mdgriffith$elm_ui$Element$Input$tex
 		autofill: $elm$core$Maybe$Nothing,
 		spellchecked: false,
 		type_: $mdgriffith$elm_ui$Element$Input$TextInputNode('text')
-	});
-var $author$project$Main$statEditor = F3(
-	function (stat, value, label) {
-		return A2(
-			$mdgriffith$elm_ui$Element$el,
-			_List_fromArray(
-				[
-					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-				]),
-			A2(
-				$mdgriffith$elm_ui$Element$Input$text,
-				_List_fromArray(
-					[
-						$mdgriffith$elm_ui$Element$Font$color(
-						A3($mdgriffith$elm_ui$Element$rgb, 0, 0, 0))
-					]),
-				{
-					label: A2(
-						$mdgriffith$elm_ui$Element$Input$labelAbove,
-						_List_fromArray(
-							[$mdgriffith$elm_ui$Element$centerX]),
-						$mdgriffith$elm_ui$Element$text(label)),
-					onChange: $author$project$Main$ChangeStatAttribute(stat),
-					placeholder: $elm$core$Maybe$Just(
-						A2(
-							$mdgriffith$elm_ui$Element$Input$placeholder,
-							_List_fromArray(
-								[
-									$mdgriffith$elm_ui$Element$Font$color(
-									A3($mdgriffith$elm_ui$Element$rgb, 244, 244, 244))
-								]),
-							$mdgriffith$elm_ui$Element$text('0'))),
-					text: $elm$core$String$fromInt(value)
-				}));
-	});
-var $author$project$Main$ChangeItemAttribute = F2(
-	function (a, b) {
-		return {$: 'ChangeItemAttribute', a: a, b: b};
 	});
 var $author$project$Main$textEditor = F3(
 	function (attr, value, label) {
