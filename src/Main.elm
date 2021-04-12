@@ -71,6 +71,7 @@ type alias Character =
 type EditingState
     = EditingCharacterStats
     | EditingItem Int
+    | ConfirmingDelete Int
     | EditingCharactertext CharacterTextAttribute
     | EditingCharacterNumber CharacterNumberAttribute
     | ShowError String
@@ -171,7 +172,7 @@ init flags =
             , Cmd.none
             )
 
-        Err e ->
+        Err _ ->
             ( { character = tabula_rasa
               , settings =
                     { editingState = NotEditing
@@ -253,6 +254,7 @@ type Msg
     | LoadCharacter
     | CharacterSelected File
     | CharacterLoaded String
+    | ConfirmDelete
     | DeleteItem
 
 
@@ -474,7 +476,17 @@ update msg model =
 
         DeleteItem ->
             case model.settings.editingState of
-                EditingItem i ->
+                EditingItem ix ->
+                    ConfirmingDelete ix
+                        |> asEditingStateIn model.settings
+                        |> asSettingsIn model
+
+                _ ->
+                    model
+
+        ConfirmDelete ->
+            case model.settings.editingState of
+                ConfirmingDelete i ->
                     NotEditing
                         |> asEditingStateIn model.settings
                         |> asSettingsIn
@@ -765,6 +777,9 @@ view model =
                 ShowError err ->
                     [ showErrorModal err ]
 
+                ConfirmingDelete ix ->
+                    [ confirmDeleteModal ix ]
+
                 _ ->
                     []
     in
@@ -922,6 +937,10 @@ editItemModal item =
                     ]
                 , row [ centerX, spacingXY 10 0 ]
                     [ Input.button [ centerX ]
+                        { onPress = Just DisableEdit
+                        , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Close"
+                        }
+                    , Input.button [ centerX ]
                         { onPress = Just DeleteItem
                         , label =
                             el
@@ -932,10 +951,6 @@ editItemModal item =
                                 ]
                             <|
                                 text "Delete item"
-                        }
-                    , Input.button [ centerX ]
-                        { onPress = Just DisableEdit
-                        , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Close"
                         }
                     ]
                 ]
@@ -967,6 +982,40 @@ showErrorModal err =
                 , Input.button [ centerX ]
                     { onPress = Just DisableEdit
                     , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Close"
+                    }
+                ]
+
+
+confirmDeleteModal : Int -> Attribute Msg
+confirmDeleteModal ix =
+    inFront <|
+        el
+            [ width fill
+            , height fill
+            , Background.color (Element.rgba 0 0 0 0.5)
+            ]
+        <|
+            column
+                [ paddingXY 70 30
+                , width fill
+                , spacingXY 0 10
+                , centerY
+                , Background.color (rgb 0 0 0)
+                , Font.color (rgb 255 255 255)
+                ]
+                [ row [ spacingXY 10 0, centerX ]
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 2) ] <| text "Confirm delete"
+                    ]
+                , row [ centerX ]
+                    [ el [ padding 5, Border.color (rgb 255 255 255), Font.size (scaled 1) ] <| text "Are you sure you want to delete this item?"
+                    ]
+                , Input.button [ centerX ]
+                    { onPress = Just ConfirmDelete
+                    , label = el [ padding 5, Border.width 1, Border.color (rgb255 255 255 255), Background.color (rgb255 194 0 0) ] <| text "Delete"
+                    }
+                , Input.button [ centerX ]
+                    { onPress = Just DisableEdit
+                    , label = el [ padding 5, Border.width 1, Border.color (rgb 255 255 255) ] <| text "Cancel"
                     }
                 ]
 
@@ -1008,15 +1057,6 @@ statEditor stat value label =
                 }
             ]
         ]
-
-
-
--- Input.text [ Font.color (rgb 0 0 0) ]
---     { onChange = ChangeStatAttribute stat
---     , text = String.fromInt value
---     , placeholder = Just <| Input.placeholder [ Font.color (rgb 244 244 244) ] <| text <| "0"
---     , label = Input.labelAbove [ centerX ] <| text label
---     }
 
 
 textEditor : ItemAttribute -> String -> String -> Element Msg
