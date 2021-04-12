@@ -5660,7 +5660,6 @@ var $author$project$Main$init = function (flags) {
 			},
 			$elm$core$Platform$Cmd$none);
 	} else {
-		var e = _v0.a;
 		return _Utils_Tuple2(
 			{
 				character: $author$project$Main$tabula_rasa,
@@ -5850,6 +5849,9 @@ var $elm$file$File$Download$string = F3(
 			A3(_File_download, name, mime, content));
 	});
 var $elm$file$File$toString = _File_toString;
+var $author$project$Main$ConfirmingDelete = function (a) {
+	return {$: 'ConfirmingDelete', a: a};
+};
 var $author$project$Main$EditingCharacterNumber = function (a) {
 	return {$: 'EditingCharacterNumber', a: a};
 };
@@ -6623,35 +6625,43 @@ var $author$project$Main$update = F2(
 			case 'ChangeStatAttribute':
 				var stat = msg.a;
 				var value = msg.b;
-				var _v18 = $elm$core$String$toInt(value);
-				if (_v18.$ === 'Just') {
-					var intVal = _v18.a;
-					var _v19 = model.settings.editingState;
-					switch (_v19.$) {
-						case 'EditingCharacterStats':
-							return A3($author$project$Main$updateStat, model, stat, intVal);
-						case 'EditingItem':
-							var ix = _v19.a;
-							return A4($author$project$Main$updateItemStat, model, stat, intVal, ix);
-						default:
-							return model;
-					}
-				} else {
-					return model;
+				var _v18 = model.settings.editingState;
+				switch (_v18.$) {
+					case 'EditingCharacterStats':
+						return A3($author$project$Main$updateStat, model, stat, value);
+					case 'EditingItem':
+						var ix = _v18.a;
+						return A4($author$project$Main$updateItemStat, model, stat, value, ix);
+					default:
+						return model;
 				}
 			case 'ChangeItemAttribute':
 				var attr = msg.a;
 				var value = msg.b;
-				var _v20 = model.settings.editingState;
-				if (_v20.$ === 'EditingItem') {
-					var ix = _v20.a;
+				var _v19 = model.settings.editingState;
+				if (_v19.$ === 'EditingItem') {
+					var ix = _v19.a;
 					return A4($author$project$Main$updateItemAttribute, model, attr, value, ix);
 				} else {
 					return model;
 				}
 			case 'DeleteItem':
+				var _v20 = model.settings.editingState;
+				if (_v20.$ === 'EditingItem') {
+					var ix = _v20.a;
+					return A2(
+						$author$project$Main$asSettingsIn,
+						model,
+						A2(
+							$author$project$Main$asEditingStateIn,
+							model.settings,
+							$author$project$Main$ConfirmingDelete(ix)));
+				} else {
+					return model;
+				}
+			case 'ConfirmDelete':
 				var _v21 = model.settings.editingState;
-				if (_v21.$ === 'EditingItem') {
+				if (_v21.$ === 'ConfirmingDelete') {
 					var i = _v21.a;
 					return A2(
 						$author$project$Main$asSettingsIn,
@@ -6847,10 +6857,11 @@ var $author$project$Main$updateWithCommands = F2(
 						$elm$core$Platform$Cmd$none);
 				}
 			default:
+				var newModel = A2($author$project$Main$update, msg, model);
 				return _Utils_Tuple2(
-					A2($author$project$Main$update, msg, model),
+					newModel,
 					$author$project$Main$setStorage(
-						$author$project$Main$encodeCharacterObject(model.character)));
+						$author$project$Main$encodeCharacterObject(newModel.character)));
 		}
 	});
 var $mdgriffith$elm_ui$Internal$Model$AlignY = function (a) {
@@ -12732,21 +12743,8 @@ var $mdgriffith$elm_ui$Element$Font$color = function (fontColor) {
 			'color',
 			fontColor));
 };
-var $author$project$Main$Armor = {$: 'Armor'};
-var $author$project$Main$Basic = {$: 'Basic'};
-var $author$project$Main$Cha = {$: 'Cha'};
-var $author$project$Main$Con = {$: 'Con'};
-var $author$project$Main$DeleteItem = {$: 'DeleteItem'};
-var $author$project$Main$Description = {$: 'Description'};
-var $author$project$Main$Dex = {$: 'Dex'};
+var $author$project$Main$ConfirmDelete = {$: 'ConfirmDelete'};
 var $author$project$Main$DisableEdit = {$: 'DisableEdit'};
-var $author$project$Main$Hearts = {$: 'Hearts'};
-var $author$project$Main$Int = {$: 'Int'};
-var $author$project$Main$ItemName = {$: 'ItemName'};
-var $author$project$Main$Magic = {$: 'Magic'};
-var $author$project$Main$Str = {$: 'Str'};
-var $author$project$Main$Weapon = {$: 'Weapon'};
-var $author$project$Main$Wis = {$: 'Wis'};
 var $mdgriffith$elm_ui$Internal$Model$Button = {$: 'Button'};
 var $mdgriffith$elm_ui$Internal$Model$Describe = function (a) {
 	return {$: 'Describe', a: a};
@@ -12956,9 +12954,203 @@ var $mdgriffith$elm_ui$Element$spacingXY = F2(
 				x,
 				y));
 	});
+var $author$project$Main$confirmDeleteModal = function (ix) {
+	return $mdgriffith$elm_ui$Element$inFront(
+		A2(
+			$mdgriffith$elm_ui$Element$el,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$Background$color(
+					A4($mdgriffith$elm_ui$Element$rgba, 0, 0, 0, 0.5))
+				]),
+			A2(
+				$mdgriffith$elm_ui$Element$column,
+				_List_fromArray(
+					[
+						A2($mdgriffith$elm_ui$Element$paddingXY, 70, 30),
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+						A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
+						$mdgriffith$elm_ui$Element$centerY,
+						$mdgriffith$elm_ui$Element$Background$color(
+						A3($mdgriffith$elm_ui$Element$rgb, 0, 0, 0)),
+						$mdgriffith$elm_ui$Element$Font$color(
+						A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255))
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$row,
+						_List_fromArray(
+							[
+								A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+								$mdgriffith$elm_ui$Element$centerX
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$padding(5),
+										$mdgriffith$elm_ui$Element$Border$color(
+										A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255)),
+										$mdgriffith$elm_ui$Element$Font$size(
+										$author$project$Main$scaled(2))
+									]),
+								$mdgriffith$elm_ui$Element$text('Confirm delete'))
+							])),
+						A2(
+						$mdgriffith$elm_ui$Element$row,
+						_List_fromArray(
+							[$mdgriffith$elm_ui$Element$centerX]),
+						_List_fromArray(
+							[
+								A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$padding(5),
+										$mdgriffith$elm_ui$Element$Border$color(
+										A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255)),
+										$mdgriffith$elm_ui$Element$Font$size(
+										$author$project$Main$scaled(1))
+									]),
+								$mdgriffith$elm_ui$Element$text('Are you sure you want to delete this item?'))
+							])),
+						A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_List_fromArray(
+							[$mdgriffith$elm_ui$Element$centerX]),
+						{
+							label: A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$padding(5),
+										$mdgriffith$elm_ui$Element$Border$width(1),
+										$mdgriffith$elm_ui$Element$Border$color(
+										A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255)),
+										$mdgriffith$elm_ui$Element$Background$color(
+										A3($mdgriffith$elm_ui$Element$rgb255, 194, 0, 0))
+									]),
+								$mdgriffith$elm_ui$Element$text('Delete')),
+							onPress: $elm$core$Maybe$Just($author$project$Main$ConfirmDelete)
+						}),
+						A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_List_fromArray(
+							[$mdgriffith$elm_ui$Element$centerX]),
+						{
+							label: A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$padding(5),
+										$mdgriffith$elm_ui$Element$Border$width(1),
+										$mdgriffith$elm_ui$Element$Border$color(
+										A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255))
+									]),
+								$mdgriffith$elm_ui$Element$text('Cancel')),
+							onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
+						})
+					]))));
+};
+var $author$project$Main$Armor = {$: 'Armor'};
+var $author$project$Main$Basic = {$: 'Basic'};
+var $author$project$Main$Cha = {$: 'Cha'};
+var $author$project$Main$Con = {$: 'Con'};
+var $author$project$Main$DeleteItem = {$: 'DeleteItem'};
+var $author$project$Main$Description = {$: 'Description'};
+var $author$project$Main$Dex = {$: 'Dex'};
+var $author$project$Main$Hearts = {$: 'Hearts'};
+var $author$project$Main$Int = {$: 'Int'};
+var $author$project$Main$ItemName = {$: 'ItemName'};
+var $author$project$Main$Magic = {$: 'Magic'};
+var $author$project$Main$Str = {$: 'Str'};
+var $author$project$Main$Weapon = {$: 'Weapon'};
+var $author$project$Main$Wis = {$: 'Wis'};
 var $author$project$Main$ChangeStatAttribute = F2(
 	function (a, b) {
 		return {$: 'ChangeStatAttribute', a: a, b: b};
+	});
+var $author$project$Main$statEditor = F3(
+	function (stat, value, label) {
+		var buttonStyle = _List_fromArray(
+			[
+				A2($mdgriffith$elm_ui$Element$paddingXY, 10, 5),
+				$mdgriffith$elm_ui$Element$Font$size(
+				$author$project$Main$scaled(2)),
+				$mdgriffith$elm_ui$Element$centerY,
+				$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
+			]);
+		return A2(
+			$mdgriffith$elm_ui$Element$column,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$centerX]),
+					$mdgriffith$elm_ui$Element$text(label)),
+					A2(
+					$mdgriffith$elm_ui$Element$row,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$Border$width(1),
+							$mdgriffith$elm_ui$Element$Border$color(
+							A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255))
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$mdgriffith$elm_ui$Element$Input$button,
+							_List_Nil,
+							{
+								label: A2(
+									$mdgriffith$elm_ui$Element$el,
+									buttonStyle,
+									$mdgriffith$elm_ui$Element$text('+')),
+								onPress: $elm$core$Maybe$Just(
+									A2($author$project$Main$ChangeStatAttribute, stat, value + 1))
+							}),
+							A2(
+							$mdgriffith$elm_ui$Element$el,
+							_List_fromArray(
+								[
+									A2($mdgriffith$elm_ui$Element$paddingXY, 10, 5),
+									$mdgriffith$elm_ui$Element$Font$size(
+									$author$project$Main$scaled(2)),
+									$mdgriffith$elm_ui$Element$Font$color(
+									A3($mdgriffith$elm_ui$Element$rgb255, 0, 0, 0)),
+									$mdgriffith$elm_ui$Element$Background$color(
+									A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255))
+								]),
+							$mdgriffith$elm_ui$Element$text(
+								$elm$core$String$fromInt(value))),
+							A2(
+							$mdgriffith$elm_ui$Element$Input$button,
+							_List_Nil,
+							{
+								label: A2(
+									$mdgriffith$elm_ui$Element$el,
+									buttonStyle,
+									$mdgriffith$elm_ui$Element$text('-')),
+								onPress: $elm$core$Maybe$Just(
+									A2($author$project$Main$ChangeStatAttribute, stat, value - 1))
+							})
+						]))
+				]));
+	});
+var $author$project$Main$ChangeItemAttribute = F2(
+	function (a, b) {
+		return {$: 'ChangeItemAttribute', a: a, b: b};
 	});
 var $mdgriffith$elm_ui$Element$Input$Above = {$: 'Above'};
 var $mdgriffith$elm_ui$Element$Input$Label = F3(
@@ -13832,44 +14024,6 @@ var $mdgriffith$elm_ui$Element$Input$text = $mdgriffith$elm_ui$Element$Input$tex
 		spellchecked: false,
 		type_: $mdgriffith$elm_ui$Element$Input$TextInputNode('text')
 	});
-var $author$project$Main$statEditor = F3(
-	function (stat, value, label) {
-		return A2(
-			$mdgriffith$elm_ui$Element$el,
-			_List_fromArray(
-				[
-					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-				]),
-			A2(
-				$mdgriffith$elm_ui$Element$Input$text,
-				_List_fromArray(
-					[
-						$mdgriffith$elm_ui$Element$Font$color(
-						A3($mdgriffith$elm_ui$Element$rgb, 0, 0, 0))
-					]),
-				{
-					label: A2(
-						$mdgriffith$elm_ui$Element$Input$labelAbove,
-						_List_fromArray(
-							[$mdgriffith$elm_ui$Element$centerX]),
-						$mdgriffith$elm_ui$Element$text(label)),
-					onChange: $author$project$Main$ChangeStatAttribute(stat),
-					placeholder: $elm$core$Maybe$Just(
-						A2(
-							$mdgriffith$elm_ui$Element$Input$placeholder,
-							_List_fromArray(
-								[
-									$mdgriffith$elm_ui$Element$Font$color(
-									A3($mdgriffith$elm_ui$Element$rgb, 244, 244, 244))
-								]),
-							$mdgriffith$elm_ui$Element$text('0'))),
-					text: $elm$core$String$fromInt(value)
-				}));
-	});
-var $author$project$Main$ChangeItemAttribute = F2(
-	function (a, b) {
-		return {$: 'ChangeItemAttribute', a: a, b: b};
-	});
 var $author$project$Main$textEditor = F3(
 	function (attr, value, label) {
 		return A2(
@@ -14022,12 +14176,10 @@ var $author$project$Main$editItemModal = function (item) {
 												$mdgriffith$elm_ui$Element$padding(5),
 												$mdgriffith$elm_ui$Element$Border$width(1),
 												$mdgriffith$elm_ui$Element$Border$color(
-												A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255)),
-												$mdgriffith$elm_ui$Element$Background$color(
-												A3($mdgriffith$elm_ui$Element$rgb255, 194, 0, 0))
+												A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255))
 											]),
-										$mdgriffith$elm_ui$Element$text('Delete item')),
-									onPress: $elm$core$Maybe$Just($author$project$Main$DeleteItem)
+										$mdgriffith$elm_ui$Element$text('Close')),
+									onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
 								}),
 								A2(
 								$mdgriffith$elm_ui$Element$Input$button,
@@ -14041,10 +14193,12 @@ var $author$project$Main$editItemModal = function (item) {
 												$mdgriffith$elm_ui$Element$padding(5),
 												$mdgriffith$elm_ui$Element$Border$width(1),
 												$mdgriffith$elm_ui$Element$Border$color(
-												A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255))
+												A3($mdgriffith$elm_ui$Element$rgb, 255, 255, 255)),
+												$mdgriffith$elm_ui$Element$Background$color(
+												A3($mdgriffith$elm_ui$Element$rgb255, 194, 0, 0))
 											]),
-										$mdgriffith$elm_ui$Element$text('Close')),
-									onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
+										$mdgriffith$elm_ui$Element$text('Delete item')),
+									onPress: $elm$core$Maybe$Just($author$project$Main$DeleteItem)
 								})
 							]))
 					]))));
@@ -15909,6 +16063,12 @@ var $author$project$Main$view = function (model) {
 				return _List_fromArray(
 					[
 						$author$project$Main$showErrorModal(err)
+					]);
+			case 'ConfirmingDelete':
+				var ix = _v0.a;
+				return _List_fromArray(
+					[
+						$author$project$Main$confirmDeleteModal(ix)
 					]);
 			default:
 				return _List_Nil;
