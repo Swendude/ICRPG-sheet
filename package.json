@@ -10,7 +10,9 @@
     "elm-test": "^0.19.1-revision6",
     "package-lock.json": "^1.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "elm-review": "^2.5.0"
+  },
   "scripts": {
     "test": "elm-test",
     "start": "elm-live src/Main.elm --open -- --output=main.js",

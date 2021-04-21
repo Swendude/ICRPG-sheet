@@ -772,7 +772,7 @@ pickStyle model =
             }
 
         _ ->
-            { mainWidth = px 1200
+            { mainWidth = fill
             , fontBase = 24
             , fieldWidth = px 300
             }
@@ -1134,16 +1134,7 @@ infoRow model =
                 rows
     in
     case model.settings.device.class of
-        Tablet ->
-            singleRow
-
-        Phone ->
-            singleCol
-
-        Desktop ->
-            singleRow
-
-        BigDesktop ->
+        _ ->
             singleRow
 
 

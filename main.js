@@ -12950,7 +12950,7 @@ var $author$project$Main$pickStyle = function (model) {
 			return {
 				fieldWidth: $mdgriffith$elm_ui$Element$px(300),
 				fontBase: 24,
-				mainWidth: $mdgriffith$elm_ui$Element$px(1200)
+				mainWidth: $mdgriffith$elm_ui$Element$fill
 			};
 	}
 };
@@ -15494,16 +15494,7 @@ var $author$project$Main$infoRow = function (model) {
 			]),
 		rows);
 	var _v0 = model.settings.device._class;
-	switch (_v0.$) {
-		case 'Tablet':
-			return singleRow;
-		case 'Phone':
-			return singleCol;
-		case 'Desktop':
-			return singleRow;
-		default:
-			return singleRow;
-	}
+	return singleRow;
 };
 var $mdgriffith$elm_ui$Internal$Model$Left = {$: 'Left'};
 var $mdgriffith$elm_ui$Element$alignLeft = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Left);
