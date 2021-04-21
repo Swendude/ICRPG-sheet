@@ -5383,16 +5383,34 @@ var $mdgriffith$elm_ui$Element$classifyDevice = function (window) {
 	};
 };
 var $author$project$Main$Bioform = {$: 'Bioform'};
-var $author$project$Main$Character = F9(
-	function (name, bioform, _class, story, hitpoints, items, stats, coin, deathtimer) {
-		return {bioform: bioform, _class: _class, coin: coin, deathtimer: deathtimer, hitpoints: hitpoints, items: items, name: name, stats: stats, story: story};
-	});
+var $author$project$Main$Character = function (name) {
+	return function (world) {
+		return function (bioform) {
+			return function (_class) {
+				return function (story) {
+					return function (hitpoints) {
+						return function (items) {
+							return function (stats) {
+								return function (coin) {
+									return function (deathtimer) {
+										return {bioform: bioform, _class: _class, coin: coin, deathtimer: deathtimer, hitpoints: hitpoints, items: items, name: name, stats: stats, story: story, world: world};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 var $author$project$Main$Class = {$: 'Class'};
 var $author$project$Main$Coin = {$: 'Coin'};
 var $author$project$Main$Deathtimer = {$: 'Deathtimer'};
 var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
 var $author$project$Main$Name = {$: 'Name'};
 var $author$project$Main$Story = {$: 'Story'};
+var $author$project$Main$World = {$: 'World'};
 var $author$project$Main$CharacterNumberProp = F3(
 	function (value, id, editvalue) {
 		return {editvalue: editvalue, id: id, value: value};
@@ -5632,11 +5650,16 @@ var $author$project$Main$decodeCharacter = A3(
 								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 								'bioform',
 								$author$project$Main$decodeCharacterTextProp($author$project$Main$Bioform),
-								A3(
-									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-									'name',
-									$author$project$Main$decodeCharacterTextProp($author$project$Main$Name),
-									$elm$json$Json$Decode$succeed($author$project$Main$Character))))))))));
+								A4(
+									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+									'world',
+									$author$project$Main$decodeCharacterTextProp($author$project$Main$World),
+									{hovered: false, id: $author$project$Main$World, value: 'world'},
+									A3(
+										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+										'name',
+										$author$project$Main$decodeCharacterTextProp($author$project$Main$Name),
+										$elm$json$Json$Decode$succeed($author$project$Main$Character)))))))))));
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$tabula_rasa = {
@@ -5668,7 +5691,8 @@ var $author$project$Main$tabula_rasa = {
 		]),
 	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
 	stats: $author$project$Main$Stats(0)(0)(10)(0)(0)(0)(0)(0)(0)(0)(0)(1),
-	story: {hovered: false, id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
+	story: {hovered: false, id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'},
+	world: {hovered: false, id: $author$project$Main$World, value: 'Alfheim'}
 };
 var $author$project$Main$init = function (_v0) {
 	var charValue = _v0.a;
@@ -6252,6 +6276,9 @@ var $author$project$Main$encodeCharacterObject = function (_char) {
 				'name',
 				$author$project$Main$encodeTextProp(_char.name)),
 				_Utils_Tuple2(
+				'world',
+				$author$project$Main$encodeTextProp(_char.world)),
+				_Utils_Tuple2(
 				'bioform',
 				$author$project$Main$encodeTextProp(_char.bioform)),
 				_Utils_Tuple2(
@@ -6397,6 +6424,12 @@ var $author$project$Main$asTextValueIn = F2(
 			charp,
 			{value: newvalue});
 	});
+var $author$project$Main$asWorldIn = F2(
+	function (_char, newworld) {
+		return _Utils_update(
+			_char,
+			{world: newworld});
+	});
 var $elm$core$Basics$composeL = F3(
 	function (g, f, x) {
 		return g(
@@ -6438,6 +6471,7 @@ var $elm_community$list_extra$List$Extra$getAt = F2(
 		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
 			A2($elm$core$List$drop, idx, xs));
 	});
+var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Basics$not = _Basics_not;
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
@@ -6889,7 +6923,8 @@ var $author$project$Main$update = F2(
 					A2(
 						$author$project$Main$asEditingStateIn,
 						model.settings,
-						$author$project$Main$EditingCharactertext(id)));
+						$author$project$Main$EditingCharactertext(
+							A2($elm$core$Debug$log, 'editing:', id))));
 			case 'EditNumber':
 				var id = msg.a;
 				return A2(
@@ -6945,23 +6980,29 @@ var $author$project$Main$update = F2(
 										$author$project$Main$asBioformIn,
 										model.character,
 										A2($author$project$Main$asTextValueIn, model.character.bioform, value));
-								default:
+								case 'Story':
 									var _v5 = _v1.a;
 									return A2(
 										$author$project$Main$asStoryIn,
 										model.character,
 										A2($author$project$Main$asTextValueIn, model.character.story, value));
+								default:
+									var _v6 = _v1.a;
+									return A2(
+										$author$project$Main$asWorldIn,
+										model.character,
+										A2($author$project$Main$asTextValueIn, model.character.world, value));
 							}
 						} else {
 							return model.character;
 						}
 					}());
 			case 'IncreaseNumberAttribute':
-				var _v6 = model.settings.editingState;
-				if (_v6.$ === 'EditingCharacterNumber') {
-					switch (_v6.a.$) {
+				var _v7 = model.settings.editingState;
+				if (_v7.$ === 'EditingCharacterNumber') {
+					switch (_v7.a.$) {
 						case 'Coin':
-							var _v7 = _v6.a;
+							var _v8 = _v7.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6970,7 +7011,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value + model.character.coin.editvalue)));
 						case 'Hitpoints':
-							var _v8 = _v6.a;
+							var _v9 = _v7.a;
 							var result = model.character.hitpoints.value + model.character.hitpoints.editvalue;
 							var maxHitpoints = (model.character.stats.hearts + function ($) {
 								return $.hearts;
@@ -6985,7 +7026,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.hitpoints, maxResult)));
 						default:
-							var _v9 = _v6.a;
+							var _v10 = _v7.a;
 							var result = model.character.deathtimer.value + model.character.deathtimer.editvalue;
 							var maxResult = (result > 6) ? 6 : result;
 							return A2(
@@ -7000,11 +7041,11 @@ var $author$project$Main$update = F2(
 					return model;
 				}
 			case 'DecreaseNumberAttribute':
-				var _v10 = model.settings.editingState;
-				if (_v10.$ === 'EditingCharacterNumber') {
-					switch (_v10.a.$) {
+				var _v11 = model.settings.editingState;
+				if (_v11.$ === 'EditingCharacterNumber') {
+					switch (_v11.a.$) {
 						case 'Coin':
-							var _v11 = _v10.a;
+							var _v12 = _v11.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -7013,7 +7054,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value - model.character.coin.editvalue)));
 						case 'Hitpoints':
-							var _v12 = _v10.a;
+							var _v13 = _v11.a;
 							var resultHitpoints = model.character.hitpoints.value - model.character.hitpoints.editvalue;
 							var newHitpoints = (resultHitpoints <= 0) ? 0 : resultHitpoints;
 							return A2(
@@ -7024,7 +7065,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.hitpoints, newHitpoints)));
 						default:
-							var _v13 = _v10.a;
+							var _v14 = _v11.a;
 							return (model.character.deathtimer.value <= 0) ? model : A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -7038,11 +7079,11 @@ var $author$project$Main$update = F2(
 				}
 			case 'UpdateEditField':
 				var value = msg.a;
-				var _v14 = model.settings.editingState;
-				if (_v14.$ === 'EditingCharacterNumber') {
-					switch (_v14.a.$) {
+				var _v15 = model.settings.editingState;
+				if (_v15.$ === 'EditingCharacterNumber') {
+					switch (_v15.a.$) {
 						case 'Coin':
-							var _v15 = _v14.a;
+							var _v16 = _v15.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -7057,7 +7098,7 @@ var $author$project$Main$update = F2(
 											0,
 											$elm$core$String$toInt(value)))));
 						case 'Hitpoints':
-							var _v16 = _v14.a;
+							var _v17 = _v15.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -7072,7 +7113,7 @@ var $author$project$Main$update = F2(
 											0,
 											$elm$core$String$toInt(value)))));
 						default:
-							var _v17 = _v14.a;
+							var _v18 = _v15.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -7093,15 +7134,15 @@ var $author$project$Main$update = F2(
 			case 'ChangeStatAttribute':
 				var stat = msg.a;
 				var value = msg.b;
-				var _v18 = $elm$core$String$toInt(value);
-				if (_v18.$ === 'Just') {
-					var intVal = _v18.a;
-					var _v19 = model.settings.editingState;
-					switch (_v19.$) {
+				var _v19 = $elm$core$String$toInt(value);
+				if (_v19.$ === 'Just') {
+					var intVal = _v19.a;
+					var _v20 = model.settings.editingState;
+					switch (_v20.$) {
 						case 'EditingCharacterStats':
 							return A3($author$project$Main$updateStat, model, stat, intVal);
 						case 'EditingItem':
-							var ix = _v19.a;
+							var ix = _v20.a;
 							return A4($author$project$Main$updateItemStat, model, stat, intVal, ix);
 						default:
 							return model;
@@ -7112,17 +7153,17 @@ var $author$project$Main$update = F2(
 			case 'ChangeItemAttribute':
 				var attr = msg.a;
 				var value = msg.b;
-				var _v20 = model.settings.editingState;
-				if (_v20.$ === 'EditingItem') {
-					var ix = _v20.a;
+				var _v21 = model.settings.editingState;
+				if (_v21.$ === 'EditingItem') {
+					var ix = _v21.a;
 					return A4($author$project$Main$updateItemAttribute, model, attr, value, ix);
 				} else {
 					return model;
 				}
 			case 'DeleteItem':
-				var _v21 = model.settings.editingState;
-				if (_v21.$ === 'EditingItem') {
-					var i = _v21.a;
+				var _v22 = model.settings.editingState;
+				if (_v22.$ === 'EditingItem') {
+					var i = _v22.a;
 					return A2(
 						$author$project$Main$asSettingsIn,
 						A2(
@@ -7138,9 +7179,9 @@ var $author$project$Main$update = F2(
 				}
 			case 'ToggleItem':
 				var ix = msg.a;
-				var _v22 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
-				if (_v22.$ === 'Just') {
-					var item = _v22.a;
+				var _v23 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
+				if (_v23.$ === 'Just') {
+					var item = _v23.a;
 					var totalItems = $elm$core$List$length(
 						A2(
 							$elm$core$List$filter,
@@ -7216,7 +7257,7 @@ var $author$project$Main$update = F2(
 								$author$project$Main$asBioformIn,
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.bioform, true)));
-					default:
+					case 'Story':
 						return A2(
 							$author$project$Main$asCharIn,
 							model,
@@ -7224,6 +7265,14 @@ var $author$project$Main$update = F2(
 								$author$project$Main$asStoryIn,
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.story, true)));
+					default:
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asWorldIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.world, true)));
 				}
 			case 'Unhovered':
 				var attribute = msg.a;
@@ -7252,7 +7301,7 @@ var $author$project$Main$update = F2(
 								$author$project$Main$asBioformIn,
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.bioform, false)));
-					default:
+					case 'Story':
 						return A2(
 							$author$project$Main$asCharIn,
 							model,
@@ -7260,6 +7309,14 @@ var $author$project$Main$update = F2(
 								$author$project$Main$asStoryIn,
 								model.character,
 								A2($author$project$Main$asHoveredIn, model.character.story, false)));
+					default:
+						return A2(
+							$author$project$Main$asCharIn,
+							model,
+							A2(
+								$author$project$Main$asWorldIn,
+								model.character,
+								A2($author$project$Main$asHoveredIn, model.character.world, false)));
 				}
 			default:
 				return model;
@@ -12936,19 +12993,19 @@ var $author$project$Main$pickStyle = function (model) {
 	switch (_v0.$) {
 		case 'Phone':
 			return {
-				fieldWidth: $mdgriffith$elm_ui$Element$px(300),
+				fieldWidth: $mdgriffith$elm_ui$Element$px(100),
 				fontBase: 24,
 				mainWidth: $mdgriffith$elm_ui$Element$fill
 			};
 		case 'Tablet':
 			return {
-				fieldWidth: $mdgriffith$elm_ui$Element$px(300),
+				fieldWidth: $mdgriffith$elm_ui$Element$px(100),
 				fontBase: 24,
 				mainWidth: $mdgriffith$elm_ui$Element$fill
 			};
 		default:
 			return {
-				fieldWidth: $mdgriffith$elm_ui$Element$px(300),
+				fieldWidth: $mdgriffith$elm_ui$Element$px(100),
 				fontBase: 24,
 				mainWidth: $mdgriffith$elm_ui$Element$fill
 			};
@@ -14856,9 +14913,10 @@ var $author$project$Main$headerRow = function (model) {
 				_List_fromArray(
 					[
 						$mdgriffith$elm_ui$Element$Font$size(
-						A2($author$project$Main$scaled, model, 3))
+						A2($author$project$Main$scaled, model, 3)),
+						$mdgriffith$elm_ui$Element$centerX
 					]),
-				$mdgriffith$elm_ui$Element$text('ICRPG Character Sheet')),
+				$mdgriffith$elm_ui$Element$text('Index Card RPG Character Sheet')),
 				A2(
 				$mdgriffith$elm_ui$Element$Input$button,
 				_List_fromArray(
@@ -15307,8 +15365,10 @@ var $author$project$Main$printTextAttribute = function (attr) {
 			return 'Class';
 		case 'Story':
 			return 'Story';
-		default:
+		case 'Bioform':
 			return 'Bioform';
+		default:
+			return 'World';
 	}
 };
 var $mdgriffith$elm_ui$Element$scrollbarX = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$overflow, $mdgriffith$elm_ui$Internal$Style$classes.scrollbarsX);
@@ -15396,93 +15456,7 @@ var $author$project$Main$editableTextField = F3(
 	});
 var $mdgriffith$elm_ui$Element$spaceEvenly = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$spacing, $mdgriffith$elm_ui$Internal$Style$classes.spaceEvenly);
 var $author$project$Main$infoRow = function (model) {
-	var rows = _List_fromArray(
-		[
-			A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_fromArray(
-				[
-					A2($mdgriffith$elm_ui$Element$spacingXY, 5, 0)
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$el,
-					_List_Nil,
-					$mdgriffith$elm_ui$Element$text('Name :')),
-					A3(
-					$author$project$Main$editableTextField,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$height(
-							$mdgriffith$elm_ui$Element$px(36)),
-							$mdgriffith$elm_ui$Element$width(
-							$author$project$Main$pickStyle(model).fieldWidth)
-						]),
-					model.settings.editingState,
-					model.character.name)
-				])),
-			A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_fromArray(
-				[
-					A2($mdgriffith$elm_ui$Element$spacingXY, 5, 0)
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$el,
-					_List_Nil,
-					$mdgriffith$elm_ui$Element$text('Class :')),
-					A3(
-					$author$project$Main$editableTextField,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$height(
-							$mdgriffith$elm_ui$Element$px(36)),
-							$mdgriffith$elm_ui$Element$width(
-							$author$project$Main$pickStyle(model).fieldWidth)
-						]),
-					model.settings.editingState,
-					model.character._class)
-				])),
-			A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_fromArray(
-				[
-					A2($mdgriffith$elm_ui$Element$spacingXY, 5, 0)
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$el,
-					_List_Nil,
-					$mdgriffith$elm_ui$Element$text('Bioform :')),
-					A3(
-					$author$project$Main$editableTextField,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$height(
-							$mdgriffith$elm_ui$Element$px(36)),
-							$mdgriffith$elm_ui$Element$width(
-							$author$project$Main$pickStyle(model).fieldWidth)
-						]),
-					model.settings.editingState,
-					model.character.bioform)
-				]))
-		]);
-	var singleCol = A2(
-		$mdgriffith$elm_ui$Element$column,
-		_List_fromArray(
-			[
-				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-				$mdgriffith$elm_ui$Element$spaceEvenly,
-				$mdgriffith$elm_ui$Element$Background$color(
-				A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244)),
-				A2($mdgriffith$elm_ui$Element$paddingXY, 15, 15)
-			]),
-		rows);
-	var singleRow = A2(
+	return A2(
 		$mdgriffith$elm_ui$Element$row,
 		_List_fromArray(
 			[
@@ -15490,11 +15464,107 @@ var $author$project$Main$infoRow = function (model) {
 				$mdgriffith$elm_ui$Element$spaceEvenly,
 				$mdgriffith$elm_ui$Element$Background$color(
 				A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244)),
-				A2($mdgriffith$elm_ui$Element$paddingXY, 40, 5)
+				A2($mdgriffith$elm_ui$Element$paddingXY, 10, 5)
 			]),
-		rows);
-	var _v0 = model.settings.device._class;
-	return singleRow;
+		_List_fromArray(
+			[
+				A2(
+				$mdgriffith$elm_ui$Element$row,
+				_List_fromArray(
+					[
+						A2($mdgriffith$elm_ui$Element$spacingXY, 5, 0)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$el,
+						_List_Nil,
+						$mdgriffith$elm_ui$Element$text('Name :')),
+						A3(
+						$author$project$Main$editableTextField,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$height(
+								$mdgriffith$elm_ui$Element$px(36)),
+								$mdgriffith$elm_ui$Element$width(
+								$author$project$Main$pickStyle(model).fieldWidth)
+							]),
+						model.settings.editingState,
+						model.character.name)
+					])),
+				A2(
+				$mdgriffith$elm_ui$Element$row,
+				_List_fromArray(
+					[
+						A2($mdgriffith$elm_ui$Element$spacingXY, 5, 0)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$el,
+						_List_Nil,
+						$mdgriffith$elm_ui$Element$text('World :')),
+						A3(
+						$author$project$Main$editableTextField,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$height(
+								$mdgriffith$elm_ui$Element$px(36)),
+								$mdgriffith$elm_ui$Element$width(
+								$author$project$Main$pickStyle(model).fieldWidth)
+							]),
+						model.settings.editingState,
+						model.character.world)
+					])),
+				A2(
+				$mdgriffith$elm_ui$Element$row,
+				_List_fromArray(
+					[
+						A2($mdgriffith$elm_ui$Element$spacingXY, 5, 0)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$el,
+						_List_Nil,
+						$mdgriffith$elm_ui$Element$text('Class :')),
+						A3(
+						$author$project$Main$editableTextField,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$height(
+								$mdgriffith$elm_ui$Element$px(36)),
+								$mdgriffith$elm_ui$Element$width(
+								$author$project$Main$pickStyle(model).fieldWidth)
+							]),
+						model.settings.editingState,
+						model.character._class)
+					])),
+				A2(
+				$mdgriffith$elm_ui$Element$row,
+				_List_fromArray(
+					[
+						A2($mdgriffith$elm_ui$Element$spacingXY, 5, 0)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$el,
+						_List_Nil,
+						$mdgriffith$elm_ui$Element$text('Bioform :')),
+						A3(
+						$author$project$Main$editableTextField,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$height(
+								$mdgriffith$elm_ui$Element$px(36)),
+								$mdgriffith$elm_ui$Element$width(
+								$author$project$Main$pickStyle(model).fieldWidth)
+							]),
+						model.settings.editingState,
+						model.character.bioform)
+					]))
+			]));
 };
 var $mdgriffith$elm_ui$Internal$Model$Left = {$: 'Left'};
 var $mdgriffith$elm_ui$Element$alignLeft = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Left);

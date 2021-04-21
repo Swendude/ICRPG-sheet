@@ -38,7 +38,7 @@ port setStorage : Encode.Value -> Cmd msg
 
 
 
--- ANCHOR SUBSCRIPTIONS
+-- ANCHOR Subscriptions
 
 
 subscriptions : Model -> Sub Msg
@@ -58,6 +58,7 @@ type alias Model =
 
 type alias Character =
     { name : CharacterTextProp
+    , world : CharacterTextProp
     , bioform : CharacterTextProp
     , class : CharacterTextProp
     , story : CharacterTextProp
@@ -69,6 +70,13 @@ type alias Character =
     }
 
 
+type alias AppSettings =
+    { editingState : EditingState
+    , darkMode : Bool
+    , device : Device
+    }
+
+
 type EditingState
     = EditingCharacterStats
     | EditingItem Int
@@ -76,13 +84,6 @@ type EditingState
     | EditingCharacterNumber CharacterNumberAttribute
     | ShowError String
     | NotEditing
-
-
-type alias AppSettings =
-    { editingState : EditingState
-    , darkMode : Bool
-    , device : Device
-    }
 
 
 type alias CharacterTextProp =
@@ -104,6 +105,7 @@ type CharacterTextAttribute
     | Story
     | Class
     | Bioform
+    | World
 
 
 type CharacterNumberAttribute
@@ -196,6 +198,11 @@ tabula_rasa =
     , bioform =
         { value = "Dwarf"
         , id = Bioform
+        , hovered = False
+        }
+    , world =
+        { value = "Alfheim"
+        , id = World
         , hovered = False
         }
     , class =
@@ -300,7 +307,7 @@ update msg model =
                 |> asSettingsIn model
 
         EditText id ->
-            EditingCharactertext id
+            EditingCharactertext (Debug.log "editing:" id)
                 |> asEditingStateIn model.settings
                 |> asSettingsIn model
 
@@ -347,7 +354,13 @@ update msg model =
                             |> asTextValueIn model.character.story
                             |> asStoryIn model.character
 
+                    EditingCharactertext World ->
+                        value
+                            |> asTextValueIn model.character.world
+                            |> asWorldIn model.character
+
                     _ ->
+                        -- this is annoying during development
                         model.character
 
         IncreaseNumberAttribute ->
@@ -567,6 +580,12 @@ update msg model =
                         |> asStoryIn model.character
                         |> asCharIn model
 
+                World ->
+                    True
+                        |> asHoveredIn model.character.world
+                        |> asWorldIn model.character
+                        |> asCharIn model
+
         Unhovered attribute ->
             case attribute of
                 Name ->
@@ -591,6 +610,12 @@ update msg model =
                     False
                         |> asHoveredIn model.character.story
                         |> asStoryIn model.character
+                        |> asCharIn model
+
+                World ->
+                    False
+                        |> asHoveredIn model.character.world
+                        |> asWorldIn model.character
                         |> asCharIn model
 
         _ ->
@@ -752,6 +777,9 @@ printTextAttribute attr =
         Bioform ->
             "Bioform"
 
+        World ->
+            "World"
+
 
 
 -- ANCHOR View
@@ -762,19 +790,19 @@ pickStyle model =
         Phone ->
             { mainWidth = fill
             , fontBase = 24
-            , fieldWidth = px 300
+            , fieldWidth = px 100
             }
 
         Tablet ->
             { mainWidth = fill
             , fontBase = 24
-            , fieldWidth = px 300
+            , fieldWidth = px 100
             }
 
         _ ->
             { mainWidth = fill
             , fontBase = 24
-            , fieldWidth = px 300
+            , fieldWidth = px 100
             }
 
 
@@ -1050,7 +1078,7 @@ headerRow model =
         , padding 5
         , spacingXY 12 0
         ]
-        [ el [ Font.size (scaled model 3) ] <| text "ICRPG Character Sheet"
+        [ el [ Font.size (scaled model 3), centerX ] <| text "Index Card RPG Character Sheet"
         , Input.button [ alignRight ]
             { onPress = Just SaveCharacter
             , label =
@@ -1084,58 +1112,49 @@ headerRow model =
 
 infoRow : Model -> Element Msg
 infoRow model =
-    let
-        rows =
-            [ row [ spacingXY 5 0 ]
-                [ el [] (text "Name :")
-                , editableTextField
-                    [ height (px <| 36)
-                    , width <| (pickStyle model).fieldWidth
-                    ]
-                    model.settings.editingState
-                    model.character.name
+    row
+        [ width fill
+        , spaceEvenly
+        , Background.color <| Element.rgb255 244 244 244
+        , paddingXY 10 5
+        ]
+        [ row [ spacingXY 5 0 ]
+            [ el [] (text "Name :")
+            , editableTextField
+                [ height (px <| 36)
+                , width <| (pickStyle model).fieldWidth
                 ]
-            , row [ spacingXY 5 0 ]
-                [ el [] (text "Class :")
-                , editableTextField
-                    [ height (px <| 36)
-                    , width <| (pickStyle model).fieldWidth
-                    ]
-                    model.settings.editingState
-                    model.character.class
-                ]
-            , row [ spacingXY 5 0 ]
-                [ el [] (text "Bioform :")
-                , editableTextField
-                    [ height (px <| 36)
-                    , width <| (pickStyle model).fieldWidth
-                    ]
-                    model.settings.editingState
-                    model.character.bioform
-                ]
+                model.settings.editingState
+                model.character.name
             ]
-
-        singleRow =
-            row
-                [ width fill
-                , spaceEvenly
-                , Background.color <| Element.rgb255 244 244 244
-                , paddingXY 40 5
+        , row [ spacingXY 5 0 ]
+            [ el [] (text "World :")
+            , editableTextField
+                [ height (px <| 36)
+                , width <| (pickStyle model).fieldWidth
                 ]
-                rows
-
-        singleCol =
-            column
-                [ width fill
-                , spaceEvenly
-                , Background.color <| Element.rgb255 244 244 244
-                , paddingXY 15 15
+                model.settings.editingState
+                model.character.world
+            ]
+        , row [ spacingXY 5 0 ]
+            [ el [] (text "Class :")
+            , editableTextField
+                [ height (px <| 36)
+                , width <| (pickStyle model).fieldWidth
                 ]
-                rows
-    in
-    case model.settings.device.class of
-        _ ->
-            singleRow
+                model.settings.editingState
+                model.character.class
+            ]
+        , row [ spacingXY 5 0 ]
+            [ el [] (text "Bioform :")
+            , editableTextField
+                [ height (px <| 36)
+                , width <| (pickStyle model).fieldWidth
+                ]
+                model.settings.editingState
+                model.character.bioform
+            ]
+        ]
 
 
 storyRow : Model -> Element Msg
@@ -1776,6 +1795,11 @@ asClassIn char newclass =
     { char | class = newclass }
 
 
+asWorldIn : Character -> CharacterTextProp -> Character
+asWorldIn char newworld =
+    { char | world = newworld }
+
+
 asTextValueIn : CharacterTextProp -> String -> CharacterTextProp
 asTextValueIn charp newvalue =
     { charp | value = newvalue }
@@ -1814,6 +1838,7 @@ encodeCharacterObject : Character -> Encode.Value
 encodeCharacterObject char =
     Encode.object
         [ ( "name", encodeTextProp char.name )
+        , ( "world", encodeTextProp char.world )
         , ( "bioform", encodeTextProp char.bioform )
         , ( "class", encodeTextProp char.class )
         , ( "story", encodeTextProp char.story )
@@ -1873,6 +1898,7 @@ decodeCharacter : Decode.Decoder Character
 decodeCharacter =
     Decode.succeed Character
         |> Pipeline.required "name" (decodeCharacterTextProp Name)
+        |> Pipeline.optional "world" (decodeCharacterTextProp World) { value = "world", hovered = False, id = World }
         |> Pipeline.required "bioform" (decodeCharacterTextProp Bioform)
         |> Pipeline.required "class" (decodeCharacterTextProp Class)
         |> Pipeline.required "story" (decodeCharacterTextProp Story)
