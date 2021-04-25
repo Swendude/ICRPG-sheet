@@ -15991,6 +15991,385 @@ var $author$project$Main$storyRow = function (model) {
 };
 var $mdgriffith$elm_ui$Element$Font$typeface = $mdgriffith$elm_ui$Internal$Model$Typeface;
 var $mdgriffith$elm_ui$Element$Font$underline = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.underline);
+var $mdgriffith$elm_ui$Element$Border$roundEach = function (_v0) {
+	var topLeft = _v0.topLeft;
+	var topRight = _v0.topRight;
+	var bottomLeft = _v0.bottomLeft;
+	var bottomRight = _v0.bottomRight;
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$borderRound,
+		A3(
+			$mdgriffith$elm_ui$Internal$Model$Single,
+			'br-' + ($elm$core$String$fromInt(topLeft) + ('-' + ($elm$core$String$fromInt(topRight) + ($elm$core$String$fromInt(bottomLeft) + ('-' + $elm$core$String$fromInt(bottomRight)))))),
+			'border-radius',
+			$elm$core$String$fromInt(topLeft) + ('px ' + ($elm$core$String$fromInt(topRight) + ('px ' + ($elm$core$String$fromInt(bottomRight) + ('px ' + ($elm$core$String$fromInt(bottomLeft) + 'px'))))))));
+};
+var $author$project$Main$armorBlock = F4(
+	function (model, label, basestat, lootstat) {
+		return A2(
+			$mdgriffith$elm_ui$Element$column,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$spacing(5),
+					$mdgriffith$elm_ui$Element$centerX
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[
+							A2($mdgriffith$elm_ui$Element$paddingXY, 5, 5),
+							$mdgriffith$elm_ui$Element$centerX,
+							$mdgriffith$elm_ui$Element$Border$widthEach(
+							{bottom: 3, left: 1, right: 1, top: 1}),
+							$mdgriffith$elm_ui$Element$Border$roundEach(
+							{bottomLeft: 25, bottomRight: 25, topLeft: 3, topRight: 3}),
+							$mdgriffith$elm_ui$Element$Background$color(
+							A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255))
+						]),
+					$mdgriffith$elm_ui$Element$text(
+						$elm$core$String$fromInt((lootstat + basestat) + 10))),
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$centerX]),
+					$mdgriffith$elm_ui$Element$text(label)),
+					A2(
+					$mdgriffith$elm_ui$Element$row,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$centerX,
+							$mdgriffith$elm_ui$Element$Font$size(
+							A2($author$project$Main$scaled, model, -3))
+						]),
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$text('Base '),
+							$mdgriffith$elm_ui$Element$text(
+							$elm$core$String$fromInt(basestat)),
+							$mdgriffith$elm_ui$Element$text(' '),
+							$mdgriffith$elm_ui$Element$text('Loot '),
+							$mdgriffith$elm_ui$Element$text(
+							$elm$core$String$fromInt(lootstat))
+						]))
+				]));
+	});
+var $author$project$Main$DecreaseNumberAttribute = {$: 'DecreaseNumberAttribute'};
+var $author$project$Main$EditNumber = function (a) {
+	return {$: 'EditNumber', a: a};
+};
+var $author$project$Main$IncreaseNumberAttribute = {$: 'IncreaseNumberAttribute'};
+var $author$project$Main$UpdateEditField = function (a) {
+	return {$: 'UpdateEditField', a: a};
+};
+var $author$project$Main$printNumberAttribute = function (attr) {
+	switch (attr.$) {
+		case 'Coin':
+			return 'Coin';
+		case 'Hitpoints':
+			return 'Hitpoints';
+		default:
+			return 'Deathtimer';
+	}
+};
+var $author$project$Main$editableNumberField = F3(
+	function (style, model, prop) {
+		var labelEl = A2(
+			$mdgriffith$elm_ui$Element$el,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$Border$widthEach(
+					{bottom: 1, left: 0, right: 0, top: 0}),
+					$mdgriffith$elm_ui$Element$Border$dotted
+				]),
+			$mdgriffith$elm_ui$Element$text(
+				$elm$core$String$fromInt(prop.value)));
+		var readField = A2(
+			$mdgriffith$elm_ui$Element$row,
+			style,
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$Input$button,
+					_List_Nil,
+					{
+						label: labelEl,
+						onPress: $elm$core$Maybe$Just(
+							$author$project$Main$EditNumber(prop.id))
+					})
+				]));
+		var writeField = A2(
+			$mdgriffith$elm_ui$Element$row,
+			style,
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$Input$button,
+					_List_Nil,
+					{
+						label: labelEl,
+						onPress: $elm$core$Maybe$Just($author$project$Main$DisableEdit)
+					}),
+					A2(
+					$mdgriffith$elm_ui$Element$Input$text,
+					_List_fromArray(
+						[
+							A2($mdgriffith$elm_ui$Element$paddingXY, 5, 0),
+							$mdgriffith$elm_ui$Element$width(
+							$mdgriffith$elm_ui$Element$px(40))
+						]),
+					{
+						label: $mdgriffith$elm_ui$Element$Input$labelHidden(
+							$author$project$Main$printNumberAttribute(prop.id)),
+						onChange: $author$project$Main$UpdateEditField,
+						placeholder: $elm$core$Maybe$Nothing,
+						text: $elm$core$String$fromInt(prop.editvalue)
+					}),
+					A2(
+					$mdgriffith$elm_ui$Element$Input$button,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$Font$size(
+							A2($author$project$Main$scaled, model, -1)),
+							A2($mdgriffith$elm_ui$Element$paddingXY, 0, 0)
+						]),
+					{
+						label: $mdgriffith$elm_ui$Element$text('+'),
+						onPress: $elm$core$Maybe$Just($author$project$Main$IncreaseNumberAttribute)
+					}),
+					A2(
+					$mdgriffith$elm_ui$Element$Input$button,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$Font$size(
+							A2($author$project$Main$scaled, model, -1)),
+							A2($mdgriffith$elm_ui$Element$paddingXY, 0, 0)
+						]),
+					{
+						label: $mdgriffith$elm_ui$Element$text('-'),
+						onPress: $elm$core$Maybe$Just($author$project$Main$DecreaseNumberAttribute)
+					})
+				]));
+		var _v0 = model.settings.editingState;
+		if (_v0.$ === 'EditingCharacterNumber') {
+			var n = _v0.a;
+			return _Utils_eq(n, prop.id) ? writeField : readField;
+		} else {
+			return readField;
+		}
+	});
+var $author$project$Main$emptyHearts = A2(
+	$mdgriffith$elm_ui$Element$el,
+	_List_Nil,
+	$mdgriffith$elm_ui$Element$html(
+		A2(
+			$elm$svg$Svg$svg,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$viewBox('0 0 100 100'),
+					$elm$svg$Svg$Attributes$width('20px')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$svg$Svg$g,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$strokeWidth('5'),
+							$elm$svg$Svg$Attributes$stroke('black'),
+							$elm$svg$Svg$Attributes$fill('white')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$svg$Svg$path,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$d('M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z')
+								]),
+							_List_Nil)
+						]))
+				]))));
+var $author$project$Main$filledHearts = A2(
+	$mdgriffith$elm_ui$Element$el,
+	_List_Nil,
+	$mdgriffith$elm_ui$Element$html(
+		A2(
+			$elm$svg$Svg$svg,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$viewBox('0 0 100 100'),
+					$elm$svg$Svg$Attributes$width('20px')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$svg$Svg$g,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$strokeWidth('5'),
+							$elm$svg$Svg$Attributes$fill('rgb(194 0 0)'),
+							$elm$svg$Svg$Attributes$stroke('black')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$svg$Svg$path,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$d('M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 z')
+								]),
+							_List_Nil)
+						]))
+				]))));
+var $elm$core$List$repeatHelp = F3(
+	function (result, n, value) {
+		repeatHelp:
+		while (true) {
+			if (n <= 0) {
+				return result;
+			} else {
+				var $temp$result = A2($elm$core$List$cons, value, result),
+					$temp$n = n - 1,
+					$temp$value = value;
+				result = $temp$result;
+				n = $temp$n;
+				value = $temp$value;
+				continue repeatHelp;
+			}
+		}
+	});
+var $elm$core$List$repeat = F2(
+	function (n, value) {
+		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
+	});
+var $author$project$Main$variablesBlocks = function (model) {
+	var heartsTotal = model.character.stats.hearts + function ($) {
+		return $.hearts;
+	}(
+		$author$project$Main$totalEquippedStats(model.character.items));
+	var multiHeartsEl = (heartsTotal > 10) ? _List_fromArray(
+		[
+			A2(
+			$mdgriffith$elm_ui$Element$el,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$Font$size(
+					A2($author$project$Main$scaled, model, -3)),
+					$mdgriffith$elm_ui$Element$centerY
+				]),
+			$mdgriffith$elm_ui$Element$text(
+				' total: ' + $elm$core$String$fromInt(heartsTotal)))
+		]) : _List_Nil;
+	var overTenHearts = (heartsTotal > 10) ? (heartsTotal - 10) : 0;
+	var heartsLeft = (model.character.hitpoints.value / 10) | 0;
+	var filledHeartsEl = A2(
+		$elm$core$List$repeat,
+		A2($elm$core$Basics$min, 10, heartsLeft),
+		$author$project$Main$filledHearts);
+	var fieldStyle = _List_fromArray(
+		[
+			A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+			$mdgriffith$elm_ui$Element$height(
+			$mdgriffith$elm_ui$Element$px(40)),
+			$mdgriffith$elm_ui$Element$centerX
+		]);
+	var emptyHeartsEl = A2($elm$core$List$repeat, (heartsTotal - heartsLeft) - overTenHearts, $author$project$Main$emptyHearts);
+	var heartsRow = _Utils_ap(
+		filledHeartsEl,
+		_Utils_ap(emptyHeartsEl, multiHeartsEl));
+	return _List_fromArray(
+		[
+			A2(
+			$mdgriffith$elm_ui$Element$row,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$centerX,
+					$mdgriffith$elm_ui$Element$Background$color(
+					A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244))
+				]),
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$text('Hit Points: '),
+					A3($author$project$Main$editableNumberField, fieldStyle, model, model.character.hitpoints)
+				])),
+			A2(
+			$mdgriffith$elm_ui$Element$row,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$centerX,
+					$mdgriffith$elm_ui$Element$Background$color(
+					A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244))
+				]),
+			heartsRow),
+			A2(
+			$mdgriffith$elm_ui$Element$row,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$centerX,
+					$mdgriffith$elm_ui$Element$Background$color(
+					A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$centerX]),
+					$mdgriffith$elm_ui$Element$text('Coin: ')),
+					A3($author$project$Main$editableNumberField, fieldStyle, model, model.character.coin)
+				])),
+			A2(
+			$mdgriffith$elm_ui$Element$row,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$centerX,
+					$mdgriffith$elm_ui$Element$Background$color(
+					A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$centerX]),
+					$mdgriffith$elm_ui$Element$text('† Dying?: ')),
+					A3($author$project$Main$editableNumberField, fieldStyle, model, model.character.deathtimer)
+				])),
+			A2(
+			$mdgriffith$elm_ui$Element$row,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$centerX,
+					$mdgriffith$elm_ui$Element$Background$color(
+					A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244))
+				]),
+			_List_fromArray(
+				[
+					A4(
+					$author$project$Main$armorBlock,
+					model,
+					'Armor',
+					model.character.stats.armor,
+					function ($) {
+						return $.armor;
+					}(
+						$author$project$Main$totalEquippedStats(model.character.items)))
+				]))
+		]);
+};
 var $author$project$Main$view = function (model) {
 	var activeModal = function () {
 		var _v0 = model.settings.editingState;
@@ -16061,7 +16440,8 @@ var $author$project$Main$view = function (model) {
 					_List_fromArray(
 						[
 							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-							A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0)
+							A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+							$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
 						]),
 					_List_fromArray(
 						[
@@ -16078,7 +16458,14 @@ var $author$project$Main$view = function (model) {
 								[
 									A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
 								]),
-							$author$project$Main$effortBlocks(model))
+							$author$project$Main$effortBlocks(model)),
+							A2(
+							$mdgriffith$elm_ui$Element$column,
+							_List_fromArray(
+								[
+									A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
+								]),
+							$author$project$Main$variablesBlocks(model))
 						])),
 					A2(
 					$mdgriffith$elm_ui$Element$row,

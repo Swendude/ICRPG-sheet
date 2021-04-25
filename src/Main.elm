@@ -858,20 +858,10 @@ view model =
             [ headerRow model
             , infoRow model
             , storyRow model
-
-            -- , heartRow model
-            -- , effortRow model
-            , row [ width fill, spacingXY 10 0 ]
-                -- [ el
-                --     [ width (fillPortion 1)
-                --     , Background.color <| Element.rgb255 244 244 244
-                --     , paddingXY 10 10
-                --     ]
-                --   <|
-                --     armorBlock model "Armor" model.character.stats.armor <|
-                --         .armor (totalEquippedStats model.character.items)
+            , row [ width fill, spacingXY 10 0, height fill ]
                 [ column [ spacingXY 0 10 ] <| statBlocks model
                 , column [ spacingXY 0 10 ] <| effortBlocks model
+                , column [ spacingXY 0 10 ] <| variablesBlocks model
                 ]
             , row
                 [ width fill
@@ -1309,8 +1299,8 @@ editableNumberField style model prop =
             readField
 
 
-heartRow : Model -> Element Msg
-heartRow model =
+variablesBlocks : Model -> List (Element Msg)
+variablesBlocks model =
     let
         heartsLeft : Int
         heartsLeft =
@@ -1349,26 +1339,25 @@ heartRow model =
             , centerX
             ]
     in
-    column [ width fill ]
-        [ row [ width fill, spacingXY 10 0 ]
-            [ column [ width <| fill, height <| px 65, centerX, Background.color <| Element.rgb255 244 244 244 ]
-                [ row [ centerX ]
-                    [ text <| "Hit Points: "
-                    , editableNumberField fieldStyle model model.character.hitpoints
-                    ]
-                , row [ centerX ] <|
-                    heartsRow
-                ]
-            , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
-                [ el [ centerX ] <| text <| "Coin: "
-                , editableNumberField fieldStyle model model.character.coin
-                ]
-            , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
-                [ el [ centerX ] <| text <| "† Dying?: "
-                , editableNumberField fieldStyle model model.character.deathtimer
-                ]
-            ]
+    [ row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
+        [ text <| "Hit Points: "
+        , editableNumberField fieldStyle model model.character.hitpoints
         ]
+    , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ] <|
+        heartsRow
+    , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
+        [ el [ centerX ] <| text <| "Coin: "
+        , editableNumberField fieldStyle model model.character.coin
+        ]
+    , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
+        [ el [ centerX ] <| text <| "† Dying?: "
+        , editableNumberField fieldStyle model model.character.deathtimer
+        ]
+    , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
+        [ armorBlock model "Armor" model.character.stats.armor <|
+            .armor (totalEquippedStats model.character.items)
+        ]
+    ]
 
 
 filledHearts : Element Msg
