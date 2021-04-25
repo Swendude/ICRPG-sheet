@@ -318,7 +318,7 @@ update msg model =
                 |> asSettingsIn model
 
         EditText id ->
-            EditingCharactertext (Debug.log "editing:" id)
+            EditingCharactertext id
                 |> asEditingStateIn model.settings
                 |> asSettingsIn model
 
@@ -1931,6 +1931,11 @@ decodeCharacter =
         |> Pipeline.required "coin" (decodeCharacterNumberProp Coin)
         |> Pipeline.optional "herocoin" Decode.bool False
         |> Pipeline.required "deathtimer" (decodeCharacterNumberProp Deathtimer)
+
+
+
+-- TODO: Prevent item 'overload' (check if !> 10 for equipped and unequipped items)
+-- Maybe allowing it and showing a red mark would suffice
 
 
 decodeMaxTimes : Int -> Decode.Decoder a -> Decode.Decoder (List a)

@@ -6492,7 +6492,6 @@ var $elm_community$list_extra$List$Extra$getAt = F2(
 		return (idx < 0) ? $elm$core$Maybe$Nothing : $elm$core$List$head(
 			A2($elm$core$List$drop, idx, xs));
 	});
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Basics$not = _Basics_not;
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
@@ -6961,8 +6960,7 @@ var $author$project$Main$update = F2(
 					A2(
 						$author$project$Main$asEditingStateIn,
 						model.settings,
-						$author$project$Main$EditingCharactertext(
-							A2($elm$core$Debug$log, 'editing:', id))));
+						$author$project$Main$EditingCharactertext(id)));
 			case 'EditNumber':
 				var id = msg.a;
 				return A2(
