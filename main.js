@@ -5392,8 +5392,10 @@ var $author$project$Main$Character = function (name) {
 						return function (items) {
 							return function (stats) {
 								return function (coin) {
-									return function (deathtimer) {
-										return {bioform: bioform, _class: _class, coin: coin, deathtimer: deathtimer, hitpoints: hitpoints, items: items, name: name, stats: stats, story: story, world: world};
+									return function (herocoin) {
+										return function (deathtimer) {
+											return {bioform: bioform, _class: _class, coin: coin, deathtimer: deathtimer, herocoin: herocoin, hitpoints: hitpoints, items: items, name: name, stats: stats, story: story, world: world};
+										};
 									};
 								};
 							};
@@ -5411,6 +5413,7 @@ var $author$project$Main$Hitpoints = {$: 'Hitpoints'};
 var $author$project$Main$Name = {$: 'Name'};
 var $author$project$Main$Story = {$: 'Story'};
 var $author$project$Main$World = {$: 'World'};
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Main$CharacterNumberProp = F3(
 	function (value, id, editvalue) {
 		return {editvalue: editvalue, id: id, value: value};
@@ -5442,7 +5445,6 @@ var $author$project$Main$Item = F4(
 	function (name, description, stats, equipped) {
 		return {description: description, equipped: equipped, name: name, stats: stats};
 	});
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Main$Stats = function (str) {
 	return function (dex) {
 		return function (con) {
@@ -5629,44 +5631,49 @@ var $author$project$Main$decodeCharacter = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 	'deathtimer',
 	$author$project$Main$decodeCharacterNumberProp($author$project$Main$Deathtimer),
-	A3(
-		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-		'coin',
-		$author$project$Main$decodeCharacterNumberProp($author$project$Main$Coin),
+	A4(
+		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+		'herocoin',
+		$elm$json$Json$Decode$bool,
+		false,
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'stats',
-			$author$project$Main$decodeStats,
+			'coin',
+			$author$project$Main$decodeCharacterNumberProp($author$project$Main$Coin),
 			A3(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'items',
-				A2($author$project$Main$decodeMaxTimes, 20, $author$project$Main$decodeItem),
+				'stats',
+				$author$project$Main$decodeStats,
 				A3(
 					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'hitpoints',
-					$author$project$Main$decodeCharacterNumberProp($author$project$Main$Hitpoints),
+					'items',
+					A2($author$project$Main$decodeMaxTimes, 20, $author$project$Main$decodeItem),
 					A3(
 						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-						'story',
-						$author$project$Main$decodeCharacterTextProp($author$project$Main$Story),
+						'hitpoints',
+						$author$project$Main$decodeCharacterNumberProp($author$project$Main$Hitpoints),
 						A3(
 							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-							'class',
-							$author$project$Main$decodeCharacterTextProp($author$project$Main$Class),
+							'story',
+							$author$project$Main$decodeCharacterTextProp($author$project$Main$Story),
 							A3(
 								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-								'bioform',
-								$author$project$Main$decodeCharacterTextProp($author$project$Main$Bioform),
-								A4(
-									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-									'world',
-									$author$project$Main$decodeCharacterTextProp($author$project$Main$World),
-									{hovered: false, id: $author$project$Main$World, value: 'world'},
-									A3(
-										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-										'name',
-										$author$project$Main$decodeCharacterTextProp($author$project$Main$Name),
-										$elm$json$Json$Decode$succeed($author$project$Main$Character)))))))))));
+								'class',
+								$author$project$Main$decodeCharacterTextProp($author$project$Main$Class),
+								A3(
+									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+									'bioform',
+									$author$project$Main$decodeCharacterTextProp($author$project$Main$Bioform),
+									A4(
+										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+										'world',
+										$author$project$Main$decodeCharacterTextProp($author$project$Main$World),
+										{hovered: false, id: $author$project$Main$World, value: 'world'},
+										A3(
+											$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+											'name',
+											$author$project$Main$decodeCharacterTextProp($author$project$Main$Name),
+											$elm$json$Json$Decode$succeed($author$project$Main$Character))))))))))));
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$tabula_rasa = {
@@ -5674,6 +5681,7 @@ var $author$project$Main$tabula_rasa = {
 	_class: {hovered: false, id: $author$project$Main$Class, value: 'Knight'},
 	coin: {editvalue: 0, id: $author$project$Main$Coin, value: 0},
 	deathtimer: {editvalue: 0, id: $author$project$Main$Deathtimer, value: 0},
+	herocoin: false,
 	hitpoints: {editvalue: 0, id: $author$project$Main$Hitpoints, value: 10},
 	items: _List_fromArray(
 		[
@@ -6389,6 +6397,12 @@ var $author$project$Main$asEditValueIn = F2(
 			charp,
 			{editvalue: newvalue});
 	});
+var $author$project$Main$asHerocoinIn = F2(
+	function (_char, hc) {
+		return _Utils_update(
+			_char,
+			{herocoin: hc});
+	});
 var $author$project$Main$asHitpointsIn = F2(
 	function (_char, newhitpoints) {
 		return _Utils_update(
@@ -6923,6 +6937,11 @@ var $elm$core$Maybe$withDefault = F2(
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
+			case 'EditHerocoin':
+				return A2(
+					$author$project$Main$asCharIn,
+					model,
+					A2($author$project$Main$asHerocoinIn, model.character, !model.character.herocoin));
 			case 'ScreenResize':
 				var h = msg.a;
 				var w = msg.b;
@@ -7404,6 +7423,8 @@ var $mdgriffith$elm_ui$Internal$Model$AlignY = function (a) {
 };
 var $mdgriffith$elm_ui$Internal$Model$Bottom = {$: 'Bottom'};
 var $mdgriffith$elm_ui$Element$alignBottom = $mdgriffith$elm_ui$Internal$Model$AlignY($mdgriffith$elm_ui$Internal$Model$Bottom);
+var $mdgriffith$elm_ui$Internal$Model$Top = {$: 'Top'};
+var $mdgriffith$elm_ui$Element$alignTop = $mdgriffith$elm_ui$Internal$Model$AlignY($mdgriffith$elm_ui$Internal$Model$Top);
 var $mdgriffith$elm_ui$Internal$Model$AlignX = function (a) {
 	return {$: 'AlignX', a: a};
 };
@@ -15213,8 +15234,6 @@ var $author$project$Main$infoRow = function (model) {
 					]))
 			]));
 };
-var $mdgriffith$elm_ui$Internal$Model$Top = {$: 'Top'};
-var $mdgriffith$elm_ui$Element$alignTop = $mdgriffith$elm_ui$Internal$Model$AlignY($mdgriffith$elm_ui$Internal$Model$Top);
 var $author$project$Main$EditItem = function (a) {
 	return {$: 'EditItem', a: a};
 };
@@ -15991,6 +16010,7 @@ var $author$project$Main$storyRow = function (model) {
 };
 var $mdgriffith$elm_ui$Element$Font$typeface = $mdgriffith$elm_ui$Internal$Model$Typeface;
 var $mdgriffith$elm_ui$Element$Font$underline = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.underline);
+var $author$project$Main$EditHerocoin = {$: 'EditHerocoin'};
 var $mdgriffith$elm_ui$Element$Border$roundEach = function (_v0) {
 	var topLeft = _v0.topLeft;
 	var topRight = _v0.topRight;
@@ -16343,6 +16363,36 @@ var $author$project$Main$variablesBlocks = function (model) {
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(
 						[$mdgriffith$elm_ui$Element$centerX]),
+					$mdgriffith$elm_ui$Element$text('Herocoin: ')),
+					A2(
+					$mdgriffith$elm_ui$Element$Input$button,
+					_List_Nil,
+					{
+						label: A2(
+							$mdgriffith$elm_ui$Element$el,
+							_List_fromArray(
+								[$mdgriffith$elm_ui$Element$centerX]),
+							$mdgriffith$elm_ui$Element$text(
+								model.character.herocoin ? 'True' : 'False')),
+						onPress: $elm$core$Maybe$Just($author$project$Main$EditHerocoin)
+					})
+				])),
+			A2(
+			$mdgriffith$elm_ui$Element$row,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+					$mdgriffith$elm_ui$Element$centerX,
+					$mdgriffith$elm_ui$Element$Background$color(
+					A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$centerX]),
 					$mdgriffith$elm_ui$Element$text('† Dying?: ')),
 					A3($author$project$Main$editableNumberField, fieldStyle, model, model.character.deathtimer)
 				])),
@@ -16449,21 +16499,24 @@ var $author$project$Main$view = function (model) {
 							$mdgriffith$elm_ui$Element$column,
 							_List_fromArray(
 								[
-									A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
+									A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
+									$mdgriffith$elm_ui$Element$alignTop
 								]),
 							$author$project$Main$statBlocks(model)),
 							A2(
 							$mdgriffith$elm_ui$Element$column,
 							_List_fromArray(
 								[
-									A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
+									A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
+									$mdgriffith$elm_ui$Element$alignTop
 								]),
 							$author$project$Main$effortBlocks(model)),
 							A2(
 							$mdgriffith$elm_ui$Element$column,
 							_List_fromArray(
 								[
-									A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10)
+									A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
+									$mdgriffith$elm_ui$Element$alignTop
 								]),
 							$author$project$Main$variablesBlocks(model))
 						])),

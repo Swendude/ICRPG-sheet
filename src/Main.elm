@@ -67,6 +67,7 @@ type alias Character =
     , items : List Item
     , stats : Stats
     , coin : CharacterNumberProp
+    , herocoin : Bool
     , deathtimer : CharacterNumberProp
     }
 
@@ -234,6 +235,7 @@ tabula_rasa =
         , id = Coin
         , editvalue = 0
         }
+    , herocoin = False
     , deathtimer =
         { value = 0
         , id = Deathtimer
@@ -269,6 +271,7 @@ type Msg
     | CharacterLoaded String
     | DeleteItem
     | ScreenResize Int Int
+    | EditHerocoin
 
 
 
@@ -304,6 +307,11 @@ updateWithCommands msg model =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
+        EditHerocoin ->
+            not model.character.herocoin
+                |> asHerocoinIn model.character
+                |> asCharIn model
+
         ScreenResize h w ->
             classifyDevice { width = w, height = h }
                 |> asDeviceIn model.settings
@@ -859,9 +867,9 @@ view model =
             , infoRow model
             , storyRow model
             , row [ width fill, spacingXY 10 0, height fill ]
-                [ column [ spacingXY 0 10 ] <| statBlocks model
-                , column [ spacingXY 0 10 ] <| effortBlocks model
-                , column [ spacingXY 0 10 ] <| variablesBlocks model
+                [ column [ spacingXY 0 10, alignTop ] <| statBlocks model
+                , column [ spacingXY 0 10, alignTop ] <| effortBlocks model
+                , column [ spacingXY 0 10, alignTop ] <| variablesBlocks model
                 ]
             , row
                 [ width fill
@@ -1350,6 +1358,21 @@ variablesBlocks model =
         , editableNumberField fieldStyle model model.character.coin
         ]
     , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
+        [ el [ centerX ] <| text <| "Herocoin: "
+        , Input.button []
+            { onPress = Just EditHerocoin
+            , label =
+                el [ centerX ]
+                    (text <|
+                        if model.character.herocoin then
+                            "True"
+
+                        else
+                            "False"
+                    )
+            }
+        ]
+    , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
         [ el [ centerX ] <| text <| "† Dying?: "
         , editableNumberField fieldStyle model model.character.deathtimer
         ]
@@ -1756,6 +1779,11 @@ asCharIn model char =
     { model | character = char }
 
 
+asHerocoinIn : Character -> Bool -> Character
+asHerocoinIn char hc =
+    { char | herocoin = hc }
+
+
 asHitpointsIn : Character -> CharacterNumberProp -> Character
 asHitpointsIn char newhitpoints =
     { char | hitpoints = newhitpoints }
@@ -1901,6 +1929,7 @@ decodeCharacter =
         |> Pipeline.required "items" (decodeMaxTimes 20 decodeItem)
         |> Pipeline.required "stats" decodeStats
         |> Pipeline.required "coin" (decodeCharacterNumberProp Coin)
+        |> Pipeline.optional "herocoin" Decode.bool False
         |> Pipeline.required "deathtimer" (decodeCharacterNumberProp Deathtimer)
 
 
