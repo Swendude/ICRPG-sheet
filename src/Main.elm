@@ -12,6 +12,7 @@ import File exposing (File)
 import File.Download as Download
 import File.Select as Select
 import Html exposing (Html)
+import Html.Attributes exposing (align)
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
 import Json.Encode as Encode
@@ -124,6 +125,7 @@ type StatAttribute
     | Armor
     | Basic
     | Weapon
+    | Guns
     | Magic
     | Ultimate
     | Hearts
@@ -138,6 +140,7 @@ type alias Stats =
     , cha : Int
     , basic : Int
     , weapon : Int
+    , guns : Int
     , magic : Int
     , ultimate : Int
     , armor : Int
@@ -221,11 +224,11 @@ tabula_rasa =
         , editvalue = 0
         }
     , items =
-        [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 1) True
-        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0) True
-        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 1 0 0 0) False
+        [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 0 1) True
+        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0 0) True
+        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 1 0 0 0 0) False
         ]
-    , stats = Stats 0 0 10 0 0 0 0 0 0 0 0 1
+    , stats = Stats 0 0 10 0 0 0 0 0 0 0 0 0 1
     , coin =
         { value = 0
         , id = Coin
@@ -241,7 +244,7 @@ tabula_rasa =
 
 emptyStats : Stats
 emptyStats =
-    Stats 0 0 0 0 0 0 0 0 0 0 0 0
+    Stats 0 0 0 0 0 0 0 0 0 0 0 0 0
 
 
 type Msg
@@ -664,6 +667,9 @@ updateStat model stat value =
         Weapon ->
             { stats | weapon = value } |> statsToModel
 
+        Guns ->
+            { stats | guns = value } |> statsToModel
+
         Magic ->
             { stats | magic = value } |> statsToModel
 
@@ -735,6 +741,9 @@ updateItemStat model stat value ix =
 
                 Weapon ->
                     { stats | weapon = value } |> statsToItem ix
+
+                Guns ->
+                    { stats | guns = value } |> statsToItem ix
 
                 Magic ->
                     { stats | magic = value } |> statsToItem ix
@@ -849,21 +858,20 @@ view model =
             [ headerRow model
             , infoRow model
             , storyRow model
-            , heartRow model
-            , effortRow model
+
+            -- , heartRow model
+            -- , effortRow model
             , row [ width fill, spacingXY 10 0 ]
-                [ el
-                    [ width (fillPortion 1)
-                    , Background.color <| Element.rgb255 244 244 244
-                    , paddingXY 10 10
-                    ]
-                  <|
-                    armorBlock model "Armor" model.character.stats.armor <|
-                        .armor (totalEquippedStats model.character.items)
-                , column [ width (fillPortion 7), spacingXY 0 10 ]
-                    [ statRow1 model
-                    , statRow2 model
-                    ]
+                -- [ el
+                --     [ width (fillPortion 1)
+                --     , Background.color <| Element.rgb255 244 244 244
+                --     , paddingXY 10 10
+                --     ]
+                --   <|
+                --     armorBlock model "Armor" model.character.stats.armor <|
+                --         .armor (totalEquippedStats model.character.items)
+                [ column [ spacingXY 0 10 ] <| statBlocks model
+                , column [ spacingXY 0 10 ] <| effortBlocks model
                 ]
             , row
                 [ width fill
@@ -922,7 +930,9 @@ editStatsModal model =
                 , row [ spacingXY 10 0, centerX ]
                     [ statEditor Basic model.character.stats.basic "Basic"
                     , statEditor Weapon model.character.stats.weapon "Weapon"
+                    , statEditor Guns model.character.stats.guns "Guns"
                     , statEditor Magic model.character.stats.magic "Magic"
+                    , statEditor Ultimate model.character.stats.ultimate "Ultimate"
                     , statEditor Armor model.character.stats.armor "Armor"
                     ]
                 , row [ spacingXY 10 0, centerX ]
@@ -970,7 +980,9 @@ editItemModal model item =
                     [ statEditor Hearts item.stats.hearts "Hearts"
                     , statEditor Basic item.stats.basic "Basic"
                     , statEditor Weapon item.stats.weapon "Weapon"
+                    , statEditor Guns item.stats.weapon "Guns"
                     , statEditor Magic item.stats.magic "Magic"
+                    , statEditor Ultimate item.stats.ultimate "Ultimate"
                     , statEditor Armor item.stats.armor "Armor"
                     ]
                 , row [ spacingXY 10 0, centerX ]
@@ -1112,13 +1124,19 @@ headerRow model =
 
 infoRow : Model -> Element Msg
 infoRow model =
+    let
+        fieldStyle =
+            [ spacingXY 10 0
+            , paddingXY 30 0
+            ]
+    in
     row
         [ width fill
         , spaceEvenly
         , Background.color <| Element.rgb255 244 244 244
-        , paddingXY 10 5
+        , paddingXY 10 0
         ]
-        [ row [ spacingXY 5 0 ]
+        [ row fieldStyle
             [ el [] (text "Name :")
             , editableTextField
                 [ height (px <| 36)
@@ -1127,7 +1145,7 @@ infoRow model =
                 model.settings.editingState
                 model.character.name
             ]
-        , row [ spacingXY 5 0 ]
+        , row fieldStyle
             [ el [] (text "World :")
             , editableTextField
                 [ height (px <| 36)
@@ -1136,23 +1154,23 @@ infoRow model =
                 model.settings.editingState
                 model.character.world
             ]
-        , row [ spacingXY 5 0 ]
-            [ el [] (text "Class :")
-            , editableTextField
-                [ height (px <| 36)
-                , width <| (pickStyle model).fieldWidth
-                ]
-                model.settings.editingState
-                model.character.class
-            ]
-        , row [ spacingXY 5 0 ]
-            [ el [] (text "Bioform :")
+        , row fieldStyle
+            [ el [] (text "Lifeform :")
             , editableTextField
                 [ height (px <| 36)
                 , width <| (pickStyle model).fieldWidth
                 ]
                 model.settings.editingState
                 model.character.bioform
+            ]
+        , row fieldStyle
+            [ el [] (text "Type :")
+            , editableTextField
+                [ height (px <| 36)
+                , width <| (pickStyle model).fieldWidth
+                ]
+                model.settings.editingState
+                model.character.class
             ]
         ]
 
@@ -1166,8 +1184,8 @@ storyRow model =
         fieldStyle =
             [ Font.size (scaled model -3), height (px <| 36), width (px 600) ]
     in
-    row [ width fill, Background.color <| Element.rgb255 244 244 244, padding 10 ]
-        [ row [ spacingXY 10 0, centerX ]
+    row [ width fill, Background.color <| Element.rgb255 244 244 244, paddingXY 10 0 ]
+        [ row [ spacingXY 10 0, paddingXY 30 0, alignLeft ]
             [ el labelStyle (text "Story :")
             , editableTextField fieldStyle model.settings.editingState model.character.story
             ]
@@ -1387,12 +1405,12 @@ emptyHearts =
 
 blockRowLabelStyle : List (Attribute msg)
 blockRowLabelStyle =
-    [ centerX ]
+    [ alignLeft ]
 
 
 blockRowBlockStyle : List (Attribute msg)
 blockRowBlockStyle =
-    [ centerX ]
+    [ alignLeft ]
 
 
 blockRowStyle : List (Attribute msg)
@@ -1400,82 +1418,65 @@ blockRowStyle =
     [ spacingXY 10 0, Background.color <| Element.rgb255 244 244 244, padding 5, width (fill |> minimum 150) ]
 
 
-statRow1 : Model -> Element Msg
-statRow1 model =
-    row
-        [ width fill
-        , spacingXY 10 0
+statBlocks : Model -> List (Element Msg)
+statBlocks model =
+    [ row blockRowStyle
+        [ el blockRowLabelStyle <| text "Str"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.str <| .str (totalEquippedStats model.character.items)
         ]
-        [ row blockRowStyle
-            [ el blockRowLabelStyle <| text "Str"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.str <| .str (totalEquippedStats model.character.items)
-            ]
-        , row blockRowStyle
-            [ el blockRowLabelStyle <| text "Dex"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.dex <| .dex (totalEquippedStats model.character.items)
-            ]
-        , row blockRowStyle
-            [ el blockRowLabelStyle <| text "Con"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.con <| .con (totalEquippedStats model.character.items)
-            ]
+    , row blockRowStyle
+        [ el blockRowLabelStyle <| text "Dex"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.dex <| .dex (totalEquippedStats model.character.items)
         ]
+    , row blockRowStyle
+        [ el blockRowLabelStyle <| text "Con"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.con <| .con (totalEquippedStats model.character.items)
+        ]
+    , row blockRowStyle
+        [ el blockRowLabelStyle <| text "Int"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.int <| .int (totalEquippedStats model.character.items)
+        ]
+    , row blockRowStyle
+        [ el blockRowLabelStyle <| text "Wis"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.wis <| .wis (totalEquippedStats model.character.items)
+        ]
+    , row blockRowStyle
+        [ el blockRowLabelStyle <| text "Cha"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.cha <| .cha (totalEquippedStats model.character.items)
+        ]
+    ]
 
 
-statRow2 : Model -> Element Msg
-statRow2 model =
-    row
-        [ width fill
-        , spacingXY 10 0
+effortBlocks : Model -> List (Element Msg)
+effortBlocks model =
+    [ row blockRowStyle
+        [ el blockRowLabelStyle <| text "Basic\t(D4)"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.basic <| .basic (totalEquippedStats model.character.items)
         ]
-        [ row blockRowStyle
-            [ el blockRowLabelStyle <| text "Int"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.int <| .int (totalEquippedStats model.character.items)
-            ]
-        , row blockRowStyle
-            [ el blockRowLabelStyle <| text "Wis"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.wis <| .wis (totalEquippedStats model.character.items)
-            ]
-        , row blockRowStyle
-            [ el blockRowLabelStyle <| text "Cha"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.cha <| .cha (totalEquippedStats model.character.items)
-            ]
+    , row blockRowStyle
+        [ el blockRowLabelStyle <| text "Weapon\t(D6)"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.weapon <| .weapon (totalEquippedStats model.character.items)
         ]
-
-
-effortRow : Model -> Element Msg
-effortRow model =
-    let
-        labelStyle =
-            [ centerX, Font.size (scaled model -1) ]
-    in
-    row
-        [ width fill
-        , spacingXY 10 0
+    , row blockRowStyle
+        [ el blockRowLabelStyle <| text "Guns \t(D8)"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.guns <| .guns (totalEquippedStats model.character.items)
         ]
-        [ row blockRowStyle
-            [ el labelStyle <| text "Basic (D4)"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.basic <| .basic (totalEquippedStats model.character.items)
-            ]
-        , row blockRowStyle
-            [ el labelStyle <| text "Weapon (D6)"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.weapon <| .weapon (totalEquippedStats model.character.items)
-            ]
-        , row blockRowStyle
-            [ el labelStyle <| text "Magic (D8)"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.magic <| .magic (totalEquippedStats model.character.items)
-            ]
-        , row blockRowStyle
-            [ el labelStyle <| text "Ultimate (D12)"
-            , el blockRowBlockStyle <| statBlock model model.character.stats.ultimate <| .ultimate (totalEquippedStats model.character.items)
-            ]
-        , row [ Background.color <| Element.rgb255 244 244 244, padding 5, width (px 52) ]
-            [ el [ centerX, centerY ] <|
-                Input.button []
-                    { label = gear
-                    , onPress = Just EditBaseStats
-                    }
-            ]
+    , row blockRowStyle
+        [ el blockRowLabelStyle <| text "Magic\t(D10)"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.magic <| .magic (totalEquippedStats model.character.items)
         ]
+    , row blockRowStyle
+        [ el blockRowLabelStyle <| text "Ultimate\t(D12)"
+        , el blockRowBlockStyle <| statBlock model model.character.stats.ultimate <| .ultimate (totalEquippedStats model.character.items)
+        ]
+    , row blockRowStyle
+        [ el [ centerX, centerY ] <|
+            Input.button []
+                { label = gear
+                , onPress = Just EditBaseStats
+                }
+        ]
+    ]
 
 
 gear : Element Msg
@@ -1705,7 +1706,7 @@ armorBlock model label basestat lootstat =
 
 totalEquippedStats : List Item -> Stats
 totalEquippedStats items =
-    List.foldr sumStatsEquipped (Stats 0 0 0 0 0 0 0 0 0 0 0 0) <|
+    List.foldr sumStatsEquipped (Stats 0 0 0 0 0 0 0 0 0 0 0 0 0) <|
         List.map .stats (List.filter .equipped items)
 
 
@@ -1719,6 +1720,7 @@ sumStatsEquipped s1 s2 =
     , cha = s1.cha + s2.cha
     , basic = s1.basic + s2.basic
     , weapon = s1.weapon + s2.weapon
+    , guns = s1.guns + s2.guns
     , magic = s1.magic + s2.magic
     , ultimate = s1.ultimate + s2.ultimate
     , armor = s1.armor + s2.armor
@@ -1834,6 +1836,10 @@ encodeCharacter char =
     Encode.encode 0 <| encodeCharacterObject char
 
 
+
+-- Ordering is important here!
+
+
 encodeCharacterObject : Character -> Encode.Value
 encodeCharacterObject char =
     Encode.object
@@ -1944,6 +1950,7 @@ decodeStats =
         |> Pipeline.optional "cha" Decode.int 0
         |> Pipeline.optional "basic" Decode.int 0
         |> Pipeline.optional "weapon" Decode.int 0
+        |> Pipeline.optional "guns" Decode.int 0
         |> Pipeline.optional "magic" Decode.int 0
         |> Pipeline.optional "ultimate" Decode.int 0
         |> Pipeline.optional "armor" Decode.int 0
