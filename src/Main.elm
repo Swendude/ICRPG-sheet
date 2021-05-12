@@ -301,7 +301,11 @@ updateWithCommands msg model =
                     ( ShowError (Decode.errorToString e) |> asEditingStateIn model.settings |> asSettingsIn model, Cmd.none )
 
         _ ->
-            ( update msg model, setStorage (encodeCharacterObject model.character) )
+            let
+                newModel =
+                    update msg model
+            in
+            ( newModel, setStorage (encodeCharacterObject newModel.character) )
 
 
 update : Msg -> Model -> Model
@@ -525,9 +529,6 @@ update msg model =
             case List.Extra.getAt ix model.character.items of
                 Just item ->
                     let
-                        totalItems =
-                            List.length <| List.filter ((/=) item.equipped << .equipped) model.character.items
-
                         newItem =
                             { item | equipped = not item.equipped }
 
@@ -537,33 +538,22 @@ update msg model =
                         newItems =
                             itemsRemoved ++ [ newItem ]
                     in
-                    if totalItems < 10 then
-                        newItems
-                            |> asItemsIn model.character
-                            |> asCharIn model
-
-                    else
-                        model
+                    newItems
+                        |> asItemsIn model.character
+                        |> asCharIn model
 
                 Nothing ->
                     model
 
         NewItem equippedState ->
             let
-                totalItems =
-                    List.length <| List.filter ((==) equippedState << .equipped) model.character.items
-
                 newItem =
                     Item "Edit me!" "" emptyStats equippedState
             in
-            if totalItems < 10 then
-                model.character.items
-                    ++ [ newItem ]
-                    |> asItemsIn model.character
-                    |> asCharIn model
-
-            else
-                model
+            model.character.items
+                ++ [ newItem ]
+                |> asItemsIn model.character
+                |> asCharIn model
 
         Hovered attribute ->
             case attribute of
@@ -1934,8 +1924,8 @@ decodeCharacter =
 
 
 
--- TODO: Prevent item 'overload' (check if !> 10 for equipped and unequipped items)
--- Maybe allowing it and showing a red mark would suffice
+-- TODO:
+-- Allow arbitrarly many items, perform no checks. (due to items messing with limits)
 
 
 decodeMaxTimes : Int -> Decode.Decoder a -> Decode.Decoder (List a)
