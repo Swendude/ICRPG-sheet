@@ -12,14 +12,13 @@ import File exposing (File)
 import File.Download as Download
 import File.Select as Select
 import Html exposing (Html)
-import Html.Attributes exposing (align)
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
 import Json.Encode as Encode
 import List
 import List.Extra
 import Maybe
-import String
+import String exposing (fromInt)
 import Svg
 import Svg.Attributes
 import Task
@@ -262,6 +261,7 @@ type Msg
     | ChangeStatAttribute StatAttribute String
     | ChangeItemAttribute ItemAttribute String
     | ToggleItem Int
+    | MoveItem Int Bool
     | Hovered CharacterTextAttribute
     | Unhovered CharacterTextAttribute
     | NewItem Bool
@@ -532,11 +532,8 @@ update msg model =
                         newItem =
                             { item | equipped = not item.equipped }
 
-                        itemsRemoved =
-                            List.Extra.removeAt ix model.character.items
-
                         newItems =
-                            itemsRemoved ++ [ newItem ]
+                            List.Extra.setAt ix newItem model.character.items
                     in
                     newItems
                         |> asItemsIn model.character
@@ -544,6 +541,19 @@ update msg model =
 
                 Nothing ->
                     model
+
+        MoveItem ix up ->
+            let
+                newItems =
+                    if up then
+                        List.Extra.swapAt ix (ix + 1) model.character.items
+
+                    else
+                        List.Extra.swapAt ix (ix - 1) model.character.items
+            in
+            newItems
+                |> asItemsIn model.character
+                |> asCharIn model
 
         NewItem equippedState ->
             let
@@ -621,11 +631,6 @@ update msg model =
 
         _ ->
             model
-
-
-itemsIndexed : Bool -> List Item -> List ( Int, Item )
-itemsIndexed b =
-    List.filter ((==) b << .equipped << Tuple.second) << List.indexedMap Tuple.pair
 
 
 updateStat : Model -> StatAttribute -> Int -> Model
@@ -865,8 +870,8 @@ view model =
                 [ width fill
                 , spacingXY 10 0
                 ]
-                [ itemCol model True "Equipped " "Carry"
-                , itemCol model False "Carried " "Equip"
+                [ itemCol model
+                , el [ width fill ] <| text "placeholder"
                 ]
             , spacerRow
             , row
@@ -968,7 +973,7 @@ editItemModal model item =
                     [ statEditor Hearts item.stats.hearts "Hearts"
                     , statEditor Basic item.stats.basic "Basic"
                     , statEditor Weapon item.stats.weapon "Weapon"
-                    , statEditor Guns item.stats.weapon "Guns"
+                    , statEditor Guns item.stats.guns "Guns"
                     , statEditor Magic item.stats.magic "Magic"
                     , statEditor Ultimate item.stats.ultimate "Ultimate"
                     , statEditor Armor item.stats.armor "Armor"
@@ -1511,31 +1516,39 @@ fillListUntil filler amount list =
         list ++ List.repeat fillerCount filler
 
 
-itemCol : Model -> Bool -> String -> String -> Element Msg
-itemCol model equippedState label modifyLabel =
+itemCol : Model -> Element Msg
+itemCol model =
     column
         [ width fill
         , Element.alignTop
         , spacingXY 0 10
         , height fill
         ]
-        [ row [ width fill ]
+        [ row [ width fill, spacingXY 10 0, paddingXY 0 10 ]
             [ el
                 [ alignLeft
-                , alignTop
                 , Font.size (scaled model -1)
-                , paddingXY 0 10
                 ]
               <|
                 text
-                    (label
-                        ++ (String.fromInt <|
-                                List.length <|
-                                    itemsIndexed equippedState model.character.items
-                           )
+                    "Loot"
+            , el
+                [ Font.size (scaled model -3)
+                ]
+              <|
+                text <|
+                    "Equipped: "
+                        ++ fromInt (List.length <| List.filter .equipped model.character.items)
                         ++ "/10"
-                    )
-            , newItemButton model equippedState
+            , el
+                [ Font.size (scaled model -3)
+                ]
+              <|
+                text <|
+                    "Carried: "
+                        ++ fromInt (List.length <| List.filter (.equipped >> not) model.character.items)
+                        ++ "/10"
+            , newItemButton model
             ]
         , column
             [ width fill
@@ -1546,8 +1559,8 @@ itemCol model equippedState label modifyLabel =
             , Font.size (scaled model -1)
             ]
           <|
-            List.map (itemRow model (stateModifier modifyLabel) editModifier)
-                (itemsIndexed equippedState model.character.items)
+            List.map (itemRow model)
+                (List.indexedMap Tuple.pair model.character.items)
         ]
 
 
@@ -1559,18 +1572,10 @@ stateModifier label ix =
         }
 
 
-editModifier : Int -> Element Msg
-editModifier ix =
-    Input.button []
-        { onPress = Just <| EditItem ix
-        , label = el [] <| text "Edit"
-        }
-
-
-newItemButton : Model -> Bool -> Element Msg
-newItemButton model equipped =
+newItemButton : Model -> Element Msg
+newItemButton model =
     Input.button [ alignRight ]
-        { onPress = Just <| NewItem equipped
+        { onPress = Just <| NewItem False
         , label =
             el
                 [ width fill
@@ -1585,8 +1590,8 @@ newItemButton model equipped =
         }
 
 
-itemRow : Model -> (Int -> Element Msg) -> (Int -> Element Msg) -> ( Int, Item ) -> Element Msg
-itemRow model modifierButton editButton ( ix, item ) =
+itemRow : Model -> ( Int, Item ) -> Element Msg
+itemRow model ( ix, item ) =
     row
         [ spacingXY 10 0
         , width fill
@@ -1605,9 +1610,43 @@ itemRow model modifierButton editButton ( ix, item ) =
             List.map text <|
                 printStats item.stats
         , el [ Font.size (scaled model -2), alignTop, width fill ] <| paragraph [ width fill ] [ text item.description ]
-        , el [ alignRight ] <| editButton ix
-        , el [ alignRight ] <| modifierButton ix
+        , el [ alignRight ] <|
+            Input.button []
+                { onPress = Just <| EditItem ix
+                , label = el [] <| text "Edit"
+                }
+        , el [ alignRight, Font.size (scaled model -4) ] <|
+            Input.button []
+                { onPress = Just <| ToggleItem ix
+                , label =
+                    el [] <|
+                        text <|
+                            printEquipped item.equipped
+                }
+        , el [ alignRight, Font.size (scaled model -4) ] <|
+            Input.button []
+                { onPress = Just <| MoveItem ix False
+                , label =
+                    el [] <|
+                        text "▲"
+                }
+        , el [ alignRight, Font.size (scaled model -4) ] <|
+            Input.button []
+                { onPress = Just <| MoveItem ix True
+                , label =
+                    el [] <|
+                        text "▼"
+                }
         ]
+
+
+printEquipped : Bool -> String
+printEquipped isEquipped =
+    if isEquipped then
+        "Equipped"
+
+    else
+        "Carried"
 
 
 printStats : Stats -> List String
@@ -1925,7 +1964,8 @@ decodeCharacter =
 
 
 -- TODO:
--- Allow arbitrarly many items, perform no checks. (due to items messing with limits)
+-- Single list items
+-- Notities
 
 
 decodeMaxTimes : Int -> Decode.Decoder a -> Decode.Decoder (List a)

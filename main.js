@@ -6630,27 +6630,6 @@ var $elm_community$list_extra$List$Extra$removeAt = F2(
 			}
 		}
 	});
-var $author$project$Main$sumStatsEquipped = F2(
-	function (s1, s2) {
-		return {armor: s1.armor + s2.armor, basic: s1.basic + s2.basic, cha: s1.cha + s2.cha, con: s1.con + s2.con, dex: s1.dex + s2.dex, guns: s1.guns + s2.guns, hearts: s1.hearts + s2.hearts, _int: s1._int + s2._int, magic: s1.magic + s2.magic, str: s1.str + s2.str, ultimate: s1.ultimate + s2.ultimate, weapon: s1.weapon + s2.weapon, wis: s1.wis + s2.wis};
-	});
-var $author$project$Main$totalEquippedStats = function (items) {
-	return A3(
-		$elm$core$List$foldr,
-		$author$project$Main$sumStatsEquipped,
-		$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
-		A2(
-			$elm$core$List$map,
-			function ($) {
-				return $.stats;
-			},
-			A2(
-				$elm$core$List$filter,
-				function ($) {
-					return $.equipped;
-				},
-				items)));
-};
 var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
@@ -6683,6 +6662,100 @@ var $elm_community$list_extra$List$Extra$setAt = F2(
 			index,
 			$elm$core$Basics$always(value));
 	});
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm_community$list_extra$List$Extra$splitAt = F2(
+	function (n, xs) {
+		return _Utils_Tuple2(
+			A2($elm$core$List$take, n, xs),
+			A2($elm$core$List$drop, n, xs));
+	});
+var $elm_community$list_extra$List$Extra$uncons = function (list) {
+	if (!list.b) {
+		return $elm$core$Maybe$Nothing;
+	} else {
+		var first = list.a;
+		var rest = list.b;
+		return $elm$core$Maybe$Just(
+			_Utils_Tuple2(first, rest));
+	}
+};
+var $elm_community$list_extra$List$Extra$swapAt = F3(
+	function (index1, index2, l) {
+		swapAt:
+		while (true) {
+			if (_Utils_eq(index1, index2) || (index1 < 0)) {
+				return l;
+			} else {
+				if (_Utils_cmp(index1, index2) > 0) {
+					var $temp$index1 = index2,
+						$temp$index2 = index1,
+						$temp$l = l;
+					index1 = $temp$index1;
+					index2 = $temp$index2;
+					l = $temp$l;
+					continue swapAt;
+				} else {
+					var _v0 = A2($elm_community$list_extra$List$Extra$splitAt, index1, l);
+					var part1 = _v0.a;
+					var tail1 = _v0.b;
+					var _v1 = A2($elm_community$list_extra$List$Extra$splitAt, index2 - index1, tail1);
+					var head2 = _v1.a;
+					var tail2 = _v1.b;
+					var _v2 = _Utils_Tuple2(
+						$elm_community$list_extra$List$Extra$uncons(head2),
+						$elm_community$list_extra$List$Extra$uncons(tail2));
+					if ((_v2.a.$ === 'Just') && (_v2.b.$ === 'Just')) {
+						var _v3 = _v2.a.a;
+						var value1 = _v3.a;
+						var part2 = _v3.b;
+						var _v4 = _v2.b.a;
+						var value2 = _v4.a;
+						var part3 = _v4.b;
+						return $elm$core$List$concat(
+							_List_fromArray(
+								[
+									part1,
+									A2($elm$core$List$cons, value2, part2),
+									A2($elm$core$List$cons, value1, part3)
+								]));
+					} else {
+						return l;
+					}
+				}
+			}
+		}
+	});
+var $author$project$Main$sumStatsEquipped = F2(
+	function (s1, s2) {
+		return {armor: s1.armor + s2.armor, basic: s1.basic + s2.basic, cha: s1.cha + s2.cha, con: s1.con + s2.con, dex: s1.dex + s2.dex, guns: s1.guns + s2.guns, hearts: s1.hearts + s2.hearts, _int: s1._int + s2._int, magic: s1.magic + s2.magic, str: s1.str + s2.str, ultimate: s1.ultimate + s2.ultimate, weapon: s1.weapon + s2.weapon, wis: s1.wis + s2.wis};
+	});
+var $author$project$Main$totalEquippedStats = function (items) {
+	return A3(
+		$elm$core$List$foldr,
+		$author$project$Main$sumStatsEquipped,
+		$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+		A2(
+			$elm$core$List$map,
+			function ($) {
+				return $.stats;
+			},
+			A2(
+				$elm$core$List$filter,
+				function ($) {
+					return $.equipped;
+				},
+				items)));
+};
 var $author$project$Main$updateItemAttribute = F4(
 	function (model, attr, value, ix) {
 		var _v0 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
@@ -7216,11 +7289,7 @@ var $author$project$Main$update = F2(
 					var newItem = _Utils_update(
 						item,
 						{equipped: !item.equipped});
-					var itemsRemoved = A2($elm_community$list_extra$List$Extra$removeAt, ix, model.character.items);
-					var newItems = _Utils_ap(
-						itemsRemoved,
-						_List_fromArray(
-							[newItem]));
+					var newItems = A3($elm_community$list_extra$List$Extra$setAt, ix, newItem, model.character.items);
 					return A2(
 						$author$project$Main$asCharIn,
 						model,
@@ -7228,6 +7297,14 @@ var $author$project$Main$update = F2(
 				} else {
 					return model;
 				}
+			case 'MoveItem':
+				var ix = msg.a;
+				var up = msg.b;
+				var newItems = up ? A3($elm_community$list_extra$List$Extra$swapAt, ix, ix + 1, model.character.items) : A3($elm_community$list_extra$List$Extra$swapAt, ix, ix - 1, model.character.items);
+				return A2(
+					$author$project$Main$asCharIn,
+					model,
+					A2($author$project$Main$asItemsIn, model.character, newItems));
 			case 'NewItem':
 				var equippedState = msg.a;
 				var newItem = A4($author$project$Main$Item, 'Edit me!', '', $author$project$Main$emptyStats, equippedState);
@@ -8005,17 +8082,6 @@ var $mdgriffith$elm_ui$Internal$Style$CenterY = {$: 'CenterY'};
 var $mdgriffith$elm_ui$Internal$Style$Top = {$: 'Top'};
 var $mdgriffith$elm_ui$Internal$Style$alignments = _List_fromArray(
 	[$mdgriffith$elm_ui$Internal$Style$Top, $mdgriffith$elm_ui$Internal$Style$Bottom, $mdgriffith$elm_ui$Internal$Style$Right, $mdgriffith$elm_ui$Internal$Style$Left, $mdgriffith$elm_ui$Internal$Style$CenterX, $mdgriffith$elm_ui$Internal$Style$CenterY]);
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
-};
 var $elm$core$List$concatMap = F2(
 	function (f, list) {
 		return $elm$core$List$concat(
@@ -14336,7 +14402,7 @@ var $author$project$Main$editItemModal = F2(
 									A3($author$project$Main$statEditor, $author$project$Main$Hearts, item.stats.hearts, 'Hearts'),
 									A3($author$project$Main$statEditor, $author$project$Main$Basic, item.stats.basic, 'Basic'),
 									A3($author$project$Main$statEditor, $author$project$Main$Weapon, item.stats.weapon, 'Weapon'),
-									A3($author$project$Main$statEditor, $author$project$Main$Guns, item.stats.weapon, 'Guns'),
+									A3($author$project$Main$statEditor, $author$project$Main$Guns, item.stats.guns, 'Guns'),
 									A3($author$project$Main$statEditor, $author$project$Main$Magic, item.stats.magic, 'Magic'),
 									A3($author$project$Main$statEditor, $author$project$Main$Ultimate, item.stats.ultimate, 'Ultimate'),
 									A3($author$project$Main$statEditor, $author$project$Main$Armor, item.stats.armor, 'Armor')
@@ -15213,21 +15279,20 @@ var $author$project$Main$infoRow = function (model) {
 					]))
 			]));
 };
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
 var $author$project$Main$EditItem = function (a) {
 	return {$: 'EditItem', a: a};
 };
-var $author$project$Main$editModifier = function (ix) {
-	return A2(
-		$mdgriffith$elm_ui$Element$Input$button,
-		_List_Nil,
-		{
-			label: A2(
-				$mdgriffith$elm_ui$Element$el,
-				_List_Nil,
-				$mdgriffith$elm_ui$Element$text('Edit')),
-			onPress: $elm$core$Maybe$Just(
-				$author$project$Main$EditItem(ix))
-		});
+var $author$project$Main$MoveItem = F2(
+	function (a, b) {
+		return {$: 'MoveItem', a: a, b: b};
+	});
+var $author$project$Main$ToggleItem = function (a) {
+	return {$: 'ToggleItem', a: a};
 };
 var $mdgriffith$elm_ui$Internal$Flag$fontWeight = $mdgriffith$elm_ui$Internal$Flag$flag(13);
 var $mdgriffith$elm_ui$Element$Font$bold = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$fontWeight, $mdgriffith$elm_ui$Internal$Style$classes.bold);
@@ -15250,6 +15315,9 @@ var $mdgriffith$elm_ui$Element$paragraph = F2(
 						attrs))),
 			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
 	});
+var $author$project$Main$printEquipped = function (isEquipped) {
+	return isEquipped ? 'Equipped' : 'Carried';
+};
 var $author$project$Main$printStat = function (val_stat) {
 	var val = val_stat.a;
 	var stat = val_stat.b;
@@ -15280,8 +15348,8 @@ var $author$project$Main$printStats = function (stats) {
 					_Utils_Tuple2('Heart', stats.hearts)
 				])));
 };
-var $author$project$Main$itemRow = F4(
-	function (model, modifierButton, editButton, _v0) {
+var $author$project$Main$itemRow = F2(
+	function (model, _v0) {
 		var ix = _v0.a;
 		var item = _v0.b;
 		return A2(
@@ -15339,137 +15407,194 @@ var $author$project$Main$itemRow = F4(
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(
 						[$mdgriffith$elm_ui$Element$alignRight]),
-					editButton(ix)),
+					A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_List_Nil,
+						{
+							label: A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_Nil,
+								$mdgriffith$elm_ui$Element$text('Edit')),
+							onPress: $elm$core$Maybe$Just(
+								$author$project$Main$EditItem(ix))
+						})),
 					A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_fromArray(
-						[$mdgriffith$elm_ui$Element$alignRight]),
-					modifierButton(ix))
+						[
+							$mdgriffith$elm_ui$Element$alignRight,
+							$mdgriffith$elm_ui$Element$Font$size(
+							A2($author$project$Main$scaled, model, -4))
+						]),
+					A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_List_Nil,
+						{
+							label: A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_Nil,
+								$mdgriffith$elm_ui$Element$text(
+									$author$project$Main$printEquipped(item.equipped))),
+							onPress: $elm$core$Maybe$Just(
+								$author$project$Main$ToggleItem(ix))
+						})),
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$alignRight,
+							$mdgriffith$elm_ui$Element$Font$size(
+							A2($author$project$Main$scaled, model, -4))
+						]),
+					A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_List_Nil,
+						{
+							label: A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_Nil,
+								$mdgriffith$elm_ui$Element$text('▲')),
+							onPress: $elm$core$Maybe$Just(
+								A2($author$project$Main$MoveItem, ix, false))
+						})),
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$alignRight,
+							$mdgriffith$elm_ui$Element$Font$size(
+							A2($author$project$Main$scaled, model, -4))
+						]),
+					A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_List_Nil,
+						{
+							label: A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_Nil,
+								$mdgriffith$elm_ui$Element$text('▼')),
+							onPress: $elm$core$Maybe$Just(
+								A2($author$project$Main$MoveItem, ix, true))
+						}))
 				]));
 	});
+var $author$project$Main$NewItem = function (a) {
+	return {$: 'NewItem', a: a};
+};
+var $author$project$Main$newItemButton = function (model) {
+	return A2(
+		$mdgriffith$elm_ui$Element$Input$button,
+		_List_fromArray(
+			[$mdgriffith$elm_ui$Element$alignRight]),
+		{
+			label: A2(
+				$mdgriffith$elm_ui$Element$el,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+						$mdgriffith$elm_ui$Element$Border$width(1),
+						$mdgriffith$elm_ui$Element$padding(5),
+						$mdgriffith$elm_ui$Element$Border$dotted,
+						$mdgriffith$elm_ui$Element$Font$center,
+						$mdgriffith$elm_ui$Element$Font$size(
+						A2($author$project$Main$scaled, model, -2))
+					]),
+				$mdgriffith$elm_ui$Element$text('Add item')),
+			onPress: $elm$core$Maybe$Just(
+				$author$project$Main$NewItem(false))
+		});
+};
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
 	});
-var $author$project$Main$itemsIndexed = function (b) {
+var $author$project$Main$itemCol = function (model) {
 	return A2(
-		$elm$core$Basics$composeL,
-		$elm$core$List$filter(
-			A2(
-				$elm$core$Basics$composeL,
+		$mdgriffith$elm_ui$Element$column,
+		_List_fromArray(
+			[
+				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$alignTop,
+				A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
+				$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
+			]),
+		_List_fromArray(
+			[
 				A2(
-					$elm$core$Basics$composeL,
-					$elm$core$Basics$eq(b),
-					function ($) {
-						return $.equipped;
-					}),
-				$elm$core$Tuple$second)),
-		$elm$core$List$indexedMap($elm$core$Tuple$pair));
+				$mdgriffith$elm_ui$Element$row,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+						A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+						A2($mdgriffith$elm_ui$Element$paddingXY, 0, 10)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$el,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$alignLeft,
+								$mdgriffith$elm_ui$Element$Font$size(
+								A2($author$project$Main$scaled, model, -1))
+							]),
+						$mdgriffith$elm_ui$Element$text('Loot')),
+						A2(
+						$mdgriffith$elm_ui$Element$el,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$Font$size(
+								A2($author$project$Main$scaled, model, -3))
+							]),
+						$mdgriffith$elm_ui$Element$text(
+							'Equipped: ' + ($elm$core$String$fromInt(
+								$elm$core$List$length(
+									A2(
+										$elm$core$List$filter,
+										function ($) {
+											return $.equipped;
+										},
+										model.character.items))) + '/10'))),
+						A2(
+						$mdgriffith$elm_ui$Element$el,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$Font$size(
+								A2($author$project$Main$scaled, model, -3))
+							]),
+						$mdgriffith$elm_ui$Element$text(
+							'Carried: ' + ($elm$core$String$fromInt(
+								$elm$core$List$length(
+									A2(
+										$elm$core$List$filter,
+										A2(
+											$elm$core$Basics$composeR,
+											function ($) {
+												return $.equipped;
+											},
+											$elm$core$Basics$not),
+										model.character.items))) + '/10'))),
+						$author$project$Main$newItemButton(model)
+					])),
+				A2(
+				$mdgriffith$elm_ui$Element$column,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+						A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
+						A2($mdgriffith$elm_ui$Element$paddingXY, 10, 10),
+						$mdgriffith$elm_ui$Element$Background$color(
+						A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244)),
+						$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+						$mdgriffith$elm_ui$Element$Font$size(
+						A2($author$project$Main$scaled, model, -1))
+					]),
+				A2(
+					$elm$core$List$map,
+					$author$project$Main$itemRow(model),
+					A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, model.character.items)))
+			]));
 };
-var $author$project$Main$NewItem = function (a) {
-	return {$: 'NewItem', a: a};
-};
-var $author$project$Main$newItemButton = F2(
-	function (model, equipped) {
-		return A2(
-			$mdgriffith$elm_ui$Element$Input$button,
-			_List_fromArray(
-				[$mdgriffith$elm_ui$Element$alignRight]),
-			{
-				label: A2(
-					$mdgriffith$elm_ui$Element$el,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-							$mdgriffith$elm_ui$Element$Border$width(1),
-							$mdgriffith$elm_ui$Element$padding(5),
-							$mdgriffith$elm_ui$Element$Border$dotted,
-							$mdgriffith$elm_ui$Element$Font$center,
-							$mdgriffith$elm_ui$Element$Font$size(
-							A2($author$project$Main$scaled, model, -2))
-						]),
-					$mdgriffith$elm_ui$Element$text('Add item')),
-				onPress: $elm$core$Maybe$Just(
-					$author$project$Main$NewItem(equipped))
-			});
-	});
-var $author$project$Main$ToggleItem = function (a) {
-	return {$: 'ToggleItem', a: a};
-};
-var $author$project$Main$stateModifier = F2(
-	function (label, ix) {
-		return A2(
-			$mdgriffith$elm_ui$Element$Input$button,
-			_List_Nil,
-			{
-				label: A2(
-					$mdgriffith$elm_ui$Element$el,
-					_List_Nil,
-					$mdgriffith$elm_ui$Element$text(label)),
-				onPress: $elm$core$Maybe$Just(
-					$author$project$Main$ToggleItem(ix))
-			});
-	});
-var $author$project$Main$itemCol = F4(
-	function (model, equippedState, label, modifyLabel) {
-		return A2(
-			$mdgriffith$elm_ui$Element$column,
-			_List_fromArray(
-				[
-					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-					$mdgriffith$elm_ui$Element$alignTop,
-					A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
-					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$row,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$mdgriffith$elm_ui$Element$el,
-							_List_fromArray(
-								[
-									$mdgriffith$elm_ui$Element$alignLeft,
-									$mdgriffith$elm_ui$Element$alignTop,
-									$mdgriffith$elm_ui$Element$Font$size(
-									A2($author$project$Main$scaled, model, -1)),
-									A2($mdgriffith$elm_ui$Element$paddingXY, 0, 10)
-								]),
-							$mdgriffith$elm_ui$Element$text(
-								label + ($elm$core$String$fromInt(
-									$elm$core$List$length(
-										A2($author$project$Main$itemsIndexed, equippedState, model.character.items))) + '/10'))),
-							A2($author$project$Main$newItemButton, model, equippedState)
-						])),
-					A2(
-					$mdgriffith$elm_ui$Element$column,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-							A2($mdgriffith$elm_ui$Element$spacingXY, 0, 10),
-							A2($mdgriffith$elm_ui$Element$paddingXY, 10, 10),
-							$mdgriffith$elm_ui$Element$Background$color(
-							A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244)),
-							$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
-							$mdgriffith$elm_ui$Element$Font$size(
-							A2($author$project$Main$scaled, model, -1))
-						]),
-					A2(
-						$elm$core$List$map,
-						A3(
-							$author$project$Main$itemRow,
-							model,
-							$author$project$Main$stateModifier(modifyLabel),
-							$author$project$Main$editModifier),
-						A2($author$project$Main$itemsIndexed, equippedState, model.character.items)))
-				]));
-	});
 var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
 	function (a, b) {
 		return {$: 'OnlyDynamic', a: a, b: b};
@@ -16508,8 +16633,14 @@ var $author$project$Main$view = function (model) {
 						]),
 					_List_fromArray(
 						[
-							A4($author$project$Main$itemCol, model, true, 'Equipped ', 'Carry'),
-							A4($author$project$Main$itemCol, model, false, 'Carried ', 'Equip')
+							$author$project$Main$itemCol(model),
+							A2(
+							$mdgriffith$elm_ui$Element$el,
+							_List_fromArray(
+								[
+									$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+								]),
+							$mdgriffith$elm_ui$Element$text('placeholder'))
 						])),
 					$author$project$Main$spacerRow,
 					A2(
