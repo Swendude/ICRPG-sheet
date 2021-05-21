@@ -5456,10 +5456,8 @@ var $author$project$Main$Stats = function (str) {
 								return function (guns) {
 									return function (magic) {
 										return function (ultimate) {
-											return function (armor) {
-												return function (hearts) {
-													return {armor: armor, basic: basic, cha: cha, con: con, dex: dex, guns: guns, hearts: hearts, _int: _int, magic: magic, str: str, ultimate: ultimate, weapon: weapon, wis: wis};
-												};
+											return function (hearts) {
+												return {basic: basic, cha: cha, con: con, dex: dex, guns: guns, hearts: hearts, _int: _int, magic: magic, str: str, ultimate: ultimate, weapon: weapon, wis: wis};
 											};
 										};
 									};
@@ -5529,65 +5527,60 @@ var $author$project$Main$decodeStats = A4(
 	0,
 	A4(
 		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-		'armor',
+		'ultimate',
 		$elm$json$Json$Decode$int,
 		0,
 		A4(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-			'ultimate',
+			'magic',
 			$elm$json$Json$Decode$int,
 			0,
 			A4(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-				'magic',
+				'guns',
 				$elm$json$Json$Decode$int,
 				0,
 				A4(
 					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-					'guns',
+					'weapon',
 					$elm$json$Json$Decode$int,
 					0,
 					A4(
 						$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-						'weapon',
+						'basic',
 						$elm$json$Json$Decode$int,
 						0,
 						A4(
 							$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-							'basic',
+							'cha',
 							$elm$json$Json$Decode$int,
 							0,
 							A4(
 								$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-								'cha',
+								'int',
 								$elm$json$Json$Decode$int,
 								0,
 								A4(
 									$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-									'int',
+									'wis',
 									$elm$json$Json$Decode$int,
 									0,
 									A4(
 										$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-										'wis',
+										'con',
 										$elm$json$Json$Decode$int,
 										0,
 										A4(
 											$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-											'con',
+											'dex',
 											$elm$json$Json$Decode$int,
 											0,
 											A4(
 												$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-												'dex',
+												'str',
 												$elm$json$Json$Decode$int,
 												0,
-												A4(
-													$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-													'str',
-													$elm$json$Json$Decode$int,
-													0,
-													$elm$json$Json$Decode$succeed($author$project$Main$Stats))))))))))))));
+												$elm$json$Json$Decode$succeed($author$project$Main$Stats)))))))))))));
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 	function (key, valDecoder, decoder) {
 		return A2(
@@ -5689,23 +5682,23 @@ var $author$project$Main$tabula_rasa = {
 			$author$project$Main$Item,
 			'Heartstone',
 			'Adds 1 heart',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
 			true),
 			A4(
 			$author$project$Main$Item,
 			'Sword',
 			'Makes you strong!',
-			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+			$author$project$Main$Stats(1)(1)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
 			true),
 			A4(
 			$author$project$Main$Item,
 			'Heal',
 			'Wis Spell: Heal an ally',
-			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(1)(0)(0)(0)(0),
+			$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(1)(0)(0)(0),
 			false)
 		]),
 	name: {hovered: false, id: $author$project$Main$Name, value: 'Thuldir'},
-	stats: $author$project$Main$Stats(0)(0)(10)(0)(0)(0)(0)(0)(0)(0)(0)(0)(1),
+	stats: $author$project$Main$Stats(0)(0)(10)(0)(0)(0)(0)(0)(0)(0)(0)(1),
 	story: {hovered: false, id: $author$project$Main$Story, value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'},
 	world: {hovered: false, id: $author$project$Main$World, value: 'Alfheim'}
 };
@@ -6245,7 +6238,6 @@ var $author$project$Main$encodeStats = function (stats) {
 						_Utils_Tuple2('weapon', stats.weapon),
 						_Utils_Tuple2('magic', stats.magic),
 						_Utils_Tuple2('ultimate', stats.ultimate),
-						_Utils_Tuple2('armor', stats.armor),
 						_Utils_Tuple2('hearts', stats.hearts)
 					]))));
 };
@@ -6451,7 +6443,7 @@ var $author$project$Main$asWorldIn = F2(
 			_char,
 			{world: newworld});
 	});
-var $author$project$Main$emptyStats = $author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0);
+var $author$project$Main$emptyStats = $author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0);
 var $elm$core$List$drop = F2(
 	function (n, list) {
 		drop:
@@ -6737,13 +6729,13 @@ var $elm_community$list_extra$List$Extra$swapAt = F3(
 	});
 var $author$project$Main$sumStatsEquipped = F2(
 	function (s1, s2) {
-		return {armor: s1.armor + s2.armor, basic: s1.basic + s2.basic, cha: s1.cha + s2.cha, con: s1.con + s2.con, dex: s1.dex + s2.dex, guns: s1.guns + s2.guns, hearts: s1.hearts + s2.hearts, _int: s1._int + s2._int, magic: s1.magic + s2.magic, str: s1.str + s2.str, ultimate: s1.ultimate + s2.ultimate, weapon: s1.weapon + s2.weapon, wis: s1.wis + s2.wis};
+		return {basic: s1.basic + s2.basic, cha: s1.cha + s2.cha, con: s1.con + s2.con, dex: s1.dex + s2.dex, guns: s1.guns + s2.guns, hearts: s1.hearts + s2.hearts, _int: s1._int + s2._int, magic: s1.magic + s2.magic, str: s1.str + s2.str, ultimate: s1.ultimate + s2.ultimate, weapon: s1.weapon + s2.weapon, wis: s1.wis + s2.wis};
 	});
 var $author$project$Main$totalEquippedStats = function (items) {
 	return A3(
 		$elm$core$List$foldr,
 		$author$project$Main$sumStatsEquipped,
-		$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
+		$author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0),
 		A2(
 			$elm$core$List$map,
 			function ($) {
@@ -6855,13 +6847,6 @@ var $author$project$Main$updateItemStat = F4(
 						_Utils_update(
 							stats,
 							{cha: value}));
-				case 'Armor':
-					return A2(
-						statsToItem,
-						ix,
-						_Utils_update(
-							stats,
-							{armor: value}));
 				case 'Basic':
 					return A2(
 						statsToItem,
@@ -6955,11 +6940,6 @@ var $author$project$Main$updateStat = F3(
 					_Utils_update(
 						stats,
 						{cha: value}));
-			case 'Armor':
-				return statsToModel(
-					_Utils_update(
-						stats,
-						{armor: value}));
 			case 'Basic':
 				return statsToModel(
 					_Utils_update(
@@ -12972,7 +12952,6 @@ var $mdgriffith$elm_ui$Element$column = F2(
 						attrs))),
 			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
 	});
-var $author$project$Main$Armor = {$: 'Armor'};
 var $author$project$Main$Basic = {$: 'Basic'};
 var $author$project$Main$Cha = {$: 'Cha'};
 var $author$project$Main$Con = {$: 'Con'};
@@ -14404,8 +14383,7 @@ var $author$project$Main$editItemModal = F2(
 									A3($author$project$Main$statEditor, $author$project$Main$Weapon, item.stats.weapon, 'Weapon'),
 									A3($author$project$Main$statEditor, $author$project$Main$Guns, item.stats.guns, 'Guns'),
 									A3($author$project$Main$statEditor, $author$project$Main$Magic, item.stats.magic, 'Magic'),
-									A3($author$project$Main$statEditor, $author$project$Main$Ultimate, item.stats.ultimate, 'Ultimate'),
-									A3($author$project$Main$statEditor, $author$project$Main$Armor, item.stats.armor, 'Armor')
+									A3($author$project$Main$statEditor, $author$project$Main$Ultimate, item.stats.ultimate, 'Ultimate')
 								])),
 							A2(
 							$mdgriffith$elm_ui$Element$row,
@@ -14552,8 +14530,7 @@ var $author$project$Main$editStatsModal = function (model) {
 								A3($author$project$Main$statEditor, $author$project$Main$Weapon, model.character.stats.weapon, 'Weapon'),
 								A3($author$project$Main$statEditor, $author$project$Main$Guns, model.character.stats.guns, 'Guns'),
 								A3($author$project$Main$statEditor, $author$project$Main$Magic, model.character.stats.magic, 'Magic'),
-								A3($author$project$Main$statEditor, $author$project$Main$Ultimate, model.character.stats.ultimate, 'Ultimate'),
-								A3($author$project$Main$statEditor, $author$project$Main$Armor, model.character.stats.armor, 'Armor')
+								A3($author$project$Main$statEditor, $author$project$Main$Ultimate, model.character.stats.ultimate, 'Ultimate')
 							])),
 						A2(
 						$mdgriffith$elm_ui$Element$row,
@@ -15344,7 +15321,6 @@ var $author$project$Main$printStats = function (stats) {
 					_Utils_Tuple2('Weapon', stats.weapon),
 					_Utils_Tuple2('Magic', stats.magic),
 					_Utils_Tuple2('Ultimate', stats.ultimate),
-					_Utils_Tuple2('Armor', stats.armor),
 					_Utils_Tuple2('Heart', stats.hearts)
 				])));
 };
@@ -16115,71 +16091,6 @@ var $author$project$Main$storyRow = function (model) {
 var $mdgriffith$elm_ui$Element$Font$typeface = $mdgriffith$elm_ui$Internal$Model$Typeface;
 var $mdgriffith$elm_ui$Element$Font$underline = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.underline);
 var $author$project$Main$EditHerocoin = {$: 'EditHerocoin'};
-var $mdgriffith$elm_ui$Element$Border$roundEach = function (_v0) {
-	var topLeft = _v0.topLeft;
-	var topRight = _v0.topRight;
-	var bottomLeft = _v0.bottomLeft;
-	var bottomRight = _v0.bottomRight;
-	return A2(
-		$mdgriffith$elm_ui$Internal$Model$StyleClass,
-		$mdgriffith$elm_ui$Internal$Flag$borderRound,
-		A3(
-			$mdgriffith$elm_ui$Internal$Model$Single,
-			'br-' + ($elm$core$String$fromInt(topLeft) + ('-' + ($elm$core$String$fromInt(topRight) + ($elm$core$String$fromInt(bottomLeft) + ('-' + $elm$core$String$fromInt(bottomRight)))))),
-			'border-radius',
-			$elm$core$String$fromInt(topLeft) + ('px ' + ($elm$core$String$fromInt(topRight) + ('px ' + ($elm$core$String$fromInt(bottomRight) + ('px ' + ($elm$core$String$fromInt(bottomLeft) + 'px'))))))));
-};
-var $author$project$Main$armorBlock = F4(
-	function (model, label, basestat, lootstat) {
-		return A2(
-			$mdgriffith$elm_ui$Element$column,
-			_List_fromArray(
-				[
-					$mdgriffith$elm_ui$Element$spacing(5),
-					$mdgriffith$elm_ui$Element$centerX
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$el,
-					_List_fromArray(
-						[
-							A2($mdgriffith$elm_ui$Element$paddingXY, 5, 5),
-							$mdgriffith$elm_ui$Element$centerX,
-							$mdgriffith$elm_ui$Element$Border$widthEach(
-							{bottom: 3, left: 1, right: 1, top: 1}),
-							$mdgriffith$elm_ui$Element$Border$roundEach(
-							{bottomLeft: 25, bottomRight: 25, topLeft: 3, topRight: 3}),
-							$mdgriffith$elm_ui$Element$Background$color(
-							A3($mdgriffith$elm_ui$Element$rgb255, 255, 255, 255))
-						]),
-					$mdgriffith$elm_ui$Element$text(
-						$elm$core$String$fromInt((lootstat + basestat) + 10))),
-					A2(
-					$mdgriffith$elm_ui$Element$el,
-					_List_fromArray(
-						[$mdgriffith$elm_ui$Element$centerX]),
-					$mdgriffith$elm_ui$Element$text(label)),
-					A2(
-					$mdgriffith$elm_ui$Element$row,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$centerX,
-							$mdgriffith$elm_ui$Element$Font$size(
-							A2($author$project$Main$scaled, model, -3))
-						]),
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$text('Base '),
-							$mdgriffith$elm_ui$Element$text(
-							$elm$core$String$fromInt(basestat)),
-							$mdgriffith$elm_ui$Element$text(' '),
-							$mdgriffith$elm_ui$Element$text('Loot '),
-							$mdgriffith$elm_ui$Element$text(
-							$elm$core$String$fromInt(lootstat))
-						]))
-				]));
-	});
 var $author$project$Main$DecreaseNumberAttribute = {$: 'DecreaseNumberAttribute'};
 var $author$project$Main$EditNumber = function (a) {
 	return {$: 'EditNumber', a: a};
@@ -16499,28 +16410,6 @@ var $author$project$Main$variablesBlocks = function (model) {
 						[$mdgriffith$elm_ui$Element$centerX]),
 					$mdgriffith$elm_ui$Element$text('† Dying?: ')),
 					A3($author$project$Main$editableNumberField, fieldStyle, model, model.character.deathtimer)
-				])),
-			A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_fromArray(
-				[
-					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-					$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
-					$mdgriffith$elm_ui$Element$centerX,
-					$mdgriffith$elm_ui$Element$Background$color(
-					A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244))
-				]),
-			_List_fromArray(
-				[
-					A4(
-					$author$project$Main$armorBlock,
-					model,
-					'Armor',
-					model.character.stats.armor,
-					function ($) {
-						return $.armor;
-					}(
-						$author$project$Main$totalEquippedStats(model.character.items)))
 				]))
 		]);
 };

@@ -118,11 +118,10 @@ type CharacterNumberAttribute
 type StatAttribute
     = Str
     | Dex
-    | Con
     | Wis
+    | Con
     | Int
     | Cha
-    | Armor
     | Basic
     | Weapon
     | Guns
@@ -143,7 +142,6 @@ type alias Stats =
     , guns : Int
     , magic : Int
     , ultimate : Int
-    , armor : Int
     , hearts : Int
     }
 
@@ -224,11 +222,11 @@ tabula_rasa =
         , editvalue = 0
         }
     , items =
-        [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0 0 1) True
-        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0 0 0) True
-        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 1 0 0 0 0) False
+        [ Item "Heartstone" "Adds 1 heart" (Stats 0 0 0 0 0 0 0 0 0 0 0  1) True
+        , Item "Sword" "Makes you strong!" (Stats 1 1 0 0 0 0 0 0 0 0 0  0) True
+        , Item "Heal" "Wis Spell: Heal an ally" (Stats 0 0 0 0 0 0 0 0 1 0 0  0) False
         ]
-    , stats = Stats 0 0 10 0 0 0 0 0 0 0 0 0 1
+    , stats = Stats 0 0 10 0 0 0 0 0 0 0 0  1
     , coin =
         { value = 0
         , id = Coin
@@ -245,7 +243,7 @@ tabula_rasa =
 
 emptyStats : Stats
 emptyStats =
-    Stats 0 0 0 0 0 0 0 0 0 0 0 0 0
+    Stats 0 0 0 0 0 0 0 0 0  0 0 0
 
 
 type Msg
@@ -661,9 +659,6 @@ updateStat model stat value =
         Cha ->
             { stats | cha = value } |> statsToModel
 
-        Armor ->
-            { stats | armor = value } |> statsToModel
-
         Basic ->
             { stats | basic = value } |> statsToModel
 
@@ -735,9 +730,6 @@ updateItemStat model stat value ix =
 
                 Cha ->
                     { stats | cha = value } |> statsToItem ix
-
-                Armor ->
-                    { stats | armor = value } |> statsToItem ix
 
                 Basic ->
                     { stats | basic = value } |> statsToItem ix
@@ -926,7 +918,6 @@ editStatsModal model =
                     , statEditor Guns model.character.stats.guns "Guns"
                     , statEditor Magic model.character.stats.magic "Magic"
                     , statEditor Ultimate model.character.stats.ultimate "Ultimate"
-                    , statEditor Armor model.character.stats.armor "Armor"
                     ]
                 , row [ spacingXY 10 0, centerX ]
                     [ statEditor Str model.character.stats.str "Str"
@@ -976,7 +967,6 @@ editItemModal model item =
                     , statEditor Guns item.stats.guns "Guns"
                     , statEditor Magic item.stats.magic "Magic"
                     , statEditor Ultimate item.stats.ultimate "Ultimate"
-                    , statEditor Armor item.stats.armor "Armor"
                     ]
                 , row [ spacingXY 10 0, centerX ]
                     [ statEditor Str item.stats.str "Str"
@@ -1371,10 +1361,10 @@ variablesBlocks model =
         [ el [ centerX ] <| text <| "† Dying?: "
         , editableNumberField fieldStyle model model.character.deathtimer
         ]
-    , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
-        [ armorBlock model "Armor" model.character.stats.armor <|
-            .armor (totalEquippedStats model.character.items)
-        ]
+    -- , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
+    --     [ armorBlock model "Armor" model.character.stats.armor <|
+    --         .armor (totalEquippedStats model.character.items)
+    --     ]
     ]
 
 
@@ -1663,7 +1653,6 @@ printStats stats =
             , ( "Weapon", stats.weapon )
             , ( "Magic", stats.magic )
             , ( "Ultimate", stats.ultimate )
-            , ( "Armor", stats.armor )
             , ( "Heart", stats.hearts )
             ]
 
@@ -1747,7 +1736,7 @@ armorBlock model label basestat lootstat =
 
 totalEquippedStats : List Item -> Stats
 totalEquippedStats items =
-    List.foldr sumStatsEquipped (Stats 0 0 0 0 0 0 0 0 0 0 0 0 0) <|
+    List.foldr sumStatsEquipped (Stats 0 0 0 0 0 0 0 0 0 0  0 0) <|
         List.map .stats (List.filter .equipped items)
 
 
@@ -1764,7 +1753,6 @@ sumStatsEquipped s1 s2 =
     , guns = s1.guns + s2.guns
     , magic = s1.magic + s2.magic
     , ultimate = s1.ultimate + s2.ultimate
-    , armor = s1.armor + s2.armor
     , hearts = s1.hearts + s2.hearts
     }
 
@@ -1927,7 +1915,7 @@ encodeStats stats =
                 , ( "weapon", stats.weapon )
                 , ( "magic", stats.magic )
                 , ( "ultimate", stats.ultimate )
-                , ( "armor", stats.armor )
+                
                 , ( "hearts", stats.hearts )
                 ]
 
@@ -1962,10 +1950,6 @@ decodeCharacter =
         |> Pipeline.required "deathtimer" (decodeCharacterNumberProp Deathtimer)
 
 
-
--- TODO:
--- Single list items
--- Notities
 
 
 decodeMaxTimes : Int -> Decode.Decoder a -> Decode.Decoder (List a)
@@ -2006,7 +1990,7 @@ decodeStats =
         |> Pipeline.optional "guns" Decode.int 0
         |> Pipeline.optional "magic" Decode.int 0
         |> Pipeline.optional "ultimate" Decode.int 0
-        |> Pipeline.optional "armor" Decode.int 0
+        
         |> Pipeline.optional "hearts" Decode.int 0
 
 
