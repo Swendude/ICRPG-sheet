@@ -14330,7 +14330,6 @@ var $author$project$Main$editStatsModal = function (model) {
 						})
 					]))));
 };
-var $author$project$Main$EditBaseStats = {$: 'EditBaseStats'};
 var $author$project$Main$blockRowBlockStyle = _List_fromArray(
 	[$mdgriffith$elm_ui$Element$centerX]);
 var $mdgriffith$elm_ui$Internal$Model$Min = F2(
@@ -14350,55 +14349,6 @@ var $author$project$Main$blockRowStyle = _List_fromArray(
 		$mdgriffith$elm_ui$Element$width(
 		A2($mdgriffith$elm_ui$Element$minimum, 150, $mdgriffith$elm_ui$Element$fill))
 	]);
-var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
-var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
-var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
-var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
-var $mdgriffith$elm_ui$Element$html = $mdgriffith$elm_ui$Internal$Model$unstyled;
-var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
-var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
-var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
-var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
-var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
-var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
-var $author$project$Main$gear = A2(
-	$mdgriffith$elm_ui$Element$el,
-	_List_Nil,
-	$mdgriffith$elm_ui$Element$html(
-		A2(
-			$elm$svg$Svg$svg,
-			_List_fromArray(
-				[
-					$elm$svg$Svg$Attributes$viewBox('0 0 40 40'),
-					$elm$svg$Svg$Attributes$width('40px'),
-					$elm$svg$Svg$Attributes$height('40px')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$svg$Svg$g,
-					_List_fromArray(
-						[
-							$elm$svg$Svg$Attributes$strokeWidth('1'),
-							$elm$svg$Svg$Attributes$fill('black'),
-							$elm$svg$Svg$Attributes$stroke('black')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$svg$Svg$path,
-							_List_fromArray(
-								[
-									$elm$svg$Svg$Attributes$d('m3.83 16.135c-1.26.13-2.23 1.19-2.24 2.46l-.03 2.53c-.02 1.27.92 2.35 2.18 2.51l1.86.24c.31 1.13.75 2.21 1.32 3.23l-1.2 1.48c-.8.99-.74 2.41.15 3.32l1.77 1.81c.89.91 2.31 1.01 3.32.23l1.49-1.15c1.05.62 2.16 1.11 3.32 1.45l.2 1.92c.13 1.26 1.19 2.23 2.46 2.24l2.53.03c1.27.02 2.35-.92 2.51-2.18l.23-1.82c1.26-.31 2.46-.78 3.6-1.4l1.4 1.13c.99.8 2.41.74 3.32-.15l1.81-1.77c.91-.89 1.01-2.31.23-3.32l-1.07-1.39c.66-1.1 1.17-2.27 1.52-3.5l1.66-.17c1.26-.13 2.23-1.19 2.24-2.46l.03-2.53c.02-1.27-.92-2.35-2.18-2.51l-1.62-.21c-.31-1.22-.77-2.4-1.37-3.5l1.01-1.24c.8-.99.74-2.41-.15-3.32l-1.77-1.81c-.89-.91-2.31-1.01-3.32-.23l-1.21.93c-1.14-.69-2.36-1.22-3.64-1.58l-.16-1.57c-.13-1.26-1.19-2.23-2.46-2.24l-2.53-.03c-1.27-.02-2.35.92-2.51 2.18l-.2 1.56c-1.32.34-2.59.86-3.77 1.54l-1.25-1.02c-.99-.8-2.41-.74-3.32.15l-1.82 1.78c-.91.89-1.01 2.31-.23 3.32l1.07 1.38c-.62 1.1-1.11 2.27-1.43 3.5l-1.75.18zm16.33-2.86c3.63.04 6.54 3.03 6.5 6.66-.04 3.63-3.03 6.54-6.66 6.5-3.63-.04-6.54-3.03-6.5-6.66.04-3.63 3.03-6.54 6.66-6.5z')
-								]),
-							_List_Nil)
-						]))
-				]))));
-var $mdgriffith$elm_ui$Internal$Model$Px = function (a) {
-	return {$: 'Px', a: a};
-};
-var $mdgriffith$elm_ui$Element$px = $mdgriffith$elm_ui$Internal$Model$Px;
 var $mdgriffith$elm_ui$Internal$Model$Right = {$: 'Right'};
 var $mdgriffith$elm_ui$Element$alignRight = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Right);
 var $mdgriffith$elm_ui$Internal$Flag$fontAlignment = $mdgriffith$elm_ui$Internal$Flag$flag(12);
@@ -14546,30 +14496,6 @@ var $author$project$Main$effortRow = function (_char) {
 								return $.ultimate;
 							}(
 								$author$project$Main$totalEquippedStats(_char.items))))
-					])),
-				A2(
-				$mdgriffith$elm_ui$Element$row,
-				_List_fromArray(
-					[
-						$mdgriffith$elm_ui$Element$Background$color(
-						A3($mdgriffith$elm_ui$Element$rgb255, 244, 244, 244)),
-						$mdgriffith$elm_ui$Element$padding(5),
-						$mdgriffith$elm_ui$Element$width(
-						$mdgriffith$elm_ui$Element$px(52))
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$mdgriffith$elm_ui$Element$el,
-						_List_fromArray(
-							[$mdgriffith$elm_ui$Element$centerX, $mdgriffith$elm_ui$Element$centerY]),
-						A2(
-							$mdgriffith$elm_ui$Element$Input$button,
-							_List_Nil,
-							{
-								label: $author$project$Main$gear,
-								onPress: $elm$core$Maybe$Just($author$project$Main$EditBaseStats)
-							}))
 					]))
 			]));
 };
@@ -14699,6 +14625,10 @@ var $author$project$Main$ChangeNumberAttribute = function (a) {
 var $author$project$Main$EditNumber = function (a) {
 	return {$: 'EditNumber', a: a};
 };
+var $mdgriffith$elm_ui$Internal$Model$Px = function (a) {
+	return {$: 'Px', a: a};
+};
+var $mdgriffith$elm_ui$Element$px = $mdgriffith$elm_ui$Internal$Model$Px;
 var $author$project$Main$editableDiscreetNumberField = F4(
 	function (editstate, prop, message, steps) {
 		var stepLabel = function (i) {
@@ -14874,6 +14804,17 @@ var $author$project$Main$editableNumberField = F2(
 			return readField;
 		}
 	});
+var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
+var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var $elm$svg$Svg$g = $elm$svg$Svg$trustedNode('g');
+var $mdgriffith$elm_ui$Element$html = $mdgriffith$elm_ui$Internal$Model$unstyled;
+var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
+var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
+var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
+var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
+var $elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
+var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
 var $author$project$Main$emptyHearts = A2(
 	$mdgriffith$elm_ui$Element$el,
 	_List_Nil,
@@ -15130,6 +15071,7 @@ var $mdgriffith$elm_ui$Element$image = F2(
 						$mdgriffith$elm_ui$Internal$Model$Unkeyed(_List_Nil))
 					])));
 	});
+var $author$project$Main$EditBaseStats = {$: 'EditBaseStats'};
 var $author$project$Main$EditText = function (a) {
 	return {$: 'EditText', a: a};
 };
@@ -15258,6 +15200,40 @@ var $author$project$Main$editableTextField = F3(
 			return readField;
 		}
 	});
+var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var $author$project$Main$gear = A2(
+	$mdgriffith$elm_ui$Element$el,
+	_List_Nil,
+	$mdgriffith$elm_ui$Element$html(
+		A2(
+			$elm$svg$Svg$svg,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$viewBox('0 0 40 40'),
+					$elm$svg$Svg$Attributes$width('40px'),
+					$elm$svg$Svg$Attributes$height('40px')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$svg$Svg$g,
+					_List_fromArray(
+						[
+							$elm$svg$Svg$Attributes$strokeWidth('1'),
+							$elm$svg$Svg$Attributes$fill('black'),
+							$elm$svg$Svg$Attributes$stroke('black')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$svg$Svg$path,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$d('m3.83 16.135c-1.26.13-2.23 1.19-2.24 2.46l-.03 2.53c-.02 1.27.92 2.35 2.18 2.51l1.86.24c.31 1.13.75 2.21 1.32 3.23l-1.2 1.48c-.8.99-.74 2.41.15 3.32l1.77 1.81c.89.91 2.31 1.01 3.32.23l1.49-1.15c1.05.62 2.16 1.11 3.32 1.45l.2 1.92c.13 1.26 1.19 2.23 2.46 2.24l2.53.03c1.27.02 2.35-.92 2.51-2.18l.23-1.82c1.26-.31 2.46-.78 3.6-1.4l1.4 1.13c.99.8 2.41.74 3.32-.15l1.81-1.77c.91-.89 1.01-2.31.23-3.32l-1.07-1.39c.66-1.1 1.17-2.27 1.52-3.5l1.66-.17c1.26-.13 2.23-1.19 2.24-2.46l.03-2.53c.02-1.27-.92-2.35-2.18-2.51l-1.62-.21c-.31-1.22-.77-2.4-1.37-3.5l1.01-1.24c.8-.99.74-2.41-.15-3.32l-1.77-1.81c-.89-.91-2.31-1.01-3.32-.23l-1.21.93c-1.14-.69-2.36-1.22-3.64-1.58l-.16-1.57c-.13-1.26-1.19-2.23-2.46-2.24l-2.53-.03c-1.27-.02-2.35.92-2.51 2.18l-.2 1.56c-1.32.34-2.59.86-3.77 1.54l-1.25-1.02c-.99-.8-2.41-.74-3.32.15l-1.82 1.78c-.91.89-1.01 2.31-.23 3.32l1.07 1.38c-.62 1.1-1.11 2.27-1.43 3.5l-1.75.18zm16.33-2.86c3.63.04 6.54 3.03 6.5 6.66-.04 3.63-3.03 6.54-6.66 6.5-3.63-.04-6.54-3.03-6.5-6.66.04-3.63 3.03-6.54 6.66-6.5z')
+								]),
+							_List_Nil)
+						]))
+				]))));
 var $author$project$Main$infoRow = function (model) {
 	var labelStyle = _List_Nil;
 	var groupStyle = _List_fromArray(
@@ -15316,6 +15292,28 @@ var $author$project$Main$infoRow = function (model) {
 						labelStyle,
 						$mdgriffith$elm_ui$Element$text('Bioform :')),
 						A3($author$project$Main$editableTextField, fieldStyle, model.settings.editingState, model.character.bioform)
+					])),
+				A2(
+				$mdgriffith$elm_ui$Element$row,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$alignRight,
+						$mdgriffith$elm_ui$Element$width(
+						$mdgriffith$elm_ui$Element$px(52))
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$el,
+						_List_fromArray(
+							[$mdgriffith$elm_ui$Element$centerX, $mdgriffith$elm_ui$Element$centerY]),
+						A2(
+							$mdgriffith$elm_ui$Element$Input$button,
+							_List_Nil,
+							{
+								label: $author$project$Main$gear,
+								onPress: $elm$core$Maybe$Just($author$project$Main$EditBaseStats)
+							}))
 					]))
 			]));
 };
@@ -15582,6 +15580,34 @@ var $author$project$Main$itemCol = F4(
 							$author$project$Main$stateModifier(modifyLabel),
 							$author$project$Main$editModifier),
 						A2($author$project$Main$itemsIndexed, equippedState, items)))
+				]));
+	});
+var $author$project$Main$labelRow = F2(
+	function (label, description) {
+		return A2(
+			$mdgriffith$elm_ui$Element$column,
+			_List_fromArray(
+				[
+					A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0)
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$Font$size(
+							$author$project$Main$scaled(2))
+						]),
+					$mdgriffith$elm_ui$Element$text(label)),
+					A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$Font$size(
+							$author$project$Main$scaled(-3))
+						]),
+					$mdgriffith$elm_ui$Element$text(description))
 				]));
 	});
 var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
@@ -16190,7 +16216,7 @@ var $author$project$Main$view = function (model) {
 					$author$project$Main$infoRow(model),
 					$author$project$Main$storyRow(model),
 					$author$project$Main$heartRow(model),
-					$author$project$Main$effortRow(model.character),
+					A2($author$project$Main$labelRow, 'Stats', 'When trying something, roll a D20 and add the modifier! An opponent must beat your ARMOR to hit.'),
 					A2(
 					$mdgriffith$elm_ui$Element$row,
 					_List_fromArray(
@@ -16232,6 +16258,9 @@ var $author$project$Main$view = function (model) {
 									$author$project$Main$statRow2(model.character)
 								]))
 						])),
+					A2($author$project$Main$labelRow, 'Effort', 'See how good you do, roll the dice and add the modifier!'),
+					$author$project$Main$effortRow(model.character),
+					A2($author$project$Main$labelRow, 'Inventory', 'All your stuff! Only equipped items affect your stats.'),
 					A2(
 					$mdgriffith$elm_ui$Element$row,
 					_List_fromArray(

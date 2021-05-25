@@ -842,7 +842,7 @@ view model =
             , infoRow model
             , storyRow model
             , heartRow model
-            , effortRow model.character
+            , labelRow "Stats" "When trying something, roll a D20 and add the modifier! An opponent must beat your ARMOR to hit."
             , row [ width fill, spacingXY 10 0 ]
                 [ el
                     [ width (fillPortion 1)
@@ -857,6 +857,9 @@ view model =
                     , statRow2 model.character
                     ]
                 ]
+            , labelRow "Effort" "See how good you do, roll the dice and add the modifier!"
+            , effortRow model.character
+            , labelRow "Inventory" "All your stuff! Only equipped items affect your stats."
             , row
                 [ width fill
                 , spacingXY 10 0
@@ -886,6 +889,14 @@ view model =
                 ]
             , image [ centerX, width (px 60), height (px 60) ] { src = "public/icrpg.png", description = "For use with ICRPG" }
             ]
+
+
+labelRow : String -> String -> Element Msg
+labelRow label description =
+    column [ spacingXY 10 0 ]
+        [ el [ Font.size (scaled 2) ] <| text label
+        , el [ Font.size (scaled -3) ] <| text description
+        ]
 
 
 editStatsModal : Model -> Attribute Msg
@@ -1188,6 +1199,13 @@ infoRow model =
         , row groupStyle
             [ el labelStyle (text "Bioform :")
             , editableTextField fieldStyle model.settings.editingState model.character.bioform
+            ]
+        , row [ alignRight, width (px 52) ]
+            [ el [ centerX, centerY ] <|
+                Input.button []
+                    { label = gear
+                    , onPress = Just EditBaseStats
+                    }
             ]
         ]
 
@@ -1563,13 +1581,6 @@ effortRow char =
         , row blockRowStyle
             [ el labelStyle <| text "Ultimate (D12)"
             , el blockRowBlockStyle <| statBlock char.stats.ultimate <| .ultimate (totalEquippedStats char.items)
-            ]
-        , row [ Background.color <| Element.rgb255 244 244 244, padding 5, width (px 52) ]
-            [ el [ centerX, centerY ] <|
-                Input.button []
-                    { label = gear
-                    , onPress = Just EditBaseStats
-                    }
             ]
         ]
 
