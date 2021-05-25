@@ -5564,21 +5564,7 @@ var $author$project$Main$decodeItem = A3(
 				'name',
 				$elm$json$Json$Decode$string,
 				$elm$json$Json$Decode$succeed($author$project$Main$Item)))));
-var $author$project$Main$checkListLength = F2(
-	function (n, l) {
-		return (_Utils_cmp(
-			$elm$core$List$length(l),
-			n) > 0) ? $elm$json$Json$Decode$fail(
-			'There are to many objects in this list, there should by max ' + $elm$core$String$fromInt(n)) : $elm$json$Json$Decode$succeed(l);
-	});
 var $elm$json$Json$Decode$list = _Json_decodeList;
-var $author$project$Main$decodeMaxTimes = F2(
-	function (n, a) {
-		return A2(
-			$elm$json$Json$Decode$andThen,
-			$author$project$Main$checkListLength(n),
-			$elm$json$Json$Decode$list(a));
-	});
 var $author$project$Main$decodeCharacter = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 	'deathtimer',
@@ -5594,7 +5580,7 @@ var $author$project$Main$decodeCharacter = A3(
 			A3(
 				$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 				'items',
-				A2($author$project$Main$decodeMaxTimes, 20, $author$project$Main$decodeItem),
+				$elm$json$Json$Decode$list($author$project$Main$decodeItem),
 				A3(
 					$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 					'hitpoints',
@@ -5939,11 +5925,6 @@ var $author$project$Main$asTextValueIn = F2(
 		return _Utils_update(
 			charp,
 			{value: newvalue});
-	});
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
 	});
 var $author$project$Main$emptyStats = $author$project$Main$Stats(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0)(0);
 var $elm$core$List$drop = F2(
@@ -6681,16 +6662,6 @@ var $author$project$Main$update = F2(
 				var _v22 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
 				if (_v22.$ === 'Just') {
 					var item = _v22.a;
-					var totalItems = $elm$core$List$length(
-						A2(
-							$elm$core$List$filter,
-							A2(
-								$elm$core$Basics$composeL,
-								$elm$core$Basics$neq(item.equipped),
-								function ($) {
-									return $.equipped;
-								}),
-							model.character.items));
 					var newItem = _Utils_update(
 						item,
 						{equipped: !item.equipped});
@@ -6699,27 +6670,17 @@ var $author$project$Main$update = F2(
 						itemsRemoved,
 						_List_fromArray(
 							[newItem]));
-					return (totalItems < 10) ? A2(
+					return A2(
 						$author$project$Main$asCharIn,
 						model,
-						A2($author$project$Main$asItemsIn, model.character, newItems)) : model;
+						A2($author$project$Main$asItemsIn, model.character, newItems));
 				} else {
 					return model;
 				}
 			case 'NewItem':
 				var equippedState = msg.a;
-				var totalItems = $elm$core$List$length(
-					A2(
-						$elm$core$List$filter,
-						A2(
-							$elm$core$Basics$composeL,
-							$elm$core$Basics$eq(equippedState),
-							function ($) {
-								return $.equipped;
-							}),
-						model.character.items));
 				var newItem = A4($author$project$Main$Item, 'Edit me!', '', $author$project$Main$emptyStats, equippedState);
-				return (totalItems < 10) ? A2(
+				return A2(
 					$author$project$Main$asCharIn,
 					model,
 					A2(
@@ -6728,7 +6689,7 @@ var $author$project$Main$update = F2(
 						_Utils_ap(
 							model.character.items,
 							_List_fromArray(
-								[newItem])))) : model;
+								[newItem]))));
 			case 'Hovered':
 				var attribute = msg.a;
 				switch (attribute.$) {
@@ -12771,6 +12732,11 @@ var $mdgriffith$elm_ui$Element$Input$hasFocusStyle = function (attr) {
 var $mdgriffith$elm_ui$Element$Input$focusDefault = function (attrs) {
 	return A2($elm$core$List$any, $mdgriffith$elm_ui$Element$Input$hasFocusStyle, attrs) ? $mdgriffith$elm_ui$Internal$Model$NoAttribute : $mdgriffith$elm_ui$Internal$Model$htmlClass('focusable');
 };
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };

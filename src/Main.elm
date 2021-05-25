@@ -502,9 +502,6 @@ update msg model =
             case List.Extra.getAt ix model.character.items of
                 Just item ->
                     let
-                        totalItems =
-                            List.length <| List.filter ((/=) item.equipped << .equipped) model.character.items
-
                         newItem =
                             { item | equipped = not item.equipped }
 
@@ -514,33 +511,22 @@ update msg model =
                         newItems =
                             itemsRemoved ++ [ newItem ]
                     in
-                    if totalItems < 10 then
-                        newItems
-                            |> asItemsIn model.character
-                            |> asCharIn model
-
-                    else
-                        model
+                    newItems
+                        |> asItemsIn model.character
+                        |> asCharIn model
 
                 Nothing ->
                     model
 
         NewItem equippedState ->
             let
-                totalItems =
-                    List.length <| List.filter ((==) equippedState << .equipped) model.character.items
-
                 newItem =
                     Item "Edit me!" "" emptyStats equippedState
             in
-            if totalItems < 10 then
-                model.character.items
-                    ++ [ newItem ]
-                    |> asItemsIn model.character
-                    |> asCharIn model
-
-            else
-                model
+            model.character.items
+                ++ [ newItem ]
+                |> asItemsIn model.character
+                |> asCharIn model
 
         Hovered attribute ->
             case attribute of
@@ -1887,24 +1873,10 @@ decodeCharacter =
         |> Pipeline.required "class" (decodeCharacterTextProp Class)
         |> Pipeline.required "story" (decodeCharacterTextProp Story)
         |> Pipeline.required "hitpoints" (decodeCharacterNumberProp Hitpoints)
-        |> Pipeline.required "items" (decodeMaxTimes 20 decodeItem)
+        |> Pipeline.required "items" (Decode.list decodeItem)
         |> Pipeline.required "stats" decodeStats
         |> Pipeline.required "coin" (decodeCharacterNumberProp Coin)
         |> Pipeline.required "deathtimer" (decodeCharacterNumberProp Deathtimer)
-
-
-decodeMaxTimes : Int -> Decode.Decoder a -> Decode.Decoder (List a)
-decodeMaxTimes n a =
-    Decode.list a |> Decode.andThen (checkListLength n)
-
-
-checkListLength : Int -> List a -> Decode.Decoder (List a)
-checkListLength n l =
-    if List.length l > n then
-        Decode.fail <| "There are to many objects in this list, there should by max " ++ String.fromInt n
-
-    else
-        Decode.succeed l
 
 
 decodeCharacterTextProp : CharacterTextAttribute -> Decode.Decoder CharacterTextProp

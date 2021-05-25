@@ -29,7 +29,7 @@ importExportSuite =
 
                         Err e ->
                             Expect.fail <| Decode.errorToString e
-            , test "Character with more than 20 items can't be imported" <|
-                \_ -> Expect.err <| Decode.decodeString decodeCharacter Examples.overloadedCharacter
+            , test "Character with more than 20 items can be imported" <|
+                \_ -> Expect.ok <| Decode.decodeString decodeCharacter Examples.overloadedCharacter
             ]
         ]
