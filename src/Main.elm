@@ -242,6 +242,7 @@ type Msg
     | UpdateTextAttr String
     | IncreaseNumberAttribute
     | DecreaseNumberAttribute
+    | ChangeNumberAttribute Int
     | UpdateEditField String
     | EditBaseStats
     | ChangeStatAttribute StatAttribute Int
@@ -345,6 +346,57 @@ update msg model =
 
                     _ ->
                         model.character
+
+        ChangeNumberAttribute i ->
+            case model.settings.editingState of
+                EditingCharacterNumber Coin ->
+                    (model.character.coin.value + i)
+                        |> asNumberValueIn model.character.coin
+                        |> asCoinIn model.character
+                        |> asCharIn model
+
+                EditingCharacterNumber Hitpoints ->
+                    let
+                        result =
+                            model.character.hitpoints.value + i
+
+                        maxHitpoints =
+                            (model.character.stats.hearts + .hearts (totalEquippedStats model.character.items)) * 10
+
+                        maxResult =
+                            if result > maxHitpoints then
+                                maxHitpoints
+
+                            else if result < 0 then
+                                0
+
+                            else
+                                result
+                    in
+                    maxResult
+                        |> asNumberValueIn model.character.hitpoints
+                        |> asHitpointsIn model.character
+                        |> asCharIn model
+
+                EditingCharacterNumber Deathtimer ->
+                    let
+                        result =
+                            model.character.deathtimer.value + i
+
+                        maxResult =
+                            if result > 6 then
+                                6
+
+                            else
+                                result
+                    in
+                    maxResult
+                        |> asNumberValueIn model.character.deathtimer
+                        |> asDeathtimerIn model.character
+                        |> asCharIn model
+
+                _ ->
+                    model
 
         IncreaseNumberAttribute ->
             case model.settings.editingState of
@@ -1215,8 +1267,69 @@ editableTextField style editstate prop =
             readField
 
 
-editableNumberField : List (Attribute Msg) -> EditingState -> CharacterNumberProp -> Element Msg
-editableNumberField style editstate prop =
+editableDiscreetNumberField : EditingState -> CharacterNumberProp -> (Int -> Msg) -> List Int -> Element Msg
+editableDiscreetNumberField editstate prop message steps =
+    let
+        labelEl =
+            el
+                [ Border.widthEach { top = 0, left = 0, right = 0, bottom = 1 }
+                , Border.dotted
+                , Font.size (scaled 1)
+                ]
+            <|
+                text <|
+                    String.fromInt prop.value
+
+        focused =
+            case editstate of
+                EditingCharacterNumber n ->
+                    if n == prop.id then
+                        True
+
+                    else
+                        False
+
+                _ ->
+                    False
+
+        stepLabel i =
+            if i > 0 then
+                "+" ++ String.fromInt i
+
+            else
+                String.fromInt i
+
+        stepButton i =
+            Input.button [] <|
+                { label = text <| stepLabel i, onPress = Just <| message i }
+    in
+    row
+        [ spacingXY 10 0
+        , height <| px 40
+        , centerX
+        , Font.size (scaled -3)
+        ]
+    <|
+        Input.button []
+            { label =
+                labelEl
+            , onPress =
+                if focused then
+                    Just <| DisableEdit
+
+                else
+                    Just <| EditNumber prop.id
+            }
+            :: (if focused then
+                    List.map stepButton steps
+
+                else
+                    []
+               )
+
+
+editableNumberField : EditingState -> CharacterNumberProp -> Element Msg
+editableNumberField editstate prop =
     let
         labelEl =
             el
@@ -1229,7 +1342,10 @@ editableNumberField style editstate prop =
 
         readField =
             row
-                style
+                [ spacingXY 10 0
+                , height <| px 40
+                , centerX
+                ]
                 [ Input.button [] <|
                     { label = labelEl
                     , onPress = Just <| EditNumber prop.id
@@ -1238,7 +1354,10 @@ editableNumberField style editstate prop =
 
         writeField =
             row
-                style
+                [ spacingXY 10 0
+                , height <| px 40
+                , centerX
+                ]
                 [ Input.button [] <|
                     { label =
                         labelEl
@@ -1307,30 +1426,24 @@ heartRow model =
         heartsRow : List (Element Msg)
         heartsRow =
             filledHeartsEl ++ emptyHeartsEl ++ multiHeartsEl
-
-        fieldStyle =
-            [ spacingXY 10 0
-            , height <| px 40
-            , centerX
-            ]
     in
     column [ width fill ]
         [ row [ width fill, spacingXY 10 0 ]
             [ column [ width <| fill, height <| px 65, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ row [ centerX ]
                     [ text <| "Hit Points: "
-                    , editableNumberField fieldStyle model.settings.editingState model.character.hitpoints
+                    , editableDiscreetNumberField model.settings.editingState model.character.hitpoints ChangeNumberAttribute [ -5, -1, 1, 5 ]
                     ]
                 , row [ centerX ] <|
                     heartsRow
                 ]
             , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ el [ centerX ] <| text <| "Coin: "
-                , editableNumberField fieldStyle model.settings.editingState model.character.coin
+                , editableNumberField model.settings.editingState model.character.coin
                 ]
             , row [ width <| fill, height fill, centerX, Background.color <| Element.rgb255 244 244 244 ]
                 [ el [ centerX ] <| text <| "† Dying?: "
-                , editableNumberField fieldStyle model.settings.editingState model.character.deathtimer
+                , editableNumberField model.settings.editingState model.character.deathtimer
                 ]
             ]
         ]

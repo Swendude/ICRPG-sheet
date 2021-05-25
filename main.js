@@ -6469,7 +6469,8 @@ var $author$project$Main$update = F2(
 							return model.character;
 						}
 					}());
-			case 'IncreaseNumberAttribute':
+			case 'ChangeNumberAttribute':
+				var i = msg.a;
 				var _v6 = model.settings.editingState;
 				if (_v6.$ === 'EditingCharacterNumber') {
 					switch (_v6.a.$) {
@@ -6481,9 +6482,52 @@ var $author$project$Main$update = F2(
 								A2(
 									$author$project$Main$asCoinIn,
 									model.character,
-									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value + model.character.coin.editvalue)));
+									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value + i)));
 						case 'Hitpoints':
 							var _v8 = _v6.a;
+							var result = model.character.hitpoints.value + i;
+							var maxHitpoints = (model.character.stats.hearts + function ($) {
+								return $.hearts;
+							}(
+								$author$project$Main$totalEquippedStats(model.character.items))) * 10;
+							var maxResult = (_Utils_cmp(result, maxHitpoints) > 0) ? maxHitpoints : ((result < 0) ? 0 : result);
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asHitpointsIn,
+									model.character,
+									A2($author$project$Main$asNumberValueIn, model.character.hitpoints, maxResult)));
+						default:
+							var _v9 = _v6.a;
+							var result = model.character.deathtimer.value + i;
+							var maxResult = (result > 6) ? 6 : result;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asDeathtimerIn,
+									model.character,
+									A2($author$project$Main$asNumberValueIn, model.character.deathtimer, maxResult)));
+					}
+				} else {
+					return model;
+				}
+			case 'IncreaseNumberAttribute':
+				var _v10 = model.settings.editingState;
+				if (_v10.$ === 'EditingCharacterNumber') {
+					switch (_v10.a.$) {
+						case 'Coin':
+							var _v11 = _v10.a;
+							return A2(
+								$author$project$Main$asCharIn,
+								model,
+								A2(
+									$author$project$Main$asCoinIn,
+									model.character,
+									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value + model.character.coin.editvalue)));
+						case 'Hitpoints':
+							var _v12 = _v10.a;
 							var result = model.character.hitpoints.value + model.character.hitpoints.editvalue;
 							var maxHitpoints = (model.character.stats.hearts + function ($) {
 								return $.hearts;
@@ -6498,7 +6542,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.hitpoints, maxResult)));
 						default:
-							var _v9 = _v6.a;
+							var _v13 = _v10.a;
 							var result = model.character.deathtimer.value + model.character.deathtimer.editvalue;
 							var maxResult = (result > 6) ? 6 : result;
 							return A2(
@@ -6513,11 +6557,11 @@ var $author$project$Main$update = F2(
 					return model;
 				}
 			case 'DecreaseNumberAttribute':
-				var _v10 = model.settings.editingState;
-				if (_v10.$ === 'EditingCharacterNumber') {
-					switch (_v10.a.$) {
+				var _v14 = model.settings.editingState;
+				if (_v14.$ === 'EditingCharacterNumber') {
+					switch (_v14.a.$) {
 						case 'Coin':
-							var _v11 = _v10.a;
+							var _v15 = _v14.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6526,7 +6570,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.coin, model.character.coin.value - model.character.coin.editvalue)));
 						case 'Hitpoints':
-							var _v12 = _v10.a;
+							var _v16 = _v14.a;
 							var resultHitpoints = model.character.hitpoints.value - model.character.hitpoints.editvalue;
 							var newHitpoints = (resultHitpoints <= 0) ? 0 : resultHitpoints;
 							return A2(
@@ -6537,7 +6581,7 @@ var $author$project$Main$update = F2(
 									model.character,
 									A2($author$project$Main$asNumberValueIn, model.character.hitpoints, newHitpoints)));
 						default:
-							var _v13 = _v10.a;
+							var _v17 = _v14.a;
 							return (model.character.deathtimer.value <= 0) ? model : A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6551,11 +6595,11 @@ var $author$project$Main$update = F2(
 				}
 			case 'UpdateEditField':
 				var value = msg.a;
-				var _v14 = model.settings.editingState;
-				if (_v14.$ === 'EditingCharacterNumber') {
-					switch (_v14.a.$) {
+				var _v18 = model.settings.editingState;
+				if (_v18.$ === 'EditingCharacterNumber') {
+					switch (_v18.a.$) {
 						case 'Coin':
-							var _v15 = _v14.a;
+							var _v19 = _v18.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6570,7 +6614,7 @@ var $author$project$Main$update = F2(
 											0,
 											$elm$core$String$toInt(value)))));
 						case 'Hitpoints':
-							var _v16 = _v14.a;
+							var _v20 = _v18.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6585,7 +6629,7 @@ var $author$project$Main$update = F2(
 											0,
 											$elm$core$String$toInt(value)))));
 						default:
-							var _v17 = _v14.a;
+							var _v21 = _v18.a;
 							return A2(
 								$author$project$Main$asCharIn,
 								model,
@@ -6606,12 +6650,12 @@ var $author$project$Main$update = F2(
 			case 'ChangeStatAttribute':
 				var stat = msg.a;
 				var value = msg.b;
-				var _v18 = model.settings.editingState;
-				switch (_v18.$) {
+				var _v22 = model.settings.editingState;
+				switch (_v22.$) {
 					case 'EditingCharacterStats':
 						return A3($author$project$Main$updateStat, model, stat, value);
 					case 'EditingItem':
-						var ix = _v18.a;
+						var ix = _v22.a;
 						return A4($author$project$Main$updateItemStat, model, stat, value, ix);
 					default:
 						return model;
@@ -6619,17 +6663,17 @@ var $author$project$Main$update = F2(
 			case 'ChangeItemAttribute':
 				var attr = msg.a;
 				var value = msg.b;
-				var _v19 = model.settings.editingState;
-				if (_v19.$ === 'EditingItem') {
-					var ix = _v19.a;
+				var _v23 = model.settings.editingState;
+				if (_v23.$ === 'EditingItem') {
+					var ix = _v23.a;
 					return A4($author$project$Main$updateItemAttribute, model, attr, value, ix);
 				} else {
 					return model;
 				}
 			case 'DeleteItem':
-				var _v20 = model.settings.editingState;
-				if (_v20.$ === 'EditingItem') {
-					var ix = _v20.a;
+				var _v24 = model.settings.editingState;
+				if (_v24.$ === 'EditingItem') {
+					var ix = _v24.a;
 					return A2(
 						$author$project$Main$asSettingsIn,
 						model,
@@ -6641,9 +6685,9 @@ var $author$project$Main$update = F2(
 					return model;
 				}
 			case 'ConfirmDelete':
-				var _v21 = model.settings.editingState;
-				if (_v21.$ === 'ConfirmingDelete') {
-					var i = _v21.a;
+				var _v25 = model.settings.editingState;
+				if (_v25.$ === 'ConfirmingDelete') {
+					var i = _v25.a;
 					return A2(
 						$author$project$Main$asSettingsIn,
 						A2(
@@ -6659,9 +6703,9 @@ var $author$project$Main$update = F2(
 				}
 			case 'ToggleItem':
 				var ix = msg.a;
-				var _v22 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
-				if (_v22.$ === 'Just') {
-					var item = _v22.a;
+				var _v26 = A2($elm_community$list_extra$List$Extra$getAt, ix, model.character.items);
+				if (_v26.$ === 'Just') {
+					var item = _v26.a;
 					var newItem = _Utils_update(
 						item,
 						{equipped: !item.equipped});
@@ -14649,10 +14693,72 @@ var $author$project$Main$headerRow = A2(
 				onPress: $elm$core$Maybe$Just($author$project$Main$LoadCharacter)
 			})
 		]));
-var $author$project$Main$DecreaseNumberAttribute = {$: 'DecreaseNumberAttribute'};
+var $author$project$Main$ChangeNumberAttribute = function (a) {
+	return {$: 'ChangeNumberAttribute', a: a};
+};
 var $author$project$Main$EditNumber = function (a) {
 	return {$: 'EditNumber', a: a};
 };
+var $author$project$Main$editableDiscreetNumberField = F4(
+	function (editstate, prop, message, steps) {
+		var stepLabel = function (i) {
+			return (i > 0) ? ('+' + $elm$core$String$fromInt(i)) : $elm$core$String$fromInt(i);
+		};
+		var stepButton = function (i) {
+			return A2(
+				$mdgriffith$elm_ui$Element$Input$button,
+				_List_Nil,
+				{
+					label: $mdgriffith$elm_ui$Element$text(
+						stepLabel(i)),
+					onPress: $elm$core$Maybe$Just(
+						message(i))
+				});
+		};
+		var labelEl = A2(
+			$mdgriffith$elm_ui$Element$el,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$Border$widthEach(
+					{bottom: 1, left: 0, right: 0, top: 0}),
+					$mdgriffith$elm_ui$Element$Border$dotted,
+					$mdgriffith$elm_ui$Element$Font$size(
+					$author$project$Main$scaled(1))
+				]),
+			$mdgriffith$elm_ui$Element$text(
+				$elm$core$String$fromInt(prop.value)));
+		var focused = function () {
+			if (editstate.$ === 'EditingCharacterNumber') {
+				var n = editstate.a;
+				return _Utils_eq(n, prop.id) ? true : false;
+			} else {
+				return false;
+			}
+		}();
+		return A2(
+			$mdgriffith$elm_ui$Element$row,
+			_List_fromArray(
+				[
+					A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+					$mdgriffith$elm_ui$Element$height(
+					$mdgriffith$elm_ui$Element$px(40)),
+					$mdgriffith$elm_ui$Element$centerX,
+					$mdgriffith$elm_ui$Element$Font$size(
+					$author$project$Main$scaled(-3))
+				]),
+			A2(
+				$elm$core$List$cons,
+				A2(
+					$mdgriffith$elm_ui$Element$Input$button,
+					_List_Nil,
+					{
+						label: labelEl,
+						onPress: focused ? $elm$core$Maybe$Just($author$project$Main$DisableEdit) : $elm$core$Maybe$Just(
+							$author$project$Main$EditNumber(prop.id))
+					}),
+				focused ? A2($elm$core$List$map, stepButton, steps) : _List_Nil));
+	});
+var $author$project$Main$DecreaseNumberAttribute = {$: 'DecreaseNumberAttribute'};
 var $author$project$Main$IncreaseNumberAttribute = {$: 'IncreaseNumberAttribute'};
 var $author$project$Main$UpdateEditField = function (a) {
 	return {$: 'UpdateEditField', a: a};
@@ -14671,8 +14777,8 @@ var $author$project$Main$printNumberAttribute = function (attr) {
 			return 'Deathtimer';
 	}
 };
-var $author$project$Main$editableNumberField = F3(
-	function (style, editstate, prop) {
+var $author$project$Main$editableNumberField = F2(
+	function (editstate, prop) {
 		var labelEl = A2(
 			$mdgriffith$elm_ui$Element$el,
 			_List_fromArray(
@@ -14685,7 +14791,13 @@ var $author$project$Main$editableNumberField = F3(
 				$elm$core$String$fromInt(prop.value)));
 		var readField = A2(
 			$mdgriffith$elm_ui$Element$row,
-			style,
+			_List_fromArray(
+				[
+					A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+					$mdgriffith$elm_ui$Element$height(
+					$mdgriffith$elm_ui$Element$px(40)),
+					$mdgriffith$elm_ui$Element$centerX
+				]),
 			_List_fromArray(
 				[
 					A2(
@@ -14699,7 +14811,13 @@ var $author$project$Main$editableNumberField = F3(
 				]));
 		var writeField = A2(
 			$mdgriffith$elm_ui$Element$row,
-			style,
+			_List_fromArray(
+				[
+					A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
+					$mdgriffith$elm_ui$Element$height(
+					$mdgriffith$elm_ui$Element$px(40)),
+					$mdgriffith$elm_ui$Element$centerX
+				]),
 			_List_fromArray(
 				[
 					A2(
@@ -14865,13 +14983,6 @@ var $author$project$Main$heartRow = function (model) {
 		$elm$core$List$repeat,
 		A2($elm$core$Basics$min, 10, heartsLeft),
 		$author$project$Main$filledHearts);
-	var fieldStyle = _List_fromArray(
-		[
-			A2($mdgriffith$elm_ui$Element$spacingXY, 10, 0),
-			$mdgriffith$elm_ui$Element$height(
-			$mdgriffith$elm_ui$Element$px(40)),
-			$mdgriffith$elm_ui$Element$centerX
-		]);
 	var emptyHeartsEl = A2($elm$core$List$repeat, (heartsTotal - heartsLeft) - overTenHearts, $author$project$Main$emptyHearts);
 	var heartsRow = _Utils_ap(
 		filledHeartsEl,
@@ -14913,7 +15024,13 @@ var $author$project$Main$heartRow = function (model) {
 								_List_fromArray(
 									[
 										$mdgriffith$elm_ui$Element$text('Hit Points: '),
-										A3($author$project$Main$editableNumberField, fieldStyle, model.settings.editingState, model.character.hitpoints)
+										A4(
+										$author$project$Main$editableDiscreetNumberField,
+										model.settings.editingState,
+										model.character.hitpoints,
+										$author$project$Main$ChangeNumberAttribute,
+										_List_fromArray(
+											[-5, -1, 1, 5]))
 									])),
 								A2(
 								$mdgriffith$elm_ui$Element$row,
@@ -14938,7 +15055,7 @@ var $author$project$Main$heartRow = function (model) {
 								_List_fromArray(
 									[$mdgriffith$elm_ui$Element$centerX]),
 								$mdgriffith$elm_ui$Element$text('Coin: ')),
-								A3($author$project$Main$editableNumberField, fieldStyle, model.settings.editingState, model.character.coin)
+								A2($author$project$Main$editableNumberField, model.settings.editingState, model.character.coin)
 							])),
 						A2(
 						$mdgriffith$elm_ui$Element$row,
@@ -14957,7 +15074,7 @@ var $author$project$Main$heartRow = function (model) {
 								_List_fromArray(
 									[$mdgriffith$elm_ui$Element$centerX]),
 								$mdgriffith$elm_ui$Element$text('† Dying?: ')),
-								A3($author$project$Main$editableNumberField, fieldStyle, model.settings.editingState, model.character.deathtimer)
+								A2($author$project$Main$editableNumberField, model.settings.editingState, model.character.deathtimer)
 							]))
 					]))
 			]));
